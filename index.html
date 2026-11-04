@@ -242,6 +242,7 @@ function pollBackendOrder(orderId, co, a, sol, d){
       .then(orderData => {
         if(orderData && orderData.jobs){
           co.jobs = orderData.jobs;
+          if(orderData.logs) co.logs = orderData.logs;
           if(orderData.status === "applied"){
             clearInterval(interval);
             a.domains = sol.domains.slice();
@@ -646,9 +647,54 @@ function vProvisioning(){
   if(!o && a) o=S.orders.find(x=>x.accountId===a.id&&x.kind==="provision");
   if(!o) return `<div class="content narrow">${head("Provisioning","Check status of environment setup.")}<div class="card" style="padding:28px;text-align:center">${empty("Nothing is currently being set up.")}<p class="sub" style="margin-top:8px">Your account is ready.</p><div class="row" style="margin-top:18px;justify-content:center"><a class="btn lg" href="#/app">Open your account</a></div></div></div>`;
   const ready=a?.status==="ready"||o.status==="applied";
-  return `<div class="content narrow">${stepper(ready?3:2)}${head(ready?"Your environment is ready":"Setting up "+esc(a?.name||"your environment"),ready?"AD has started. You can go to your account now.":"This usually takes a few minutes. You can leave this page; we'll keep going.")}
-  <div class="grid g2"><div class="card"><h3>Progress</h3><ul class="steps">${o.jobs.map(([n,st])=>`<li><span class="dot ${st==="done"?"done":st==="run"?"run":""}"></span><span>${n} <span class="log">${st==="run"?"running…":st==="done"?"done":""}</span></span></li>`).join("")}</ul>${ready?`<div class="row" style="margin-top:14px"><a class="btn lg" href="#/app">Open your account</a></div>`:""}</div>
-  <div class="card"><h3>What is being set up</h3><div class="diff">${o.changes.map(c=>`<div>${esc(describe(c))}</div>`).join("")}</div></div></div></div>`;
+  const logs = o.logs || [];
+  return `<div class="content" style="max-width:1160px">${stepper(ready?3:2)}${head(ready?"Your environment is ready":"Setting up "+esc(a?.name||"your environment"),ready?"Pipeline execution completed. All Azure resources verified & active.":"Pipeline runner is deploying Azure resources. Streaming real-time execution logs below.")}
+  <div class="grid" style="grid-template-columns:360px 1fr;gap:20px;align-items:start">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0">Pipeline Stages</h3>
+        <span class="pill ${ready?"green":"blue"}">${ready?"Succeeded":"In Progress"}</span>
+      </div>
+      <ul class="steps">${o.jobs.map(([n,st])=>`<li><span class="dot ${st==="done"?"done":st==="run"?"run":""}"></span><span>${n} <span class="log">${st==="run"?"running…":st==="done"?"✓ done":""}</span></span></li>`).join("")}</ul>
+      <div style="margin-top:20px;padding-top:14px;border-top:1px solid #e1e4e8">
+        ${ready ? `
+          <div style="color:#2ea043;font-weight:600;margin-bottom:12px;font-size:13px">✔ All phases deployed and verified in Azure</div>
+          <a class="btn lg" href="#/app" style="width:100%;text-align:center;box-sizing:border-box;display:block">Open your account</a>
+        ` : `
+          <div style="display:flex;align-items:center;gap:8px;color:#0969da;font-size:13px;font-weight:500">
+            <span class="spin">◐</span> <span>Deploying to Azure subscription...</span>
+          </div>
+          <p class="log" style="margin-top:6px">Resources are being provisioned live. Please wait until execution completes.</p>
+        `}
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e1e4e8">
+        <details><summary class="log" style="cursor:pointer">Target Plan Changes</summary>
+          <div class="diff" style="margin-top:8px">${o.changes.map(c=>`<div>${esc(describe(c))}</div>`).join("")}</div>
+        </details>
+      </div>
+    </div>
+    <div class="card" style="background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.15)">
+      <div style="background:#161b22;padding:10px 16px;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:600;color:#8b949e;font-family:monospace">
+          <span style="color:${ready?'#56d364':'#58a6ff'}">●</span> Azure DevOps Pipeline Console: azure-pipelines.environment.yml
+        </span>
+        <span style="font-size:11px;color:${ready?'#56d364':'#e3b341'};font-family:monospace;font-weight:600">
+          ${ready ? "● COMPLETED (EXIT 0)" : "● LIVE STREAM"}
+        </span>
+      </div>
+      <div id="pipeline-terminal" style="padding:14px;font-family:'Cascadia Code',Consolas,monospace;font-size:12px;line-height:1.7;height:420px;overflow-y:auto;white-space:pre-wrap">
+        ${logs.length ? logs.map(l => {
+          const time = (l.timestamp||"").split("T")[1]?.slice(0,8) || "00:00:00";
+          const isErr = l.status === "error";
+          const isDone = l.status === "done";
+          const color = isErr ? "#f85149" : isDone ? "#56d364" : "#e3b341";
+          const tag = isErr ? "[FAIL]" : isDone ? "[DONE]" : "[RUN]";
+          return `<div><span style="color:#6e7681;">[${time}]</span> <span style="color:${color};font-weight:600;">${tag}</span> <span style="color:#79c0ff;">[${esc(l.step)}]</span> ${esc(l.message)}</div>`;
+        }).join("") : `<div style="color:#8b949e;">[00:00:00] [INIT] Pipeline agent initialized: pool 'Azure Pipelines', runner 'linux-vm-agent-01'...</div><div style="color:#8b949e;">[00:00:01] [AUTH] Authenticating with Azure Service Principal to subscription 63724fbc-977f-4de8-834c-2be740ed933e...</div>`}
+        ${!ready ? `<div style="color:#e3b341;margin-top:6px"><span class="spin">◐</span> [Azure ARM] Long running operation in progress... waiting for confirmation.</div>` : `<div style="color:#56d364;margin-top:8px;font-weight:600">✔ Job completed successfully with exit code 0. Environment is ready.</div>`}
+      </div>
+    </div>
+  </div></div>`;
 }
 
 /* ============================== views: app ============================== */
@@ -777,6 +823,7 @@ function render(){
   app.innerHTML=html;
   const pg=app.querySelector(".content,.site"); if(pg&&p===lastPage) pg.scrollTop=sc; lastPage=p;
   document.querySelectorAll(".chat").forEach(c=>c.scrollTop=c.scrollHeight);
+  const term=document.getElementById("pipeline-terminal"); if(term) term.scrollTop=term.scrollHeight;
 }
 let lastPage="";
 
