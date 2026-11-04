@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADConfig — ADAccount Dashboard (prototype)</title>
+<style>
+:root{--navy:#14213d;--ink:#1f2933;--blue:#0b5cad;--blue2:#084a8c;--ice:#c7d3e3;--bg:#f4f6f8;--line:#d9dee5;--slate:#5f6b7a;--green:#1a7f4b;--amber:#9a6700;--red:#b42318;--sans:"Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:14px;height:100vh;display:grid;grid-template-columns:200px 1fr 340px;grid-template-rows:48px 1fr;overflow:hidden}
+header{grid-column:1/4;background:var(--navy);color:#fff;display:flex;align-items:center;padding:0 20px;gap:14px}
+header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.02em}
+header .tag{font-size:12px;color:var(--ice);border-left:1px solid #3a4a6b;padding-left:14px}
+header .spacer{flex:1}header .who{font-size:12px;color:var(--ice)}
+nav{background:#fff;border-right:1px solid var(--line);padding:12px 0;display:flex;flex-direction:column}
+nav button{all:unset;cursor:pointer;padding:9px 20px;font-weight:500;color:var(--slate);display:flex;justify-content:space-between;align-items:center;border-left:3px solid transparent}
+nav button:hover{background:var(--bg)}
+nav button.on{color:var(--navy);border-left-color:var(--blue);background:#eaf1f9;font-weight:600}
+nav .badge{background:var(--blue);color:#fff;font-size:11px;border-radius:10px;padding:0 7px}
+main{overflow:auto;padding:22px 28px}
+h2{margin:0 0 2px;font-size:20px;font-weight:600;color:var(--navy)}
+.sub{color:var(--slate);margin:0 0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:16px 18px;margin-bottom:16px}
+.card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);font-weight:600}
+.grid{display:grid;gap:16px}.g2{grid-template-columns:1fr 1fr}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);padding:8px 10px;border-bottom:1px solid var(--line);background:#fafbfc;font-weight:600}
+td{padding:10px;border-bottom:1px solid #edf0f3;vertical-align:middle}
+tr.click{cursor:pointer}tr.click:hover td{background:#f7f9fb}tr.sel td{background:#eaf1f9}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:3px;background:#eceff3;color:var(--slate)}
+.chip.ok{background:#e3f4ea;color:var(--green)}.chip.warn{background:#fdf1d6;color:var(--amber)}.chip.bad{background:#fbe4e1;color:var(--red)}.chip.run{background:#e1ecf8;color:var(--blue)}
+.btn{all:unset;cursor:pointer;background:var(--blue);color:#fff;padding:7px 14px;border-radius:3px;font-weight:600;font-size:13px}
+.btn:hover{background:var(--blue2)}.btn.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+.btn.red{background:#fff;color:var(--red);border:1px solid var(--red)}.btn[disabled]{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px}.kv b{color:var(--slate);font-weight:500}
+input,select{font:inherit;padding:6px 8px;border:1px solid #b9c2cd;border-radius:3px;background:#fff;color:var(--ink)}
+input:focus,select:focus{outline:2px solid #9cc2ea;border-color:var(--blue)}
+label{display:block;font-size:12px;font-weight:600;color:var(--slate);margin:10px 0 4px}
+pre{background:#f6f8fa;color:#24292f;border:1px solid var(--line);border-radius:3px;padding:12px;font-size:12px;line-height:1.5;overflow:auto;max-height:340px;margin:0}
+.chev{display:flex;margin-bottom:12px;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.chev span{flex:1;text-align:center;font-size:11px;font-weight:600;padding:7px 0;background:#fafbfc;color:var(--slate);border-right:1px solid var(--line)}
+.chev span:last-child{border-right:0}.chev span.done{background:var(--blue);color:#fff}.chev span.cur{background:#fdf1d6;color:var(--amber)}
+.steps{list-style:none;padding:0;margin:0}.steps li{display:grid;grid-template-columns:20px 1fr;gap:6px;padding:5px 0}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line);margin-top:4px}.dot.done{background:var(--green)}.dot.run{background:var(--blue);animation:p 1s infinite}
+@keyframes p{50%{opacity:.35}}.log{font-size:12px;color:var(--slate)}
+.err{color:var(--red);font-size:13px}.warn{color:var(--amber);font-size:13px}.empty{color:var(--slate)}
+.note{background:#fdf1d6;border:1px solid #ecd48b;color:#6b4e00;border-radius:3px;padding:8px 12px;font-size:13px;margin:10px 0}
+.pill{display:inline-block;background:#eceff3;border-radius:3px;padding:1px 7px;margin:0 4px 2px 0;font-size:12px}
+aside{background:#fff;border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+aside .head{padding:12px 16px;border-bottom:1px solid var(--line)}aside .head b{font-size:14px;color:var(--navy)}
+aside .head small{display:block;color:var(--slate);margin-top:2px;font-size:12px}
+#chat{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#fafbfc}
+.msg{max-width:92%;padding:8px 11px;border-radius:4px;font-size:13px;line-height:1.45;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:var(--blue);color:#fff}.msg.a{align-self:flex-start;background:#fff;border:1px solid var(--line)}
+.msg .mini{margin-top:8px;border-top:1px solid var(--line);padding-top:8px;font-size:12px}
+.chat-in{border-top:1px solid var(--line);padding:10px;display:flex;gap:8px}.chat-in input{flex:1}
+.sugg{padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--line)}
+.sugg button{all:unset;cursor:pointer;font-size:12px;border:1px solid var(--line);border-radius:3px;padding:2px 8px;color:var(--blue)}.sugg button:hover{background:#eaf1f9}
+</style>
+</head>
+<body>
+<header>
+  <h1>ADConfig</h1><span class="tag">Account Management</span>
+  <span class="spacer"></span><span class="who">adadmin@alidainc.com</span>
+</header>
+<nav id="nav"></nav>
+<main id="main"></main>
+<aside>
+  <div class="head"><b>ADConfig agent</b><small id="agentCtx"></small></div>
+  <div id="chat"></div>
+  <div class="sugg" id="sugg"></div>
+  <form class="chat-in" id="chatForm"><input id="chatIn" placeholder="e.g. add domain readygo-retail and add sandbox sbx-2 50gb" autocomplete="off"><button class="btn">Send</button></form>
+</aside>
+
+<script>
+/* ---------- constants & state ---------- */
+const DOMAIN_REGISTRY = {
+  "gendf":"GenDF Domain","readygo-retail":"ReadyGo Retail","readygo-finance":"ReadyGo Finance",
+  "readygo-healthcare":"ReadyGo Healthcare","transaction-enhancer":"Transaction Enhancer"
+};
+const REGIONS = ["eastus2","westus3","centralus"];
+const MAX_SPEND = 50000;
+const STAGES = ["draft","validated","approved","applying","applied","jumpstarted","verified"];
+
+const seed = () => ({
+  view:"accounts", accountId:"alida-internal", orderId:null, seq:3,
+  accounts:[{
+    id:"alida-internal", name:"Alida Internal (first client)", plan:"ad-standard", tenancy:"single", management:"fully",
+    region:"eastus2", status:"verified", domains:["gendf","readygo-retail"],
+    sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100}],
+    resources:{spendLimitUsd:5000,storageGb:500}, users:[{email:"bill@alidainc.com",role:"adadm"},{email:"dhananjay@alidainc.com",role:"aduser"}],
+    lastRun:"ord-0001"
+  }],
+  orders:[{
+    id:"ord-0001", accountId:"alida-internal", type:"initial", source:"manual", status:"verified", stage:6,
+    spec:{orderSpecVersion:"1.0",orderId:"ord-0001",type:"initial",source:"manual",client:{id:"alida-internal",name:"Alida Internal (first client)"},plan:{id:"ad-standard",tenancy:"single",management:"fully"},environment:{region:"eastus2"},domains:[{id:"gendf",action:"add"},{id:"readygo-retail",action:"add"}],sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100,action:"add"}],resources:{spendLimitUsd:5000,storageGb:500},users:[{email:"bill@alidainc.com",role:"adadm",action:"add"}],jumpstart:{enabled:true,smokeTestJob:"default-hello-data"}},
+    validation:{ok:true,errors:[],warnings:[]}, plan:"+ 14 resources to add (RG, storage, Databricks, Key Vault, identity)",
+    steps:[["Terraform plan","done"],["ADAzEnvConfig apply","done"],["ADSvcConfig apply","done"],["Jumpstart AD","done"],["Verify smoke job","done"]], created:"2026-11-24 09:12"
+  }],
+  audit:[
+    {t:"2026-11-24 09:12",actor:"bill@alidainc.com",action:"order.submitted",ref:"ord-0001"},
+    {t:"2026-11-24 09:14",actor:"bill@alidainc.com",action:"order.approved",ref:"ord-0001"},
+    {t:"2026-11-24 09:31",actor:"orchestrator",action:"order.verified",ref:"ord-0001"}
+  ],
+  chat:[{r:"a",t:"I'm the ADConfig agent. I turn requests into OrderSpecs for the selected account. Approvals happen in Orders & Runs.\n\nTry: \"add domain readygo-finance\"."}]
+});
+let S = seed();
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const acct = id => S.accounts.find(a=>a.id===(id||S.accountId));
+const nextId = () => "ord-"+String(++S.seq).padStart(4,"0");
+const now = () => new Date().toISOString().slice(0,16).replace("T"," ");
+const log = (action,ref,actor="adadmin@alidainc.com") => S.audit.unshift({t:now(),actor,action,ref});
+const chip = st => ({verified:"ok",approved:"run",applying:"run",pending_approval:"warn",draft:"",rejected:"bad",failed:"bad"}[st]||"");
+
+/* ---------- validation & apply ---------- */
+function validate(spec, a){
+  const errors=[],warnings=[];
+  if(spec.type==="initial"){
+    if(!spec.client?.name?.trim()) errors.push("Client name is required.");
+    if(!REGIONS.includes(spec.environment?.region)) errors.push("Region not allowed: "+spec.environment?.region);
+    if(S.accounts.some(x=>x.id===spec.client?.id)) errors.push("Account id already exists.");
+  }
+  const cur = a || {domains:[],sandboxes:[],users:[],resources:{storageGb:spec.resources?.storageGb||0,spendLimitUsd:0}};
+  const doms=new Set(cur.domains), sbx=new Map(cur.sandboxes.map(s=>[s.name,s])), usr=new Set(cur.users.map(u=>u.email));
+  let used = cur.sandboxes.reduce((n,s)=>n+s.quotaGb,0);
+  let cap = spec.resources?.storageGb ?? cur.resources.storageGb;
+  for(const d of spec.domains||[]){
+    if(d.action==="add"){ if(!DOMAIN_REGISTRY[d.id]) errors.push(`Domain "${d.id}" is not in the capability registry.`); else if(doms.has(d.id)) warnings.push(`Domain ${d.id} already present (no-op).`); else doms.add(d.id); }
+    else { if(!doms.has(d.id)) errors.push(`Cannot remove domain ${d.id}: not present.`); else doms.delete(d.id); }
+  }
+  for(const s of spec.sandboxes||[]){
+    if(s.action==="add"){ if(sbx.has(s.name)) errors.push(`Sandbox ${s.name} already exists.`); else { used+=s.quotaGb; sbx.set(s.name,s);} }
+    else { if(!sbx.has(s.name)) errors.push(`Cannot remove sandbox ${s.name}: not present.`); else { used-=sbx.get(s.name).quotaGb; sbx.delete(s.name);} }
+  }
+  if(used>cap) errors.push(`Sandbox quota ${used} GB exceeds storage allocation ${cap} GB.`);
+  if((spec.resources?.spendLimitUsd??0)>MAX_SPEND) errors.push(`Spend limit above policy maximum ($${MAX_SPEND}).`);
+  for(const u of spec.users||[]){
+    if(!/^\S+@\S+\.\S+$/.test(u.email)) errors.push("Invalid user email: "+u.email);
+    else if(u.action==="add" && usr.has(u.email)) warnings.push(u.email+" already a user (no-op).");
+  }
+  if(!(spec.domains?.length||spec.sandboxes?.length||spec.users?.length||spec.resources) && spec.type==="change") errors.push("Change contains no operations.");
+  return {ok:errors.length===0,errors,warnings};
+}
+function planSummary(spec){
+  if(spec.type==="initial") return "+ 14 resources to add (RG, storage, Databricks, Key Vault, identity)";
+  const n=[...(spec.domains||[]),...(spec.sandboxes||[]),...(spec.users||[])].length+(spec.resources?1:0);
+  return `~ ${n} service-config change(s); 0 infrastructure resources destroyed`;
+}
+function applySpec(spec){
+  if(spec.type==="initial"){
+    S.accounts.push({id:spec.client.id,name:spec.client.name,plan:spec.plan.id,tenancy:spec.plan.tenancy,management:spec.plan.management,region:spec.environment.region,status:"verified",domains:[],sandboxes:[],resources:{spendLimitUsd:spec.resources.spendLimitUsd,storageGb:spec.resources.storageGb},users:[],lastRun:spec.orderId});
+  }
+  const a=acct(spec.client.id);
+  for(const d of spec.domains||[]){ if(d.action==="add"&&!a.domains.includes(d.id)) a.domains.push(d.id); if(d.action==="remove") a.domains=a.domains.filter(x=>x!==d.id); }
+  for(const s of spec.sandboxes||[]){ if(s.action==="add") a.sandboxes.push({name:s.name,mode:s.mode,quotaGb:s.quotaGb}); else a.sandboxes=a.sandboxes.filter(x=>x.name!==s.name); }
+  for(const u of spec.users||[]){ if(u.action==="add"&&!a.users.some(x=>x.email===u.email)) a.users.push({email:u.email,role:u.role}); if(u.action==="remove") a.users=a.users.filter(x=>x.email!==u.email); }
+  if(spec.resources&&spec.type==="change"){ Object.assign(a.resources,spec.resources); }
+  a.lastRun=spec.orderId; a.status="verified";
+}
+function createOrder(spec, source){
+  const id=nextId(); spec.orderId=id; spec.source=source; spec.orderSpecVersion="1.0"; spec.requestedBy="adadmin@alidainc.com";
+  const a=spec.type==="initial"?null:acct(spec.client.id);
+  const validation=validate(spec,a);
+  const o={id,accountId:spec.client.id,type:spec.type,source,status:validation.ok?"pending_approval":"draft",stage:validation.ok?1:0,spec,validation,plan:planSummary(spec),steps:[],created:now()};
+  S.orders.unshift(o); log("order.submitted",id,source==="agent"?"adconfig-agent (for adadmin)":undefined);
+  if(validation.ok) log("order.validated",id,"orchestrator");
+  return o;
+}
+
+/* ---------- run pipeline (simulated, deterministic) ---------- */
+function approve(o){
+  o.status="approved"; o.stage=2; log("order.approved",o.id);
+  o.steps=(o.type==="initial"
+    ? ["Terraform plan","ADAzEnvConfig apply","ADSvcConfig apply","Jumpstart AD","Verify smoke job"]
+    : ["Terraform plan","ADSvcConfig apply","Verify health checks"]).map(n=>[n,"pending"]);
+  render(); setTimeout(()=>runStep(o,0),700);
+}
+function runStep(o,i){
+  if(o.status==="rejected") return;
+  if(i>=o.steps.length){ applySpec(o.spec); o.status="verified"; o.stage=6; log("order.verified",o.id,"orchestrator"); render(); return; }
+  o.status="applying"; if(o.stage<3)o.stage=3; o.steps[i][1]="run"; render();
+  setTimeout(()=>{
+    o.steps[i][1]="done";
+    const n=o.steps[i][0];
+    if(n.startsWith("ADSvc")||n.startsWith("ADAz")&&o.type==="initial"&&false) o.stage=Math.max(o.stage,4);
+    if(n.startsWith("Jumpstart")) o.stage=5;
+    if(n.startsWith("ADSvc")) o.stage=Math.max(o.stage,4);
+    log("step.done",o.id+" · "+n,"orchestrator"); render(); runStep(o,i+1);
+  },1100);
+}
+
+/* ---------- views ---------- */
+function nav(){
+  const pend=S.orders.filter(o=>o.status==="pending_approval").length;
+  const items=[["accounts","Accounts"],["orders","Orders & Runs",pend],["new","New order"],["audit","Audit log"]];
+  $("#nav").innerHTML=items.map(([k,l,b])=>`<button class="${(S.view===k||(k==="accounts"&&S.view==="detail"))?"on":""}" data-v="${k}">${l}${b?`<span class="badge">${b}</span>`:""}</button>`).join("");
+  document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();});
+}
+function vAccounts(){
+  return `<h2>Accounts</h2><p class="sub">Select an account to view its configuration.</p>
+  <div class="card" style="padding:0"><table><tr><th>Account</th><th>Plan</th><th>Tenancy</th><th>Region</th><th>Domains</th><th>Sandboxes</th><th>Storage</th><th>Spend limit</th><th>Status</th></tr>
+  ${S.accounts.map(a=>{const used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0);return `<tr class="click ${a.id===S.accountId?"sel":""}" data-a="${a.id}"><td><b>${esc(a.name)}</b><br><span class="log">${a.id}</span></td><td>${a.plan}</td><td>${a.tenancy} · ${a.management}</td><td>${a.region}</td><td>${a.domains.map(d=>`<span class="pill">${DOMAIN_REGISTRY[d]||d}</span>`).join("")||"–"}</td><td>${a.sandboxes.map(s=>`<span class="pill">${esc(s.name)} ${s.quotaGb}GB</span>`).join("")||"–"}</td><td>${used} / ${a.resources.storageGb} GB</td><td>$${a.resources.spendLimitUsd.toLocaleString()}</td><td><span class="chip ok">${a.status}</span></td></tr>`}).join("")}</table></div>
+  <button class="btn" id="goNew">New account order</button>`;
+}
+function vDetail(){
+  const a=acct(); const used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0); const os=S.orders.filter(o=>o.accountId===a.id);
+  return `<p class="sub" style="margin-bottom:6px"><a href="#" id="back" style="color:var(--blue);text-decoration:none">Accounts</a> / ${esc(a.name)}</p>
+  <h2>${esc(a.name)} <span class="chip ok" style="vertical-align:middle">${a.status}</span></h2><p class="sub">${a.id} · last run ${a.lastRun}</p>
+  <div class="grid g2">
+   <div class="card"><h3>Configuration</h3><div class="kv"><b>Plan</b><span>${a.plan}</span><b>Tenancy</b><span>${a.tenancy}-tenant</span><b>Management</b><span>${a.management}</span><b>Region</b><span>${a.region}</span><b>Spend limit</b><span>$${a.resources.spendLimitUsd.toLocaleString()}</span><b>Storage</b><span>${used} / ${a.resources.storageGb} GB allocated</span></div></div>
+   <div class="card"><h3>Users</h3><table>${a.users.map(u=>`<tr><td>${esc(u.email)}</td><td>${u.role}</td></tr>`).join("")||'<tr><td class="empty">None</td></tr>'}</table></div>
+  </div>
+  <div class="grid g2">
+   <div class="card"><h3>Domains</h3><table>${a.domains.map(d=>`<tr><td>${DOMAIN_REGISTRY[d]||d}</td><td class="log">${d}</td></tr>`).join("")||'<tr><td class="empty">None</td></tr>'}</table></div>
+   <div class="card"><h3>Sandboxes</h3><table>${a.sandboxes.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.mode}</td><td>${x.quotaGb} GB</td></tr>`).join("")||'<tr><td class="empty">None</td></tr>'}</table></div>
+  </div>
+  <div class="card" style="padding:0"><h3 style="padding:14px 18px 0">Orders</h3><table><tr><th>Order</th><th>Type</th><th>Source</th><th>Status</th></tr>${os.map(o=>`<tr class="click" data-o="${o.id}"><td>${o.id}</td><td>${o.type}</td><td>${o.source}</td><td><span class="chip ${chip(o.status)}">${o.status.replace("_"," ")}</span></td></tr>`).join("")}</table></div>
+  <p class="log">To change this account, use the ADConfig agent on the right.</p>`;
+}
+function vOrders(){
+  const o=S.orders.find(x=>x.id===S.orderId)||null;
+  return `<h2>Orders & Runs</h2><p class="sub">Change requests from the dashboard and the agent.</p>
+  <div class="grid" style="grid-template-columns:1fr 1.25fr;align-items:start">
+  <div class="card"><table><tr><th>Order</th><th>Type</th><th>Source</th><th>Status</th></tr>
+  ${S.orders.map(x=>`<tr class="click" data-o="${x.id}" ${o&&o.id===x.id?'style="background:#eef3f8"':""}><td><b>${x.id}</b><br><small>${esc(x.accountId)}</small></td><td>${x.type}</td><td>${x.source}</td><td><span class="chip ${chip(x.status)}">${x.status.replace("_"," ")}</span></td></tr>`).join("")}</table></div>
+  <div>${o?orderDetail(o):'<div class="card"><span class="empty">Select an order to view details.</span></div>'}</div></div>`;
+}
+function orderDetail(o){
+  const rej=o.status==="rejected";
+  const chev=STAGES.map((s,i)=>`<span class="${!rej&&i<o.stage?"done":!rej&&i===o.stage?"cur":""}">${s}</span>`).join("");
+  return `<div class="card"><h3>${o.id} · ${o.type} · ${esc(o.accountId)}</h3>
+  ${rej?'<div class="chip bad" style="margin-bottom:10px">rejected</div>':""}<div class="chev">${chev}</div>
+  ${o.validation.errors.map(e=>`<div class="err">✕ ${esc(e)}</div>`).join("")}${o.validation.warnings.map(e=>`<div class="warn">! ${esc(e)}</div>`).join("")}
+  ${o.validation.ok?`<div class="kv" style="margin:8px 0"><b>Plan summary</b><span>${esc(o.plan)}</span></div>`:""}
+  ${o.status==="pending_approval"?`<div class="note">Awaiting approval.</div><div class="row"><button class="btn" id="approve">Approve & apply</button><button class="btn red" id="reject">Reject</button></div>`:""}
+  ${o.steps.length?`<h3 style="margin-top:14px">Run</h3><ul class="steps">${o.steps.map(([n,st])=>`<li><span class="dot ${st==="done"?"done":st==="run"?"run":""}"></span><span>${n} <span class="log">${st==="run"?"running…":st==="done"?"ok":""}</span></span></li>`).join("")}</ul>`:""}
+  </div><div class="card"><h3>OrderSpec</h3><pre>${esc(JSON.stringify(o.spec,null,2))}</pre></div>`;
+}
+let nf={name:"Acme Co",tenancy:"single",management:"fully",region:"eastus2",domains:["gendf"],sbx:1,quota:100,spend:5000,storage:500,email:"admin@acme.com"};
+function nfSpec(){
+  const id=nf.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+  return {orderSpecVersion:"1.0",orderId:"(assigned on submit)",type:"initial",source:"dashboard",client:{id,name:nf.name},plan:{id:"ad-standard",tenancy:nf.tenancy,management:nf.management},environment:{region:nf.region},
+    domains:nf.domains.map(d=>({id:d,action:"add"})),sandboxes:Array.from({length:nf.sbx},(_,i)=>({name:"sbx-"+(i+1),mode:"dedicated",quotaGb:+nf.quota,action:"add"})),
+    resources:{spendLimitUsd:+nf.spend,storageGb:+nf.storage},users:nf.email?[{email:nf.email,role:"adadm",action:"add"}]:[],jumpstart:{enabled:true,smokeTestJob:"default-hello-data"}};
+}
+function vNew(){
+  const v=nfSpec(); const val=validate(v,null);
+  return `<h2>New account order</h2><p class="sub">Provision a new client environment.</p>
+  <div class="grid g2" style="align-items:start"><div class="card">
+   <label>Client name</label><input data-f="name" value="${esc(nf.name)}" style="width:100%">
+   <div class="row"><div><label>Tenancy</label><select data-f="tenancy"><option ${nf.tenancy==="single"?"selected":""}>single</option><option ${nf.tenancy==="multi"?"selected":""}>multi</option></select></div>
+   <div><label>Management</label><select data-f="management"><option ${nf.management==="fully"?"selected":""}>fully</option><option ${nf.management==="self"?"selected":""}>self</option></select></div>
+   <div><label>Region</label><select data-f="region">${REGIONS.map(r=>`<option ${nf.region===r?"selected":""}>${r}</option>`).join("")}</select></div></div>
+   <label>Domains</label>${Object.entries(DOMAIN_REGISTRY).map(([k,vv])=>`<label style="text-transform:none;font-size:14px;font-weight:500;color:var(--ink);margin:3px 0"><input type="checkbox" data-dom="${k}" ${nf.domains.includes(k)?"checked":""}> ${vv}</label>`).join("")}
+   <div class="row"><div><label>Sandboxes</label><input data-f="sbx" type="number" min="0" value="${nf.sbx}" style="width:80px"></div><div><label>GB each</label><input data-f="quota" type="number" value="${nf.quota}" style="width:90px"></div></div>
+   <div class="row"><div><label>Spend limit $</label><input data-f="spend" type="number" value="${nf.spend}" style="width:110px"></div><div><label>Storage GB</label><input data-f="storage" type="number" value="${nf.storage}" style="width:100px"></div></div>
+   <label>First ADadm user</label><input data-f="email" value="${esc(nf.email)}" style="width:100%">
+   <div style="margin-top:14px">${val.errors.map(e=>`<div class="err">✕ ${esc(e)}</div>`).join("")}<div class="row" style="margin-top:8px"><button class="btn" id="submitNew" ${val.ok?"":"disabled"}>Validate & submit for approval</button></div></div></div>
+  <div class="card"><h3>OrderSpec preview</h3><pre>${esc(JSON.stringify(v,null,2))}</pre></div></div>`;
+}
+function vAudit(){
+  return `<h2>Audit log</h2><p class="sub">Record of all order activity.</p>
+  <div class="card"><table><tr><th>Time</th><th>Actor</th><th>Action</th><th>Reference</th></tr>${S.audit.map(e=>`<tr><td>${e.t}</td><td>${esc(e.actor)}</td><td>${e.action}</td><td>${esc(e.ref)}</td></tr>`).join("")}</table></div>`;
+}
+
+/* ---------- render & wiring ---------- */
+function render(){
+  nav();
+  const m=$("#main"); const keep=m.scrollTop;
+  m.innerHTML={accounts:vAccounts,detail:vDetail,orders:vOrders,new:vNew,audit:vAudit}[S.view]();
+  m.scrollTop=keep; wire(); chat();
+}
+function wire(){
+  document.querySelectorAll("[data-a]").forEach(r=>r.onclick=()=>{S.accountId=r.dataset.a;S.view="detail";render();});
+  const g=id=>document.getElementById(id);
+  g("back")&&(g("back").onclick=e=>{e.preventDefault();S.view="accounts";render();});
+  g("goNew")&&(g("goNew").onclick=()=>{S.view="new";render();});
+  document.querySelectorAll("[data-o]").forEach(r=>r.onclick=()=>{S.orderId=r.dataset.o;render();});
+  g("approve")&&(g("approve").onclick=()=>approve(S.orders.find(x=>x.id===S.orderId)));
+  g("reject")&&(g("reject").onclick=()=>{const o=S.orders.find(x=>x.id===S.orderId);o.status="rejected";log("order.rejected",o.id);render();});
+  // new order
+  document.querySelectorAll("[data-f]").forEach(el=>el.onchange=()=>{const k=el.dataset.f;nf[k]=el.type==="number"?+el.value:el.value;render();});
+  document.querySelectorAll("[data-dom]").forEach(el=>el.onchange=()=>{nf.domains=el.checked?[...nf.domains,el.dataset.dom]:nf.domains.filter(x=>x!==el.dataset.dom);render();});
+  g("submitNew")&&(g("submitNew").onclick=()=>{const o=createOrder(nfSpec(),"dashboard");S.orderId=o.id;S.view="orders";render();});
+}
+/* ---------- ADConfig agent (rule-based stand-in for the LLM front end) ---------- */
+function chat(){
+  $("#agentCtx").textContent="Account: "+acct().name;
+  const c=$("#chat"); c.innerHTML=S.chat.map(m=>`<div class="msg ${m.r==="u"?"u":"a"}">${esc(m.t)}${m.card||""}</div>`).join(""); c.scrollTop=c.scrollHeight;
+  $("#sugg").innerHTML=["add domain readygo-finance","add sandbox sbx-2 50gb","set spend limit 8000","status"].map(t=>`<button data-s="${t}">${t}</button>`).join("");
+  document.querySelectorAll("#sugg button").forEach(b=>b.onclick=()=>say(b.dataset.s));
+  document.querySelectorAll("[data-agent-submit]").forEach(b=>b.onclick=()=>{S.view="orders";const o=S.orders.find(x=>x.id===b.dataset.agentSubmit);S.orderId=o.id;render();});
+}
+function say(text){
+  S.chat.push({r:"u",t:text});
+  const a=acct(); const t=text.toLowerCase(); const st={domains:[],sandboxes:[],users:[],resources:null}; const notes=[];
+  t.split(/\s+and\s+|,|;/).forEach(p=>{
+    let m;
+    if(m=p.match(/add domain\s+(\S+)/)) st.domains.push({id:m[1],action:"add"});
+    else if(m=p.match(/(?:remove|drop) domain\s+(\S+)/)) st.domains.push({id:m[1],action:"remove"});
+    else if(m=p.match(/add sandbox\s+(\S+)(?:\s+(\d+)\s*gb)?/)) st.sandboxes.push({name:m[1],mode:"dedicated",quotaGb:+(m[2]||50),action:"add"});
+    else if(m=p.match(/(?:remove|drop) sandbox\s+(\S+)/)) st.sandboxes.push({name:m[1],action:"remove"});
+    else if(m=p.match(/(?:spend|budget).*?(\d[\d,]*)/)) (st.resources=st.resources||{}).spendLimitUsd=+m[1].replace(/,/g,"");
+    else if(m=p.match(/storage.*?(\d+)/)) (st.resources=st.resources||{}).storageGb=+m[1];
+    else if(m=p.match(/add user\s+(\S+@\S+)(?:\s+as\s+(adadm|aduser))?/)) st.users.push({email:m[1],role:m[2]||"aduser",action:"add"});
+  });
+  const any=st.domains.length||st.sandboxes.length||st.users.length||st.resources;
+  if(/status|summary|what/.test(t)&&!any){
+    const used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0);
+    S.chat.push({r:"a",t:`${a.name}: ${a.status}. ${a.domains.length} domain(s), ${a.sandboxes.length} sandbox(es) using ${used}/${a.resources.storageGb} GB, spend limit $${a.resources.spendLimitUsd}. Last run ${a.lastRun}. ${S.orders.filter(o=>o.status==="pending_approval").length} order(s) awaiting approval.`});
+  } else if(any){
+    const spec={type:"change",client:{id:a.id},domains:st.domains,sandboxes:st.sandboxes,users:st.users,resources:st.resources||undefined};
+    if(!spec.resources) delete spec.resources;
+    const o=createOrder(spec,"agent");
+    const lines=[...st.domains.map(d=>`${d.action==="add"?"+":"−"} domain ${d.id}`),...st.sandboxes.map(s=>`${s.action==="add"?"+":"−"} sandbox ${s.name}`),...st.users.map(u=>`+ user ${u.email}`),...(st.resources?["~ "+JSON.stringify(st.resources)]:[])].join("\n");
+    const ok=o.validation.ok;
+    S.chat.push({r:"a",t:ok?`I drafted ${o.id} for ${a.name} and it passed validation. It is awaiting approval.`:`I drafted ${o.id}, but validation failed:\n- ${o.validation.errors.join("\n- ")}`,
+      card:`<div class="mini"><pre style="background:none;color:inherit;padding:0;max-height:none;font-size:12px">${esc(lines)}</pre><div style="margin-top:6px"><button class="btn ghost" style="padding:4px 10px;font-size:12px" data-agent-submit="${o.id}">Review in Orders & Runs</button></div></div>`});
+  } else {
+    S.chat.push({r:"a",t:"I can draft changes for the selected account. Try:\n• add domain readygo-finance\n• remove domain gendf\n• add sandbox sbx-2 50gb\n• set spend limit 8000\n• add user x@y.com as adadm\n• status\nI chain requests with \"and\"."});
+  }
+  render();
+}
+$("#chatForm").onsubmit=e=>{e.preventDefault();const v=$("#chatIn").value.trim();if(v){$("#chatIn").value="";say(v);}};
+render();
+</script>
+</body>
+</html>

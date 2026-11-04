@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AD as a Service — flows</title>
+<style>
+:root{--bg:#f5f7fa;--surface:#fff;--line:#e4e8ee;--ink:#101828;--slate:#667085;--muted:#98a2b3;--navy:#0f1f3d;--blue:#2563eb;--blue-soft:#eaf0ff;--green:#15803d;--green-soft:#e7f6ec;--amber:#b45309;--amber-soft:#fff4e0;--red:#b91c1c;--red-soft:#fdecec;--r:10px;--sh:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.08);--sans:Inter,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+header{height:60px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 24px;gap:24px;position:sticky;top:0;z-index:5}
+.brand{font-weight:800;font-size:17px;color:var(--navy)}.brand span{font-weight:500;color:var(--slate);margin-left:7px;font-size:13px}
+.spacer{flex:1}
+header a.link{color:var(--slate);font-weight:500;padding:7px 12px;border-radius:8px}header a.link:hover{background:#f1f4f9;color:var(--navy);text-decoration:none}
+header a.cta{background:var(--navy);color:#fff;font-weight:600;padding:8px 14px;border-radius:8px}header a.cta:hover{background:#1a2f5a;text-decoration:none}
+.layout{display:grid;grid-template-columns:220px 1fr;max-width:1180px;margin:0 auto;gap:32px;padding:0 24px}
+aside{position:sticky;top:60px;align-self:start;padding:36px 0}
+aside a{display:block;color:var(--slate);padding:6px 10px;border-radius:8px;font-size:14px;font-weight:500}aside a:hover{background:#f1f4f9;color:var(--navy);text-decoration:none}
+main{padding:40px 0 100px}
+h1{font-size:34px;font-weight:800;color:var(--navy);margin:0 0 8px;letter-spacing:-.02em;line-height:1.15}
+h2{font-size:22px;font-weight:700;color:var(--navy);margin:44px 0 14px;letter-spacing:-.01em}
+h3{font-size:15px;font-weight:700;color:var(--slate);margin:28px 0 10px;text-transform:uppercase;letter-spacing:.06em}
+.lead{color:var(--slate);font-size:16px;margin:0 0 20px;max-width:720px}
+.where{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.where div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.where b{display:block;font-size:15px;color:var(--navy);margin-bottom:4px}.where small{color:var(--slate);display:block;line-height:1.5}
+.where .m{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 9px;border-radius:999px;margin-bottom:10px}
+.sales{background:var(--amber-soft);color:var(--amber)}.config{background:var(--blue-soft);color:var(--blue)}.ad{background:var(--green-soft);color:var(--green)}.portal{background:#f1f4f9;color:var(--slate)}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);padding:10px 14px;border-bottom:1px solid var(--line);font-weight:700}
+td{padding:11px 14px;border-bottom:1px solid #eef1f5;vertical-align:top}tr:last-child td{border-bottom:0}
+.flow{display:grid;grid-template-columns:56px 1fr auto;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px;margin-bottom:10px;box-shadow:var(--sh);align-items:start}
+.flow .id{font-weight:800;color:var(--navy);font-size:15px;padding-top:2px}
+.flow .t{font-weight:700;font-size:15.5px;color:var(--navy)}
+.flow .tags{display:inline-flex;gap:6px;margin-left:10px;vertical-align:middle}
+.flow .m{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+.flow p{margin:8px 0 0;color:var(--ink)}.flow ol{margin:8px 0 0;padding-left:20px;color:var(--ink)}.flow ol li{margin:4px 0}
+.flow .note{margin-top:8px;color:var(--slate);font-size:13.5px}
+.btn{display:inline-block;background:var(--surface);color:var(--navy);border:1px solid var(--line);padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap}.btn:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+.btn.off{color:var(--muted);pointer-events:none}
+.rules{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 22px;box-shadow:var(--sh)}.rules li{margin:8px 0}
+ol.dec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 22px 16px 40px;box-shadow:var(--sh)}ol.dec li{margin:8px 0}
+code{background:#f1f4f9;padding:1px 6px;border-radius:6px;font-size:12.5px}
+@media (max-width:900px){.layout{display:block}aside{display:none}.flow{grid-template-columns:48px 1fr}.flow>a,.flow>div:last-child:not(:nth-child(2)){grid-column:2}}
+@media print{header,aside,.btn{display:none}.layout{display:block}body{background:#fff}}
+</style>
+</head>
+<body>
+<header><div class="brand">AD<span>as a Service</span></div><span style="color:var(--slate);font-size:14px">Flows</span><span class="spacer"></span><a class="link" href="#" onclick="window.print();return false">Print</a><a class="cta" href="index.html#/">Open the prototype</a></header>
+<div class="layout">
+<aside>
+ <a href="#where">Where things live</a>
+ <a href="#vocab">Vocabulary</a>
+ <a href="#flows">Flows</a>
+ <a href="#rules">Rules</a>
+ <a href="#decisions">Decisions</a>
+</aside>
+<main>
+<h1>How people move through AD as a Service</h1>
+<p class="lead">Three agents, three places. <b>Salesy</b> talks to people who don't have an account yet. <b>Configgy</b> sets up and changes an account, and only admins can reach it. <b>ADy</b> does the actual data work for everyone in the account. Each flow below has a button that opens the prototype at that exact point.</p>
+
+<h2 id="where">Where things live</h2>
+<div class="where">
+ <div><span class="m sales">Sales</span><b>The site · Salesy</b><small>What you see before you have an account: what AD can do, how it works, why it's safe, and how to start. Salesy is the chat box on the home page. This is also where you register and set up your account.</small></div>
+ <div><span class="m portal">Portal</span><b>Sign in</b><small>One sign-in for everyone. Who you are decides what you see: an admin gets both the AD and Configure sections, a regular user gets AD only, Alida staff see every account and pick one to work in.</small></div>
+ <div><span class="m config">Configure</span><b>Configgy and the Configure pages</b><small>Admins only: Setup, Domains, Sandboxes, People, Approvals, Usage, Audit log. Do it yourself on the page, or ask Configgy in the assistant panel and approve what it drafts.</small></div>
+ <div><span class="m ad">AD</span><b>ADy</b><small>Where the work happens: Data, Produce, Explore, Generate, Work orders. You tell ADy what you need in the assistant panel and it runs the job. ADy cannot change your setup; if you ask for that, it passes the request to Configgy for an admin to approve.</small></div>
+</div>
+
+<h2 id="vocab">Four words to agree on</h2>
+<table>
+<tr><th style="width:150px">Word</th><th style="width:110px">Who uses it</th><th>What it means</th></tr>
+<tr><td><b>Sales Order</b></td><td>Salesy</td><td>What you agreed to when you signed up: which work solution, how much you're willing to spend, who your users are, where it runs. It is final once you pay.</td></tr>
+<tr><td><b>Config Order</b></td><td>Configgy</td><td>Any setup or change to an account, whoever asked for it: the sales order, an admin on the dashboard, an admin talking to Configgy, or a user asking ADy. An admin either does it directly or approves it.</td></tr>
+<tr><td><b>Job</b></td><td>Configgy</td><td>One script that runs as part of a config order: set up the environment, configure the service, start AD, verify.</td></tr>
+<tr><td><b>Work Order</b></td><td>ADy</td><td>A piece of data work: bring data in, produce, explore, generate. Never a setup change.</td></tr>
+</table>
+
+<h2 id="flows">The flows</h2>
+
+<h3>Arriving and signing in</h3>
+<div class="flow"><div class="id">1</div><div><span class="t">Someone arrives without an account</span><span class="tags"><span class="m sales">Sales</span></span><p>They land on the site. They can read what AD can do, how it works and why it's safe, or ask Salesy directly. Nothing else is open to them yet: there is no Configure and no AD until they have an account.</p></div><a class="btn" href="index.html#/demo/P1">Open</a></div>
+<div class="flow"><div class="id">2</div><div><span class="t">Someone signs in</span><span class="tags"><span class="m portal">Portal</span></span><p>Email and password. Then the system looks at who they are:</p><ol><li>An <b>admin</b> lands on the account overview with both AD and Configure in the menu.</li><li>A <b>user</b> lands on the same overview with AD only; Configure is not in their menu.</li><li><b>Alida staff</b> see the list of all accounts and pick one.</li><li>Someone who registered but never finished setting up is taken back to where they stopped.</li></ol><p>Once you have an account you never see the sales side again.</p></div><div><a class="btn" href="index.html#/demo/P2a">Admin</a> <a class="btn" href="index.html#/demo/P2b">User</a></div></div>
+<div class="flow"><div class="id">3</div><div><span class="t">Someone signs out</span><span class="tags"><span class="m portal">Portal</span></span><p>Back to the site's home page.</p></div><a class="btn" href="index.html#/demo/P4">Open</a></div>
+
+<h3>Getting an account · Salesy</h3>
+<div class="flow"><div class="id">4</div><div><span class="t">Reading about AD</span><span class="tags"><span class="m sales">Sales</span></span><p>Four pages: <b>See</b> what AD can do, <b>Learn</b> how it works, <b>Understand</b> why it's safe, <b>Partner</b> for the steps to get started.</p></div><a class="btn" href="index.html#/demo/S1">Open</a></div>
+<div class="flow"><div class="id">5</div><div><span class="t">Talking to Salesy</span><span class="tags"><span class="m sales">Sales</span></span><p>Salesy answers questions from the same knowledge the pages are built on. When someone says they want to start, Salesy takes them to registration. When they say they already have an account, it sends them to sign in.</p></div><a class="btn" href="index.html#/demo/S2">Open</a></div>
+<div class="flow"><div class="id">6</div><div><span class="t">Setting up an account</span><span class="tags"><span class="m sales">Sales</span></span><p>First they register: name, organisation, email, password. That makes them the account's admin. Then six short steps with Salesy alongside:</p><ol><li>Pick a work solution.</li><li>Confirm the organisation and admin.</li><li>Set a monthly spending limit.</li><li>List the people who will use AD, and say which of them are admins.</li><li>Choose where it runs: region, single or multi-tenant, self or fully managed, storage.</li><li>Review the sales order, confirm, pay.</li></ol><p>They can leave at any step and pick it up again next time they sign in.</p></div><a class="btn" href="index.html#/demo/S3">Open</a></div>
+<div class="flow"><div class="id">7</div><div><span class="t">Salesy hands over to Configgy</span><span class="tags"><span class="m sales">Sales</span><span class="m config">Configure</span></span><p>The moment payment goes through, the sales order becomes a config order and Configgy takes it from there. The setup steps at the top move from “Set up” to “Environment”.</p></div><a class="btn" href="index.html#/demo/C1">Open</a></div>
+
+<h3>Setting up and changing an account · Configgy</h3>
+<div class="flow"><div class="id">8</div><div><span class="t">The environment gets built</span><span class="tags"><span class="m config">Configure</span></span><p>Nobody has to do anything here; the new admin just watches it happen:</p><ol><li>The sales order is checked.</li><li>The Azure environment is set up.</li><li>The service is configured: domains, the first sandbox, the people.</li><li>AD is started and verified.</li></ol><p>When it's done, the admin opens the account and lands on the overview, with a short getting-started list: environment provisioned, invite your team, run your first job.</p></div><a class="btn" href="index.html#/demo/C1">Open</a></div>
+<div class="flow"><div class="id">9</div><div><span class="t">An admin changes something by hand</span><span class="tags"><span class="m config">Configure</span></span><p>Go to the right Configure page (Domains, Sandboxes, People, Setup), make the change, press Add or Save. It is checked and applied right away, and written to the audit log as a config order.</p><p>This is the safety net. If Configgy got something nearly right, the admin fixes the last bit here instead of asking the agent again. Nobody ever goes into the Azure portal.</p></div><a class="btn" href="index.html#/demo/C3">Open</a></div>
+<div class="flow"><div class="id">10</div><div><span class="t">An admin asks Configgy to change something</span><span class="tags"><span class="m config">Configure</span></span><p>"Add the finance domain and a 50 GB sandbox." Configgy writes it up as a config order, checks it, and puts it under Approvals. The admin reads the change, approves it, and the jobs run. Configgy never approves its own work and never touches Azure itself.</p></div><a class="btn" href="index.html#/demo/C4">Open</a></div>
+<div class="flow"><div class="id">11</div><div><span class="t">Fixing what Configgy got wrong</span><span class="tags"><span class="m config">Configure</span></span><p>Open the pending order, press Edit, drop the change that's wrong or correct a number, then approve. Or reject it and ask again.</p></div><a class="btn" href="index.html#/demo/C5">Open</a></div>
+<div class="flow"><div class="id">12</div><div><span class="t">Managing people</span><span class="tags"><span class="m config">Configure</span></span><p>Invite someone as a user or an admin, change their role, or remove them. There always has to be at least one admin. New people can sign in as soon as they are added.</p></div><a class="btn" href="index.html#/demo/C6">Open</a></div>
+<div class="flow"><div class="id">13</div><div><span class="t">Approving or rejecting changes</span><span class="tags"><span class="m config">Configure</span></span><p>Every change that wasn't made by hand waits under Approvals, with a count in the menu and the top bar. Approve it and the jobs run; reject it and it's closed. Everything is in the audit log with who did what.</p></div><a class="btn" href="index.html#/demo/C8">Open</a></div>
+<div class="flow"><div class="id">14</div><div><span class="t">Watching spend</span><span class="tags"><span class="m config">Configure</span></span><p>Spend against the limit, storage against what was allocated, compute hours. A warning appears as the limit gets close.</p></div><a class="btn" href="index.html#/demo/C9">Open</a></div>
+<div class="flow"><div class="id">15</div><div><span class="t">Looking at the history</span><span class="tags"><span class="m config">Configure</span></span><p>The audit log: sales orders, config orders, approvals, jobs, work orders, sign-ins. Nothing can be edited or removed.</p></div><a class="btn" href="index.html#/demo/C13">Open</a></div>
+
+<h3>Doing the work · ADy</h3>
+<div class="flow"><div class="id">16</div><div><span class="t">Arriving in AD</span><span class="tags"><span class="m ad">AD</span></span><p>The account overview, with Data, Produce, Explore, Generate and Work orders in the menu. ADy sits in the assistant panel on the right.</p></div><a class="btn" href="index.html#/demo/A1">Open</a></div>
+<div class="flow"><div class="id">17</div><div><span class="t">Asking ADy for work</span><span class="tags"><span class="m ad">AD</span></span><p>"Produce a data foundation from the retail datasets." ADy turns it into a work order, sends it to the right coordinator, and reports the result back in the panel and on the matching page. If the account's work solution doesn't include that kind of work, ADy says so.</p></div><a class="btn" href="index.html#/demo/A2">Open</a></div>
+<div class="flow"><div class="id">18</div><div><span class="t">Asking ADy for a setup change</span><span class="tags"><span class="m ad">AD</span><span class="m config">Configure</span></span><p>"Add the healthcare domain." ADy can't do that. It raises a config order with Configgy and tells the person which admins were notified. If the person is an admin, they can approve it under Approvals themselves.</p></div><a class="btn" href="index.html#/demo/C7">Open</a></div>
+
+<h3>Alida staff</h3>
+<div class="flow"><div class="id">19</div><div><span class="t">Staff set up a client</span><span class="tags"><span class="m portal">Staff</span></span><p>Staff sign in, choose “Set up a client account”, and go through the same six steps a client would, without Salesy and without payment. They enter the client admin's name and email. On confirm the environment is built, and the client admin can sign in.</p></div><a class="btn" href="index.html#/demo/L1">Open</a></div>
+<div class="flow"><div class="id">20</div><div><span class="t">Staff see every account</span><span class="tags"><span class="m portal">Staff</span></span><p>One list: solution, environment, people, spend, status. Also anyone who registered but hasn't finished setting up.</p></div><a class="btn" href="index.html#/demo/L2">Open</a></div>
+<div class="flow"><div class="id">21</div><div><span class="t">Staff act for a client</span><span class="tags"><span class="m portal">Staff</span></span><p>Pick an account from the top bar and use it exactly as its admin would. The audit log records that it was staff.</p></div><a class="btn" href="index.html#/demo/L3">Open</a></div>
+
+<h3>Not designed yet</h3>
+<div class="flow"><div class="id">—</div><div><span class="t">Models, recovery, closing an account</span><span class="tags"><span class="m config">Configure</span></span><p>Where a generated model goes (into an existing domain or a new one) and how a library of domains is managed. Backup, restore and failover to another region. Suspending or closing an account. All deliberately left open.</p></div><a class="btn off" href="#">—</a></div>
+
+<h2 id="rules">The rules behind it</h2>
+<div class="rules"><ul>
+<li>Sales hands over to Configure <b>once</b>, when the account is paid for. After that nobody goes back to Sales.</li>
+<li>Admins move freely between Configure and AD. Users only have AD, and can only <b>ask</b> for setup changes.</li>
+<li>The agents stay in their lane. Salesy can't configure anything. Configgy can't do data work and can't approve its own orders. ADy can't change the setup.</li>
+<li>Every setup change is a config order, no matter who asked. One way to apply, one audit log.</li>
+<li>The dashboard is always there as the manual way. The agent is a convenience, not the only path.</li>
+</ul></div>
+
+<h2 id="decisions">What we need to decide</h2>
+<ol class="dec">
+<li>Are these the four words: Sales Order, Config Order, Job, Work Order?</li>
+<li>Which changes can an admin apply directly on the dashboard, and which must be reviewed first? Proposal: anything done by hand applies at once; anything an agent drafts waits for approval.</li>
+<li>Do clients set up their account through the steps, through Salesy, or both? Proposal: both, with the steps as the visible path and Salesy helping fill them in.</li>
+<li>When a user asks ADy for a setup change, should ADy raise the request itself, or tell them to go to their admin?</li>
+<li>Models, recovery and closing accounts: define the smallest version now, or leave them open?</li>
+<li>Which of the flows above do we build first?</li>
+</ol>
+</main>
+</div>
+</body>
+</html>

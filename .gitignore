@@ -1,0 +1,13 @@
+.git
+backend/runs/
+backend/__pycache__/
+__pycache__/
+*.pyc
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.plan.json
+.env
+.env.*
+crash.log
