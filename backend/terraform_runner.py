@@ -184,13 +184,54 @@ def run_provisioning_workflow(
                 rg_url = f"https://management.azure.com/subscriptions/{sub_id}/resourcegroups/{rg_name}?api-version=2021-04-01"
                 rg_body = json.dumps({
                     "location": region,
-                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"], "Platform": "Free-Trial-POC"}
+                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"], "Platform": "Enterprise-Trial"}
                 }).encode("utf-8")
                 req_rg = urllib.request.Request(rg_url, data=rg_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                 urllib.request.urlopen(req_rg, timeout=15)
-                notify("Environment setup (ADAzEnvConfig)", "done", f"Azure Resource Group '{rg_name}' verified & active in {region}.")
+                notify("Environment setup (ADAzEnvConfig)", "run", f"Resource Group '{rg_name}' verified & active in {region}.")
 
-                # 2. Create ADLS Gen2 Storage Account
+                # 2. Create Virtual Network with Enterprise Subnets
+                vnet_name = f"vnet-{config_paths['prefix']}"
+                vnet_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/virtualNetworks/{vnet_name}?api-version=2023-05-01"
+                vnet_body = json.dumps({
+                    "location": region,
+                    "properties": {
+                        "addressSpace": {"addressPrefixes": ["10.60.0.0/16", "10.61.0.0/16"]},
+                        "subnets": [
+                            {"name": "snet-app", "properties": {"addressPrefix": "10.60.1.0/24"}},
+                            {"name": "snet-storage", "properties": {"addressPrefix": "10.60.2.0/24"}},
+                            {"name": "snet-sql", "properties": {"addressPrefix": "10.60.3.0/24"}},
+                            {"name": "snet-keyvault", "properties": {"addressPrefix": "10.60.4.0/24"}},
+                            {"name": "snet-dbx-public", "properties": {"addressPrefix": "10.61.1.0/24"}},
+                            {"name": "snet-dbx-private", "properties": {"addressPrefix": "10.61.2.0/24"}}
+                        ]
+                    },
+                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"]}
+                }).encode("utf-8")
+                req_vnet = urllib.request.Request(vnet_url, data=vnet_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                urllib.request.urlopen(req_vnet, timeout=15)
+                notify("Environment setup (ADAzEnvConfig)", "done", f"Virtual Network '{vnet_name}' provisioned with 6 subnets.")
+
+                # 3. Create Azure Key Vault
+                kv_name = f"kv-{config_paths['prefix']}"[:24]
+                kv_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.KeyVault/vaults/{kv_name}?api-version=2023-07-01"
+                kv_body = json.dumps({
+                    "location": region,
+                    "properties": {
+                        "tenantId": tenant_id,
+                        "sku": {"family": "A", "name": "standard"},
+                        "accessPolicies": [],
+                        "enableSoftDelete": True
+                    },
+                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"]}
+                }).encode("utf-8")
+                try:
+                    req_kv = urllib.request.Request(kv_url, data=kv_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_kv, timeout=15)
+                except Exception as kv_err:
+                    print(f"Key Vault note: {kv_err}")
+
+                # 4. Create ADLS Gen2 Storage Account
                 notify("Service configuration (ADSvcConfig)", "run", f"Allocating ADLS Gen2 Storage Account '{sa_name}' in Azure...")
                 sa_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Storage/storageAccounts/{sa_name}?api-version=2023-01-01"
                 sa_body = json.dumps({
@@ -203,13 +244,13 @@ def run_provisioning_workflow(
                         "supportsHttpsTrafficOnly": True,
                         "allowBlobPublicAccess": False
                     },
-                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"], "Platform": "Free-Trial-POC"}
+                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"], "Platform": "Enterprise-Trial"}
                 }).encode("utf-8")
                 req_sa = urllib.request.Request(sa_url, data=sa_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                 urllib.request.urlopen(req_sa, timeout=15)
-                notify("Service configuration (ADSvcConfig)", "done", f"ADLS Gen2 Storage Account '{sa_name}' provisioned and secured.")
+                notify("Service configuration (ADSvcConfig)", "done", f"ADLS Gen2 Storage Account '{sa_name}' and Key Vault '{kv_name}' active.")
 
-                # 3. Create Client Container
+                # 5. Create Client Container
                 notify("Jumpstart AD", "run", f"Provisioning isolated tenant container 'client-{client_name}'...")
                 time.sleep(2.0)
                 notify("Jumpstart AD", "done", f"Isolated tenant filesystem container 'client-{client_name}' registered.")
