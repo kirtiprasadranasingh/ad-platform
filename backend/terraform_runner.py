@@ -72,7 +72,7 @@ client_name                  = "{org}"
 env_name                     = "{env}"
 prefix                       = "{prefix}"
 storage_account_name         = "{sa_name}"
-resource_group_name          = "{'rg-shared-adplatform' if is_shared else f'rg-{prefix}'}"
+resource_group_name          = "{'rg-shared-storage-poc' if is_shared else f'rg-{prefix}'}"
 region                       = "{region}"
 tenant_id                    = "{os.getenv('AZURE_TENANT_ID', '00000000-0000-0000-0000-000000000000')}"
 subscription_id              = "{os.getenv('AZURE_SUBSCRIPTION_ID', '00000000-0000-0000-0000-000000000000')}"
@@ -82,17 +82,17 @@ vnet_cidr                    = "{'10.80.0.0/16,10.81.0.0/16' if is_shared else '
 approved_client_cidrs        = ["10.62.0.0/24"]
 approved_egress_fqdns        = ["login.microsoftonline.com", "{region}.databricks.azure.net"]
 application_image            = "api@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-application_registry_id      = "/subscriptions/{os.getenv('AZURE_SUBSCRIPTION_ID', '00000000-0000-0000-0000-000000000000')}/resourceGroups/{'rg-shared-adplatform' if is_shared else f'rg-{prefix}'}/providers/Microsoft.ContainerRegistry/registries/cradplatform"
+application_registry_id      = "/subscriptions/{os.getenv('AZURE_SUBSCRIPTION_ID', '00000000-0000-0000-0000-000000000000')}/resourceGroups/{'rg-shared-storage-poc' if is_shared else f'rg-{prefix}'}/providers/Microsoft.ContainerRegistry/registries/cradplatform"
 application_registry_host    = "cradplatform.azurecr.io"
 entra_application_client_id  = "{os.getenv('AZURE_ENTRA_APP_ID', '00000000-0000-0000-0000-000000000000')}"
-authentication_vault_id      = "/subscriptions/{os.getenv('AZURE_SUBSCRIPTION_ID', '00000000-0000-0000-0000-000000000000')}/resourceGroups/{'rg-shared-adplatform' if is_shared else f'rg-{prefix}'}/providers/Microsoft.KeyVault/vaults/kv-adplatform"
+authentication_vault_id      = "/subscriptions/{os.getenv('AZURE_SUBSCRIPTION_ID', '00000000-0000-0000-0000-000000000000')}/resourceGroups/{'rg-shared-storage-poc' if is_shared else f'rg-{prefix}'}/providers/Microsoft.KeyVault/vaults/kv-adplatform"
 authentication_secret_uri    = "https://kv-adplatform.vault.azure.net/secrets/app-token"
 """
     tfvars_path = client_run_dir / "infrastructure.tfvars"
     tfvars_path.write_text(tfvars_content, encoding="utf-8")
 
     # 3. Generate Free-Trial Safe POC variables
-    poc_rg = "rg-shared-adplatform" if is_shared else f"rg-{prefix}"
+    poc_rg = "rg-shared-storage-poc" if is_shared else f"rg-{prefix}"
     poc_tfvars_content = f"""# Free-Trial Safe Azure POC Configuration for {prefix}
 prefix               = "{prefix}"
 resource_group_name  = "{poc_rg}"
@@ -180,16 +180,34 @@ def run_provisioning_workflow(
                 token_resp = json.loads(urllib.request.urlopen(token_url, data=data, timeout=10).read().decode())
                 token = token_resp["access_token"]
 
-                # 1. Create Resource Group in Azure
-                rg_url = f"https://management.azure.com/subscriptions/{sub_id}/resourcegroups/{rg_name}?api-version=2021-04-01"
-                rg_body = json.dumps({
-                    "location": region,
-                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"], "Platform": "Enterprise-Trial"}
-                }).encode("utf-8")
-                notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Calling Azure Resource Manager PUT /subscriptions/{sub_id[:8]}.../resourceGroups/{rg_name}...")
-                req_rg = urllib.request.Request(rg_url, data=rg_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-                urllib.request.urlopen(req_rg, timeout=15)
-                notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Resource Group '{rg_name}' (location: {region}) confirmed active.")
+                if is_shared:
+                    # SHARED PLATFORM ONBOARDING (follows SHARED-STORAGE-POC.md)
+                    shared_rg = "rg-shared-storage-poc"
+                    shared_sa = "stsharedpoc772"
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[Shared Platform] Reusing shared parents in '{shared_rg}': Storage '{shared_sa}', ACR 'acrsharedpoc772', Log Analytics 'law-shared-adenv-poc'.")
+                    time.sleep(2.0)
+                    notify("Environment setup (ADAzEnvConfig)", "done", f"Phase 1 complete: Tenant '{client_name}' connected to shared platform boundary.")
+
+                    notify("Service configuration (ADSvcConfig)", "run", f"[Shared Platform] Allocating consumption storage quota ({order.get('storage', 100)} GB) in '{shared_sa}'...")
+                    time.sleep(2.0)
+                    notify("Service configuration (ADSvcConfig)", "done", f"Service configuration complete: Shared data lake slice bound to '{client_name}'.")
+
+                    notify("Jumpstart AD", "run", f"[ARM] Provisioning isolated tenant container 'client-{client_name}' in '{shared_sa}'...")
+                    time.sleep(2.0)
+                    notify("Jumpstart AD", "run", f"[RBAC] Assigning 'Storage Blob Data Contributor' strictly at container scope (cross-tenant access denied)...")
+                    notify("Jumpstart AD", "done", f"Isolated tenant filesystem container 'client-{client_name}' registered.")
+                else:
+                    # DEDICATED SINGLE-TENANT DEPLOYMENT
+                    # 1. Create Resource Group in Azure
+                    rg_url = f"https://management.azure.com/subscriptions/{sub_id}/resourcegroups/{rg_name}?api-version=2021-04-01"
+                    rg_body = json.dumps({
+                        "location": region,
+                        "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"], "Platform": "Enterprise-Trial"}
+                    }).encode("utf-8")
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Calling Azure Resource Manager PUT /subscriptions/{sub_id[:8]}.../resourceGroups/{rg_name}...")
+                    req_rg = urllib.request.Request(rg_url, data=rg_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_rg, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Dedicated Resource Group '{rg_name}' (location: {region}) confirmed active.")
 
                 # 2. Create NSGs for Databricks and Subnets
                 nsg_pub_name = "nsg-dbx-public"

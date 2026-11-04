@@ -49,7 +49,7 @@ def test_tfvars_generation():
     sh_paths = generate_tfvars(shared_order)
     assert sh_paths["is_shared"] is True, "Shared should be flagged as shared"
     sh_tfvars = sh_paths["tfvars"].read_text(encoding="utf-8")
-    assert 'resource_group_name          = "rg-shared-adplatform"' in sh_tfvars
+    assert 'resource_group_name          = "rg-shared-storage-poc"' in sh_tfvars
     assert '10.80.0.0/16' in sh_tfvars
     print("      PASS: Dedicated and Shared configurations correctly generated.")
 
