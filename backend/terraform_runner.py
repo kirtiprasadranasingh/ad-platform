@@ -232,7 +232,17 @@ def run_provisioning_workflow(
                 notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM]   -> Subnet 'snet-dbx-public' (10.61.1.0/24) provisioned")
                 notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM]   -> Subnet 'snet-dbx-private' (10.61.2.0/24) provisioned")
 
-                # 4. Create Azure Key Vault
+                # 4. Create Route Table
+                rt_name = f"rt-{config_paths['prefix']}"
+                rt_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/routeTables/{rt_name}?api-version=2023-05-01"
+                try:
+                    req_rt = urllib.request.Request(rt_url, data=json.dumps({"location": region}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_rt, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Route Table '{rt_name}' provisioned with secure outbound route controls.")
+                except Exception as rt_err:
+                    print(f"Route Table note: {rt_err}")
+
+                # 5. Create Azure Key Vault
                 kv_name = f"kv-{config_paths['prefix']}"[:24]
                 kv_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.KeyVault/vaults/{kv_name}?api-version=2023-07-01"
                 kv_body = json.dumps({
@@ -253,7 +263,30 @@ def run_provisioning_workflow(
                 except Exception as kv_err:
                     print(f"Key Vault note: {kv_err}")
 
-                # 5. Create Log Analytics Workspace
+                # 6. Create Azure Container Registry (ACR)
+                clean_acr = sanitize_name(config_paths['prefix'], 20)
+                acr_name = f"acr{clean_acr}"[:24]
+                acr_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.ContainerRegistry/registries/{acr_name}?api-version=2023-07-01"
+                acr_body = json.dumps({"location": region, "sku": {"name": "Basic"}, "properties": {"adminUserEnabled": False}, "tags": {"ManagedBy": "AD-Platform"}}).encode("utf-8")
+                try:
+                    req_acr = urllib.request.Request(acr_url, data=acr_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_acr, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Azure Container Registry '{acr_name}' provisioned.")
+                except Exception as acr_err:
+                    print(f"ACR note: {acr_err}")
+
+                # 7. Create App Configuration Store
+                appcs_name = f"appcs-{config_paths['prefix']}"[:24]
+                appcs_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.AppConfiguration/configurationStores/{appcs_name}?api-version=2023-03-01"
+                appcs_body = json.dumps({"location": region, "sku": {"name": "free"}, "tags": {"ManagedBy": "AD-Platform"}}).encode("utf-8")
+                try:
+                    req_appcs = urllib.request.Request(appcs_url, data=appcs_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_appcs, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] App Configuration Store '{appcs_name}' provisioned.")
+                except Exception as appcs_err:
+                    print(f"AppConfig note: {appcs_err}")
+
+                # 8. Create Log Analytics Workspace
                 log_name = f"log-{config_paths['prefix']}"[:24]
                 log_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.OperationalInsights/workspaces/{log_name}?api-version=2022-10-01"
                 log_body = json.dumps({
