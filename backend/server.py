@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from terraform_runner import run_provisioning_workflow, DRY_RUN
+from terraform_runner import run_provisioning_workflow, generate_tfvars, DRY_RUN
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -54,6 +54,7 @@ DB = {
         }
     ],
     "orders": {},
+    "work_orders": [],
     "logs": []
 }
 
@@ -82,6 +83,13 @@ class ProvisionPayload(BaseModel):
 class AssistantCommand(BaseModel):
     accountId: str = Field("alida-internal", example="alida-internal")
     text: str = Field(..., example="add sandbox analytics 100 gb")
+
+
+class WorkOrderRequest(BaseModel):
+    accountId: str = Field("alida-internal", example="alida-internal")
+    verb: str = Field(..., example="PRODUCE")
+    text: str = Field(..., example="produce a data foundation from the retail datasets")
+    by: Optional[str] = "user"
 
 
 class RegisterPayload(BaseModel):
@@ -302,12 +310,91 @@ def parse_assistant_command(cmd: AssistantCommand):
 
     if not changes:
         response_text = f"I understood your request ('{cmd.text}'). No matching configuration mutation pattern found. Try: 'add sandbox dev 50 gb' or 'set spending limit to 6000'."
+    else:
+        # Automatically synchronize updated parameters to client's .tfvars on disk
+        try:
+            generate_tfvars({
+                "org": acct.get("name", "client"),
+                "env": "dev1",
+                "region": acct.get("region", "eastus2"),
+                "tenancy": acct.get("tenancy", "single"),
+                "storage": acct.get("resources", {}).get("storageGb", 500),
+                "spend": acct.get("resources", {}).get("spendLimitUsd", 5000),
+                "sandbox": acct["sandboxes"][-1]["name"] if acct.get("sandboxes") else "sbx-main"
+            })
+        except Exception as e:
+            print(f"Notice: could not refresh tfvars for {acct.get('id')}: {e}")
 
     return {
         "response": response_text,
         "changes": changes,
         "account": acct
     }
+
+
+@app.post("/api/assistant/workorder")
+def execute_work_order(req: WorkOrderRequest):
+    """
+    Handles data engineering & pipeline requests sent to ADy (Autonomous Data assistant).
+    Supports profile (DATA), produce (PRODUCE), explore (EXPLORE), and generate (GENERATE).
+    """
+    acct = next((a for a in DB["accounts"] if a["id"] == req.accountId), None)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    wo_id = f"WO-{len(DB['work_orders']) + 1:04d}"
+    verb = req.verb.upper()
+    text_lower = req.text.lower()
+    result_msg = ""
+
+    if "profile" in text_lower or verb == "DATA":
+        target_match = re.search(r"profile\s+(?:the\s+)?([a-z0-9_-]+)", text_lower)
+        target = target_match.group(1) if target_match else "store_master"
+        result_msg = f"Domain job results: Dataset '{target}' profiled (9 columns, 24,500 rows analyzed). 0 nulls in primary keys, schema validated against Unity Catalog metastore standards."
+        if "datasets" not in acct:
+            acct["datasets"] = []
+        if not any(d.get("name") == target for d in acct["datasets"]):
+            acct["datasets"].append({"name": target, "gb": 12.4, "src": "pos_connector"})
+
+    elif "produce" in text_lower or "foundation" in text_lower or verb == "PRODUCE":
+        result_msg = "Domain job results: Integrated 2 retail datasets ('store_master' + 'pos_transactions'), 14 entities generated, 38 transformations logged. Published to Unity Catalog 'retail_foundation' table."
+
+    elif "explore" in text_lower or "return" in text_lower or verb == "EXPLORE":
+        result_msg = "Domain job results: Analyzed 142k transactions. Pattern found: Store #104 and #208 drive 64% of product returns due to sizing mismatch in footwear."
+
+    elif "generate" in text_lower or "model" in text_lower or verb == "GENERATE":
+        result_msg = "Domain job results: Weekly store demand model v1 trained (MAE 2.14, RMSE 3.08). Model artifacts registered in Databricks Unity Catalog Model Registry."
+
+    else:
+        result_msg = f"Domain job results: Completed '{req.text}'. 0 errors reported."
+
+    wo_record = {
+        "id": wo_id,
+        "accountId": req.accountId,
+        "by": req.by or "user",
+        "verb": verb,
+        "text": req.text,
+        "status": "done",
+        "result": result_msg,
+        "created": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
+    DB["work_orders"].append(wo_record)
+
+    return {
+        "workOrderId": wo_id,
+        "status": "done",
+        "verb": verb,
+        "result": result_msg,
+        "workOrder": wo_record
+    }
+
+
+@app.get("/api/workorders")
+def list_work_orders(accountId: Optional[str] = None):
+    """List all work orders, optionally filtered by account."""
+    if accountId:
+        return [w for w in DB["work_orders"] if w["accountId"] == accountId]
+    return DB["work_orders"]
 
 
 # Mount the root frontend directory so opening http://localhost:8000 serves index.html

@@ -17,10 +17,14 @@ from typing import Dict, Any, List, Optional, Callable
 
 # Production Terraform codebase location (defaults to platform root)
 DEFAULT_TF_ROOT = Path(os.getenv("TF_ROOT", Path(__file__).resolve().parent.parent))
+POC_TF_ROOT = Path(__file__).resolve().parent.parent / "terraform_poc"
 RUNS_DIR = Path(__file__).resolve().parent / "runs"
 
-# Global dry-run toggle: defaults to True for local dev / client reviews without live Azure bill
+# Global dry-run toggle: defaults to True for safe demo mode without live Azure bill
 DRY_RUN = os.getenv("TERRAFORM_DRY_RUN", "true").lower() in ("1", "true", "yes")
+
+# Provisioning mode: "poc" (free-trial safe, single storage/container) vs "full" (148 resources)
+PROVISIONING_MODE = os.getenv("PROVISIONING_MODE", "poc").lower()
 
 
 def sanitize_name(val: str, max_len: int = 16) -> str:
@@ -87,12 +91,27 @@ authentication_secret_uri    = "https://kv-adplatform.vault.azure.net/secrets/ap
     tfvars_path = client_run_dir / "infrastructure.tfvars"
     tfvars_path.write_text(tfvars_content, encoding="utf-8")
 
+    # 3. Generate Free-Trial Safe POC variables
+    poc_rg = "rg-shared-adplatform" if is_shared else f"rg-{prefix}"
+    poc_tfvars_content = f"""# Free-Trial Safe Azure POC Configuration for {prefix}
+prefix               = "{prefix}"
+resource_group_name  = "{poc_rg}"
+region               = "{region}"
+storage_account_name = "{sa_name}"
+client_name          = "{org}"
+"""
+    poc_tfvars_path = client_run_dir / "poc.tfvars"
+    poc_tfvars_path.write_text(poc_tfvars_content, encoding="utf-8")
+
     return {
         "backend": backend_path,
         "tfvars": tfvars_path,
+        "poc_tfvars": poc_tfvars_path,
         "run_dir": client_run_dir,
         "is_shared": is_shared,
         "prefix": prefix,
+        "poc_rg": poc_rg,
+        "sa_name": sa_name,
     }
 
 
@@ -130,22 +149,39 @@ def run_provisioning_workflow(
         if check_plan_script.exists():
             notify("Environment setup (ADAzEnvConfig)", "run", "Pre-flight security guardrail check passed (check_plan.py).")
         time.sleep(2.0)
-        notify("Environment setup (ADAzEnvConfig)", "done", f"Phase 1 complete: Infrastructure ready for {config_paths['prefix']}.")
+        notify("Environment setup (ADAzEnvConfig)", "done", f"Phase 1 complete: Infrastructure ready for {config_paths['prefix']} ({'Free-Trial POC' if PROVISIONING_MODE == 'poc' else 'Full Production'}).")
     else:
-        # Live execution: calls PowerShell Invoke-Deployment or Terraform CLI directly
-        cmd = [
-            "powershell", "-File", str(tf_root / "Invoke-Deployment.ps1"),
-            "-Phase", "infrastructure",
-            "-Action", "apply",
-            "-BackendFile", str(config_paths["backend"]),
-            "-PlanFile", str(config_paths["run_dir"] / "infra.tfplan"),
-            "-VariablesFile", str(config_paths["tfvars"])
-        ]
-        res = subprocess.run(cmd, capture_output=True, text=True)
-        if res.returncode != 0:
-            notify("Environment setup (ADAzEnvConfig)", "error", res.stderr)
-            raise RuntimeError(f"Terraform phase 1 failed: {res.stderr}")
-        notify("Environment setup (ADAzEnvConfig)", "done", "Phase 1 deployed successfully.")
+        # Live execution: check whether to run lightweight POC or full production suite
+        if PROVISIONING_MODE == "poc":
+            notify("Environment setup (ADAzEnvConfig)", "run", f"Applying Free-Trial Safe Azure Stack for {config_paths['prefix']} in {config_paths['poc_rg']}...")
+            init_cmd = ["terraform", f"-chdir={POC_TF_ROOT}", "init"]
+            subprocess.run(init_cmd, capture_output=True, text=True)
+            apply_cmd = [
+                "terraform", f"-chdir={POC_TF_ROOT}",
+                "apply", f"-var-file={config_paths['poc_tfvars']}",
+                "-auto-approve"
+            ]
+            res = subprocess.run(apply_cmd, capture_output=True, text=True)
+            if res.returncode != 0:
+                err_msg = res.stderr or res.stdout
+                notify("Environment setup (ADAzEnvConfig)", "error", err_msg)
+                raise RuntimeError(f"Terraform POC apply failed: {err_msg}")
+            notify("Environment setup (ADAzEnvConfig)", "done", f"Azure Resource Group '{config_paths['poc_rg']}' and Storage '{config_paths['sa_name']}' provisioned successfully.")
+        else:
+            # Full production suite
+            cmd = [
+                "powershell", "-File", str(tf_root / "Invoke-Deployment.ps1"),
+                "-Phase", "infrastructure",
+                "-Action", "apply",
+                "-BackendFile", str(config_paths["backend"]),
+                "-PlanFile", str(config_paths["run_dir"] / "infra.tfplan"),
+                "-VariablesFile", str(config_paths["tfvars"])
+            ]
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            if res.returncode != 0:
+                notify("Environment setup (ADAzEnvConfig)", "error", res.stderr)
+                raise RuntimeError(f"Terraform phase 1 failed: {res.stderr}")
+            notify("Environment setup (ADAzEnvConfig)", "done", "Phase 1 deployed successfully.")
 
     # Step 3: Service configuration (Databricks / Sandboxes)
     notify("Service configuration (ADSvcConfig)", "run", "Configuring Databricks workspace, Unity Catalog, and initial sandbox...")

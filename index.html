@@ -500,10 +500,29 @@ function adySay(text){
   if(!sol.verbs.includes(verb)){ c.push({r:"a",t:`${verb} is not part of your work solution (${sol.name}). An admin can change the solution in Configure.`}); save(); return; }
   const w={id:nid("wo"),accountId:a.id,by:me().email,verb,text,status:"queued",result:""}; S.works.unshift(w); log("work-order.created ("+verb+")",w.id);
   c.push({r:"a",t:`Work order ${w.id} (${verb}) sent to the ${verb.toLowerCase()} coordinator. I'll report the results here.`}); save(); if((R.parts[0]||"")==="app") nav("/app/"+verb.toLowerCase());
-  setTimeout(()=>{ w.status="done";
-    w.result={DATA:"Domain job results: dataset profiled, 9 columns, 2 quality issues flagged, metadata registered.",PRODUCE:"Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged, audit metadata written.",EXPLORE:"Domain job results: 3 patterns found; returns concentrate in 4 stores; report attached.",GENERATE:"Domain job results: model generated with 2 metrics. Adding it to the domain library is a configuration step for your admin."}[verb];
-    if(verb==="DATA") a.datasets.push({name:"dataset_"+(++S.seq.ds),gb:+(Math.random()*20).toFixed(1),src:"import"});
-    log("work-order.done",w.id,"coordinator"); c.push({r:"a",t:`${w.id}: ${w.result}`}); save(); render(); },1800);
+  if(window.fetch){
+    fetch('/api/assistant/workorder',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({accountId: a.id, verb: verb, text: text, by: me().email})
+    }).then(r=>r.json()).then(d=>{
+      w.status="done";
+      w.result=d.result || "Domain job completed successfully.";
+      if(verb==="DATA") a.datasets.push({name:"dataset_"+(++S.seq.ds),gb:+(Math.random()*20).toFixed(1),src:"import"});
+      log("work-order.done",w.id,"coordinator"); c.push({r:"a",t:`${w.id}: ${w.result}`}); save(); render();
+    }).catch(err=>{
+      console.log("ADy backend offline fallback:", err);
+      setTimeout(()=>{ w.status="done";
+        w.result={DATA:"Domain job results: dataset profiled, 9 columns, 2 quality issues flagged, metadata registered.",PRODUCE:"Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged, audit metadata written.",EXPLORE:"Domain job results: 3 patterns found; returns concentrate in 4 stores; report attached.",GENERATE:"Domain job results: model generated with 2 metrics. Adding it to the domain library is a configuration step for your admin."}[verb];
+        if(verb==="DATA") a.datasets.push({name:"dataset_"+(++S.seq.ds),gb:+(Math.random()*20).toFixed(1),src:"import"});
+        log("work-order.done",w.id,"coordinator"); c.push({r:"a",t:`${w.id}: ${w.result}`}); save(); render(); },1000);
+    });
+  } else {
+    setTimeout(()=>{ w.status="done";
+      w.result={DATA:"Domain job results: dataset profiled, 9 columns, 2 quality issues flagged, metadata registered.",PRODUCE:"Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged, audit metadata written.",EXPLORE:"Domain job results: 3 patterns found; returns concentrate in 4 stores; report attached.",GENERATE:"Domain job results: model generated with 2 metrics. Adding it to the domain library is a configuration step for your admin."}[verb];
+      if(verb==="DATA") a.datasets.push({name:"dataset_"+(++S.seq.ds),gb:+(Math.random()*20).toFixed(1),src:"import"});
+      log("work-order.done",w.id,"coordinator"); c.push({r:"a",t:`${w.id}: ${w.result}`}); save(); render(); },1200);
+  }
 }
 function salesySay(text){
   S.chats.sales.push({r:"u",t:text}); const t=text.toLowerCase(); let r,go=null;

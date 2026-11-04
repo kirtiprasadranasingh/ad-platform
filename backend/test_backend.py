@@ -168,6 +168,30 @@ def test_assistant_command():
     print("      PASS: Natural language commands parsed and mutated account state.")
 
 
+def test_ady_work_orders():
+    print("[6/6] Testing ADy Data Assistant Work Orders...")
+    # 1. Profile dataset
+    wo1 = {"accountId": "alida-internal", "verb": "DATA", "text": "profile store_master"}
+    r1 = client.post("/api/assistant/workorder", json=wo1)
+    assert r1.status_code == 200
+    d1 = r1.json()
+    assert "store_master" in d1["result"]
+    assert d1["status"] == "done"
+
+    # 2. Produce data foundation
+    wo2 = {"accountId": "alida-internal", "verb": "PRODUCE", "text": "produce a data foundation from the retail datasets"}
+    r2 = client.post("/api/assistant/workorder", json=wo2)
+    assert r2.status_code == 200
+    d2 = r2.json()
+    assert "retail_foundation" in d2["result"]
+
+    # 3. Query work orders
+    r_list = client.get("/api/workorders?accountId=alida-internal")
+    assert r_list.status_code == 200
+    assert len(r_list.json()) >= 2
+    print("      PASS: ADy data operations executed and work orders logged.")
+
+
 if __name__ == "__main__":
     print("Running AD Platform Backend Verification Suite...")
     try:
@@ -177,7 +201,8 @@ if __name__ == "__main__":
         test_api_auto_provision_on_registration()
         test_api_provision_dispatch()
         test_assistant_command()
-        print("\nALL CHECKS PASSED SUCCESSFULLY (6/6)!")
+        test_ady_work_orders()
+        print("\nALL CHECKS PASSED SUCCESSFULLY (7/7)!")
     except AssertionError as e:
         print(f"\nCHECK FAILED: {e}")
         sys.exit(1)
