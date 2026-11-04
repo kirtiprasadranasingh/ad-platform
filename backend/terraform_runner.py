@@ -302,6 +302,45 @@ def run_provisioning_workflow(
                 except Exception as log_err:
                     print(f"Log Analytics note: {log_err}")
 
+                # 9. Create Azure Data Factory (ADF)
+                adf_name = f"adf-{config_paths['prefix']}"[:24]
+                adf_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.DataFactory/factories/{adf_name}?api-version=2018-06-01"
+                try:
+                    req_adf = urllib.request.Request(adf_url, data=json.dumps({"location": region, "identity": {"type": "SystemAssigned"}}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_adf, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Azure Data Factory '{adf_name}' provisioned with Managed Identity.")
+                except Exception as adf_err:
+                    print(f"Data Factory note: {adf_err}")
+
+                # 10. Create Service Bus Namespace
+                sb_name = f"sb-{config_paths['prefix']}"[:24]
+                sb_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.ServiceBus/namespaces/{sb_name}?api-version=2021-11-01"
+                try:
+                    req_sb = urllib.request.Request(sb_url, data=json.dumps({"location": region, "sku": {"name": "Standard"}}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_sb, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Azure Service Bus '{sb_name}' provisioned.")
+                except Exception as sb_err:
+                    print(f"Service Bus note: {sb_err}")
+
+                # 11. Create Event Grid Topic
+                egt_name = f"egt-{config_paths['prefix']}"[:24]
+                egt_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.EventGrid/topics/{egt_name}?api-version=2022-06-15"
+                try:
+                    req_egt = urllib.request.Request(egt_url, data=json.dumps({"location": region}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_egt, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Event Grid Topic '{egt_name}' provisioned.")
+                except Exception as egt_err:
+                    print(f"Event Grid note: {egt_err}")
+
+                # 12. Private DNS Zone for Key Vault
+                pdns_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net?api-version=2020-06-01"
+                try:
+                    req_pdns = urllib.request.Request(pdns_url, data=json.dumps({"location": "global"}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_pdns, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", "[ARM] Private DNS Zone 'privatelink.vaultcore.azure.net' provisioned.")
+                except Exception as pdns_err:
+                    print(f"Private DNS note: {pdns_err}")
+
                 notify("Environment setup (ADAzEnvConfig)", "done", f"Phase 1 complete: Network topology, monitoring, and security boundaries established.")
 
                 # 6. Create ADLS Gen2 Storage Account
