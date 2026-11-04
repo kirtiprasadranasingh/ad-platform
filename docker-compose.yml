@@ -10,6 +10,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - TERRAFORM_DRY_RUN=true
+      - TERRAFORM_DRY_RUN=${TERRAFORM_DRY_RUN:-true}
+      - PROVISIONING_MODE=${PROVISIONING_MODE:-poc}
+      - ARM_SUBSCRIPTION_ID
+      - ARM_TENANT_ID
+      - ARM_CLIENT_ID
+      - ARM_CLIENT_SECRET
     volumes:
       - ./backend/runs:/app/backend/runs
