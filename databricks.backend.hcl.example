@@ -1,0 +1,10 @@
+# Same protected backend, separate per-client/environment Databricks state.
+resource_group_name = "REPLACE_STATE_RESOURCE_GROUP"
+storage_account_name = "REPLACE_STATE_ACCOUNT"
+container_name = "tfstate"
+key = "REPLACE_CLIENT/REPLACE_ENV/databricks.tfstate"
+use_azuread_auth = true
+use_msi = true
+client_id = "REPLACE_DEPLOYMENT_MANAGED_IDENTITY_CLIENT_ID"
+tenant_id = "REPLACE_TENANT_ID"
+subscription_id = "REPLACE_STATE_SUBSCRIPTION_ID"

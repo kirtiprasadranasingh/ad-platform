@@ -1,0 +1,23 @@
+# Validation for this package checked out as its own repository.
+trigger: none
+pr: none
+
+parameters:
+  - name: validationPool
+    type: string
+    default: Default
+
+pool:
+  name: ${{ parameters.validationPool }}
+
+steps:
+  - checkout: self
+    persistCredentials: false
+  - task: PowerShell@2
+    displayName: Validate infrastructure and security tests
+    inputs:
+      targetType: filePath
+      filePath: validate.ps1
+      pwsh: true
+# Requires approved Terraform, Python and PowerShell on the agent.
+# This pipeline does not deploy resources or publish plans/state.

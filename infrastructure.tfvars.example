@@ -1,0 +1,21 @@
+client_name = "client"
+env_name = "prod"
+prefix = "client-prod"
+storage_account_name = "REPLACE_UNIQUE_ACCOUNT"
+resource_group_name = "REPLACE_RESOURCE_GROUP"
+region = "REPLACE_APPROVED_REGION"
+tenant_id = "REPLACE_TENANT_ID"
+subscription_id = "REPLACE_SUBSCRIPTION_ID"
+deployment_identity_client_id = "REPLACE_RUNNER_MANAGED_IDENTITY_CLIENT_ID"
+sql_admin_group_object_id = "REPLACE_SQL_ADMIN_GROUP_OBJECT_ID"
+vnet_cidr = "10.60.0.0/16,10.61.0.0/16"
+approved_client_cidrs = ["10.62.0.0/24"]
+# Initial example only. Approve exact regional Databricks/artifact/monitoring
+# endpoints for your runtime before deployment; never replace with a wildcard.
+approved_egress_fqdns = ["login.microsoftonline.com"]
+application_image = "api@sha256:REPLACE_APPROVED_IMAGE_DIGEST"
+application_registry_id = "REPLACE_PRIVATE_REGISTRY_RESOURCE_ID"
+application_registry_host = "REPLACE_REGISTRY.azurecr.io"
+entra_application_client_id = "REPLACE_ENTRA_APPLICATION_ID"
+authentication_vault_id = "REPLACE_PRIVATE_AUTHENTICATION_VAULT_ID"
+authentication_secret_uri = "https://REPLACE_VAULT.vault.azure.net/secrets/REPLACE_SECRET_NAME"

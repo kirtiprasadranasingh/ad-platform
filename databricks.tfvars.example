@@ -1,0 +1,13 @@
+# First six fields come from infrastructure output deployment_handoff.
+prefix = "client-prod"
+workspace_url = "https://REPLACE_WORKSPACE.azuredatabricks.net"
+workspace_resource_id = "REPLACE_WORKSPACE_RESOURCE_ID"
+workspace_id = 0
+access_connector_id = "REPLACE_ACCESS_CONNECTOR_ID"
+storage_account_name = "REPLACE_STORAGE_ACCOUNT"
+deployment_identity_client_id = "REPLACE_RUNNER_MANAGED_IDENTITY_CLIENT_ID"
+metastore_id = "REPLACE_EXISTING_REGIONAL_METASTORE_ID"
+runtime_version = "REPLACE_SUPPORTED_COMPLIANCE_RUNTIME_ID"
+node_type_id = "REPLACE_SUPPORTED_COMPUTE_SKU"
+owner_group = "client-platform-owners"
+user_group = "client-data-users"
