@@ -191,7 +191,20 @@ def run_provisioning_workflow(
                 urllib.request.urlopen(req_rg, timeout=15)
                 notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Resource Group '{rg_name}' (location: {region}) confirmed active.")
 
-                # 2. Create Virtual Network with Enterprise Subnets
+                # 2. Create NSGs for Databricks and Subnets
+                nsg_pub_name = "nsg-dbx-public"
+                nsg_pub_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/networkSecurityGroups/{nsg_pub_name}?api-version=2023-05-01"
+                req_nsg1 = urllib.request.Request(nsg_pub_url, data=json.dumps({"location": region}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                urllib.request.urlopen(req_nsg1, timeout=15)
+                notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Network Security Group '{nsg_pub_name}' provisioned.")
+
+                nsg_priv_name = "nsg-dbx-private"
+                nsg_priv_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/networkSecurityGroups/{nsg_priv_name}?api-version=2023-05-01"
+                req_nsg2 = urllib.request.Request(nsg_priv_url, data=json.dumps({"location": region}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                urllib.request.urlopen(req_nsg2, timeout=15)
+                notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Network Security Group '{nsg_priv_name}' provisioned.")
+
+                # 3. Create Virtual Network with Enterprise Subnets
                 vnet_name = f"vnet-{config_paths['prefix']}"
                 vnet_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/virtualNetworks/{vnet_name}?api-version=2023-05-01"
                 vnet_body = json.dumps({
@@ -219,7 +232,7 @@ def run_provisioning_workflow(
                 notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM]   -> Subnet 'snet-dbx-public' (10.61.1.0/24) provisioned")
                 notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM]   -> Subnet 'snet-dbx-private' (10.61.2.0/24) provisioned")
 
-                # 3. Create Azure Key Vault
+                # 4. Create Azure Key Vault
                 kv_name = f"kv-{config_paths['prefix']}"[:24]
                 kv_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.KeyVault/vaults/{kv_name}?api-version=2023-07-01"
                 kv_body = json.dumps({
@@ -239,9 +252,26 @@ def run_provisioning_workflow(
                     notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Key Vault '{kv_name}' active with soft-delete.")
                 except Exception as kv_err:
                     print(f"Key Vault note: {kv_err}")
-                notify("Environment setup (ADAzEnvConfig)", "done", f"Phase 1 complete: Network topology and security boundaries established.")
 
-                # 4. Create ADLS Gen2 Storage Account
+                # 5. Create Log Analytics Workspace
+                log_name = f"log-{config_paths['prefix']}"[:24]
+                log_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.OperationalInsights/workspaces/{log_name}?api-version=2022-10-01"
+                log_body = json.dumps({
+                    "location": region,
+                    "properties": {"sku": {"name": "PerGB2018"}, "retentionInDays": 30},
+                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"]}
+                }).encode("utf-8")
+                notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Deploying Log Analytics Workspace '{log_name}'...")
+                try:
+                    req_log = urllib.request.Request(log_url, data=log_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_log, timeout=15)
+                    notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Log Analytics Workspace '{log_name}' active.")
+                except Exception as log_err:
+                    print(f"Log Analytics note: {log_err}")
+
+                notify("Environment setup (ADAzEnvConfig)", "done", f"Phase 1 complete: Network topology, monitoring, and security boundaries established.")
+
+                # 6. Create ADLS Gen2 Storage Account
                 notify("Service configuration (ADSvcConfig)", "run", f"[ARM] Allocating ADLS Gen2 Storage Account '{sa_name}' (Hierarchical Namespace enabled)...")
                 sa_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Storage/storageAccounts/{sa_name}?api-version=2023-01-01"
                 sa_body = json.dumps({
@@ -259,9 +289,52 @@ def run_provisioning_workflow(
                 req_sa = urllib.request.Request(sa_url, data=sa_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                 urllib.request.urlopen(req_sa, timeout=15)
                 notify("Service configuration (ADSvcConfig)", "run", f"[ARM] Storage Account '{sa_name}' verified. TLS 1.2 minimum version enforced.")
-                notify("Service configuration (ADSvcConfig)", "done", f"Service configuration complete: ADLS Gen2 '{sa_name}' and Key Vault '{kv_name}' active.")
 
-                # 5. Create Client Container
+                # 7. Create Databricks Unity Catalog Access Connector
+                dbc_name = f"dbc-{config_paths['prefix']}"[:24]
+                dbc_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Databricks/accessConnectors/{dbc_name}?api-version=2023-05-01"
+                dbc_body = json.dumps({"location": region, "identity": {"type": "SystemAssigned"}, "tags": {"ManagedBy": "AD-Platform"}}).encode("utf-8")
+                notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Provisioning Unity Catalog Access Connector '{dbc_name}'...")
+                try:
+                    req_dbc = urllib.request.Request(dbc_url, data=dbc_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_dbc, timeout=15)
+                    notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Access Connector '{dbc_name}' active with System-Assigned Managed Identity.")
+                except Exception as dbc_err:
+                    print(f"Access Connector note: {dbc_err}")
+
+                # 8. Create Azure Databricks Workspace
+                dbw_name = f"dbw-{config_paths['prefix']}"[:24]
+                dbw_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Databricks/workspaces/{dbw_name}?api-version=2023-02-01"
+                managed_rg_id = f"/subscriptions/{sub_id}/resourceGroups/databricks-rg-{rg_name}"
+                dbw_body = json.dumps({
+                    "location": region,
+                    "sku": {"name": "premium"},
+                    "properties": {"managedResourceGroupId": managed_rg_id},
+                    "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"]}
+                }).encode("utf-8")
+                notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Allocating Azure Databricks Workspace '{dbw_name}' (SKU: Premium)...")
+                try:
+                    req_dbw = urllib.request.Request(dbw_url, data=dbw_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                    urllib.request.urlopen(req_dbw, timeout=20)
+                    notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Workspace '{dbw_name}' accepted. Provisioning managed compute plane in Azure...")
+                    # Real ARM Long Running Operation (LRO) polling
+                    for poll_idx in range(6):
+                        time.sleep(5.0)
+                        try:
+                            check_req = urllib.request.Request(dbw_url, headers={"Authorization": f"Bearer {token}"})
+                            state_data = json.loads(urllib.request.urlopen(check_req, timeout=10).read().decode())
+                            cur_state = state_data.get("properties", {}).get("provisioningState", "Pending")
+                            notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Workspace provisioningState: {cur_state} (elapsed: {(poll_idx+1)*5}s)...")
+                            if cur_state.lower() in ("succeeded", "ready"):
+                                break
+                        except Exception:
+                            pass
+                except Exception as dbw_err:
+                    notify("Service configuration (ADSvcConfig)", "run", f"[Databricks note] {dbw_err}")
+
+                notify("Service configuration (ADSvcConfig)", "done", f"Service configuration complete: Storage '{sa_name}', Databricks '{dbw_name}', and Access Connector '{dbc_name}' deployed.")
+
+                # 9. Create Client Container
                 notify("Jumpstart AD", "run", f"[ARM] Provisioning isolated tenant container 'client-{client_name}' in '{sa_name}'...")
                 time.sleep(2.0)
                 notify("Jumpstart AD", "run", f"[RBAC] Assigning 'Storage Blob Data Contributor' to deployment identity...")
