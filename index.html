@@ -143,7 +143,7 @@ h1.xl{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margi
 .vt .num{width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
 .vt b{display:block;color:var(--navy);font-size:15px}.vt small{color:var(--slate)}
 footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;padding:22px 32px;text-align:center}
-.auth{max-width:440px;margin:36px auto}
+.auth{max-width:540px;margin:36px auto}
 .auth input{width:100%}
 /* wizard */
 .wiz{display:grid;grid-template-columns:240px 1fr;gap:28px}
@@ -594,13 +594,10 @@ let toastT=null; function toast(msg){ let t=$("#toast"); if(!t){ t=document.crea
 /* ============================== shell ============================== */
 function topbar(){
   const u=me(), a=u?acct():null, p=R.parts[0]||"";
-  const backendPill = BACKEND_ONLINE
-    ? `<span style="font-size:11.5px;padding:3px 9px;border-radius:999px;background:#e7f6ec;color:#15803d;font-weight:600;display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;background:#15803d;border-radius:50%"></span>Backend Connected</span>`
-    : `<span style="font-size:11.5px;padding:3px 9px;border-radius:999px;background:#f1f4f9;color:#667085;font-weight:500;display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;background:#cfd6e0;border-radius:50%"></span>Browser Mode</span>`;
-  if(!u) return `<div class="brand" data-act="home">AD<span>as a Service</span></div><nav class="hnav">${[["see","See"],["learn","Learn"],["understand","Understand"],["partner","Partner"]].map(([k,l])=>`<a href="#/${k}" class="${p===k?"on":""}">${l}</a>`).join("")}</nav><span class="spacer"></span>${backendPill}<a class="link" href="#/login">Sign in</a><a class="link cta" href="#/register">Get started</a>`;
+  if(!u) return `<div class="brand" data-act="home">AD<span>as a Service</span></div><nav class="hnav">${[["see","See"],["learn","Learn"],["understand","Understand"],["partner","Partner"]].map(([k,l])=>`<a href="#/${k}" class="${p===k?"on":""}">${l}</a>`).join("")}</nav><span class="spacer"></span><a class="link" href="#/login">Sign in</a><a class="link cta" href="#/register">Get started</a>`;
   const pend=a?S.orders.filter(o=>o.accountId===a.id&&o.status==="pending").length:0;
   const tenant=u.role==="staff"?`<select class="tenant" data-act="switchAcct"><option value="">All accounts</option>${S.accounts.map(x=>`<option value="${x.id}" ${S.acting===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)}</span>`:"");
-  return `<div class="brand" data-act="home">AD<span>as a Service</span></div>${tenant}<span class="spacer"></span>${backendPill}
+  return `<div class="brand" data-act="home">AD<span>as a Service</span></div>${tenant}<span class="spacer"></span>
   ${a&&isAdmin()&&a.status==="ready"?`<a class="link ${pend?"attn":""}" href="#/app/admin/approvals">Approvals${pend?` <b class="cnt">${pend}</b>`:""}</a>`:""}
   ${a&&a.status==="ready"?`<button class="link ${S.ui.dock===false?"":"on"}" data-act="toggleDock">Assistant</button>`:""}
   <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida staff":u.role}</small></span><button class="link" data-act="signout">Sign out</button>`;
@@ -655,9 +652,16 @@ const vLearn=()=>qaPage("The key basics to understand AD","Short answers to the 
 const vUnderstand=()=>qaPage("Reasons why AD is safe to use","",UNDERSTAND.map(([q,a])=>`<details class="qa"><summary>${q}</summary><p>${a}</p></details>`).join(""),`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/partner">Work with AD</a></div>`);
 const vPartner=()=>qaPage("AD is with you every step of the way","The path from first look to first job.",`<ol class="vt">${PARTNER.map(([t,d],i)=>`<li><span class="num">${i+1}</span><div><b>${t}</b><small>${d}</small></div></li>`).join("")}</ol>`,`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/register">Create an account</a><a class="btn ghost lg" href="#/login">I already have one</a></div>`);
 function vRegister(){
-  return `<div class="site"><div class="wrap"><div class="auth card"><h2>Create your account</h2><p class="sub">Environment provisioning runs automatically upon registration.</p>
+  return `<div class="site"><div class="wrap"><div class="auth card" style="max-width:560px"><h2>Create your account</h2><p class="sub">Environment provisioning runs automatically upon registration.</p>
   <form data-form="register"><label>Your name</label><input name="name" required placeholder="Alice Smith"><label>Organisation</label><input name="org" required placeholder="Acme Co"><label>Work email</label><input name="email" type="email" required placeholder="you@acme.com"><label>Password</label><input name="password" type="password" required>
-  <div class="grid g3" style="margin-top:10px"><div><label>Region</label><select name="region"><option value="eastus2" selected>East US 2 (Azure)</option><option value="centralus">Central US</option><option value="westus2">West US 2</option></select></div><div><label>Tenancy Mode</label><select name="tenancy"><option value="single" selected>Dedicated (Single-tenant)</option><option value="multi">Shared (Multi-tenant)</option></select></div><div><label>Environment Tier</label><select name="env"><option value="dev1" selected>Development (dev1)</option><option value="test1">Testing / QA (test1)</option><option value="prod1">Production (prod1)</option></select></div></div>
+  <div class="grid g2" style="margin-top:10px;gap:12px">
+    <div><label>Region</label><select name="region" style="width:100%"><option value="eastus2" selected>East US 2 (Azure)</option><option value="centralus">Central US</option><option value="westus2">West US 2</option></select></div>
+    <div><label>Tenancy Mode</label><select name="tenancy" style="width:100%"><option value="single" selected>Dedicated (Single-tenant)</option><option value="multi">Shared (Multi-tenant)</option></select></div>
+  </div>
+  <div style="margin-top:10px">
+    <label>Environment Tier</label>
+    <select name="env" style="width:100%"><option value="dev1" selected>Development (dev1)</option><option value="test1">Testing / QA (test1)</option><option value="prod1">Production (prod1)</option></select>
+  </div>
   <p class="log" style="margin-top:10px">Terraform will automatically deploy your environment upon registration.</p>
   ${S.ui.authErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.authErr)}</div>`:""}<div class="row" style="margin-top:18px"><button class="btn lg">Register & Provision</button><a href="#/login">Already registered? Sign in</a></div></form></div></div>${siteFoot()}</div>`;
 }
