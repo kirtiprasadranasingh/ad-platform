@@ -395,7 +395,7 @@ function onbValidate(step){
 }
 function confirmOnboarding(){
   const o=onb(),d=o.d; const so=salesOrder(); so.salesOrderId=nid("so"); so.paid=o.source!=="staff";
-  const a={id:so.account.id,name:so.account.name,solution:so.solution,region:d.region,tenancy:d.tenancy,management:d.management,status:"provisioning",domains:[],sandboxes:[],resources:{spendLimitUsd:+d.spend,storageGb:+d.storage},usage:{spendUsd:0,computeHours:0},datasets:[],created:now().slice(0,10)};
+  const a={id:so.account.id,name:so.account.name,solution:so.solution,region:d.region,env:d.env||"dev1",tenancy:d.tenancy,management:d.management,status:"provisioning",domains:[],sandboxes:[],resources:{spendLimitUsd:+d.spend,storageGb:+d.storage},usage:{spendUsd:0,computeHours:0},datasets:[],created:now().slice(0,10)};
   S.accounts.push(a);
   let admin=S.users.find(u=>u.email===d.adminEmail);
   if(admin){ admin.accountId=a.id; admin.role="admin"; admin.name=admin.name||d.adminName; } else S.users.push({email:d.adminEmail,name:d.adminName||d.adminEmail,password:"welcome",accountId:a.id,role:"admin"});
@@ -422,6 +422,7 @@ function confirmOnboarding(){
         adminName: d.adminName||d.adminEmail,
         solution: so.solution,
         region: d.region,
+        env: d.env || "dev1",
         tenancy: d.tenancy,
         management: d.management,
         storage: +d.storage,
@@ -614,7 +615,7 @@ const vPartner=()=>qaPage("AD is with you every step of the way","The path from 
 function vRegister(){
   return `<div class="site"><div class="wrap"><div class="auth card"><h2>Create your account</h2><p class="sub">Environment provisioning runs automatically upon registration.</p>
   <form data-form="register"><label>Your name</label><input name="name" required placeholder="Alice Smith"><label>Organisation</label><input name="org" required placeholder="Acme Co"><label>Work email</label><input name="email" type="email" required placeholder="you@acme.com"><label>Password</label><input name="password" type="password" required>
-  <div class="grid g2" style="margin-top:10px"><div><label>Region</label><select name="region"><option value="eastus2" selected>East US 2 (Azure)</option><option value="centralus">Central US</option><option value="westus2">West US 2</option></select></div><div><label>Tenancy Mode</label><select name="tenancy"><option value="single" selected>Dedicated (Single-tenant)</option><option value="multi">Shared (Multi-tenant)</option></select></div></div>
+  <div class="grid g3" style="margin-top:10px"><div><label>Region</label><select name="region"><option value="eastus2" selected>East US 2 (Azure)</option><option value="centralus">Central US</option><option value="westus2">West US 2</option></select></div><div><label>Tenancy Mode</label><select name="tenancy"><option value="single" selected>Dedicated (Single-tenant)</option><option value="multi">Shared (Multi-tenant)</option></select></div><div><label>Environment Tier</label><select name="env"><option value="dev1" selected>Development (dev1)</option><option value="test1">Testing / QA (test1)</option><option value="prod1">Production (prod1)</option></select></div></div>
   <p class="log" style="margin-top:10px">Terraform will automatically deploy your environment upon registration.</p>
   ${S.ui.authErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.authErr)}</div>`:""}<div class="row" style="margin-top:18px"><button class="btn lg">Register & Provision</button><a href="#/login">Already registered? Sign in</a></div></form></div></div>${siteFoot()}</div>`;
 }
@@ -725,7 +726,7 @@ function vAdmin(k){
   const a=acct(), users=accountUsers(a), used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0);
   const err=S.ui.cfgErr?`<div class="err" style="margin-top:8px">✕ ${esc(S.ui.cfgErr)}</div>`:"";
   switch(k){
-   case "setup": return `<div class="content">${head("Setup","The environment this account runs on.")}<div class="grid g2"><div class="card"><h3>Environment</h3><div class="kv"><b>Work solution</b><span>${SOL.find(s=>s.id===a.solution)?.name}</span><b>Region</b><span>${a.region}</span><b>Tenancy</b><span>${a.tenancy}-tenant</span><b>Management</b><span>${a.management}</span><b>Status</b><span><span class="chip ${chip(a.status)}">${a.status}</span></span><b>Created</b><span>${a.created}</span></div></div>
+   case "setup": return `<div class="content">${head("Setup","The environment this account runs on.")}<div class="grid g2"><div class="card"><h3>Environment</h3><div class="kv"><b>Work solution</b><span>${SOL.find(s=>s.id===a.solution)?.name}</span><b>Region</b><span>${a.region}</span><b>Environment Tier</b><span>${a.env||"dev1"}</span><b>Tenancy</b><span>${a.tenancy}-tenant</span><b>Management</b><span>${a.management}</span><b>Status</b><span><span class="chip ${chip(a.status)}">${a.status}</span></span><b>Created</b><span>${a.created}</span></div></div>
     <div class="card"><h3>Allocation</h3><div class="row"><div><label>Spending limit (USD / month)</label><input id="rs" type="number" value="${a.resources.spendLimitUsd}" style="width:150px"></div><div><label>Storage (GB)</label><input id="rg" type="number" value="${a.resources.storageGb}" style="width:110px"></div><div style="align-self:flex-end"><button class="btn" data-act="setRes">Save</button></div></div><p class="log" style="margin-top:10px">${used} GB of ${a.resources.storageGb} GB is allocated to sandboxes.</p>${err}</div></div>
     <div class="card" style="margin-top:16px"><h3>Generated Terraform Code (infrastructure.tfvars)</h3><p class="sub">View the live Terraform parameter configuration generated by the backend for this environment.</p>
     <button class="btn sm" data-act="loadTfvars" data-v="${a.id}">View Generated .tfvars</button>
@@ -869,6 +870,7 @@ document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.targe
     const password = fd.get("password");
     const region = fd.get("region") || "eastus2";
     const tenancy = fd.get("tenancy") || "single";
+    const env = fd.get("env") || "dev1";
     S.ui.authErr = register(name, org, email, password);
     save();
     if(S.ui.authErr) {
@@ -878,6 +880,7 @@ document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.targe
       if(o && o.d) {
         o.d.region = region;
         o.d.tenancy = tenancy;
+        o.d.env = env;
       }
       confirmOnboarding();
     }

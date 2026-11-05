@@ -71,6 +71,7 @@ class ProvisionPayload(BaseModel):
     adminName: Optional[str] = "Admin User"
     solution: str = Field("data-foundation", example="data-foundation")
     region: str = Field("eastus2", example="eastus2")
+    env: Optional[str] = Field("dev1", example="dev1")  # dev1, test1, prod1
     tenancy: str = Field("single", example="single")  # single (dedicated) or multi (shared)
     management: str = Field("fully", example="fully")  # self or fully
     storage: int = Field(100, example=100)
@@ -98,6 +99,7 @@ class RegisterPayload(BaseModel):
     email: str = Field(..., example="alice@acme.com")
     password: str = Field("welcome", example="welcome")
     region: str = Field("eastus2", example="eastus2")
+    env: Optional[str] = Field("dev1", example="dev1")  # dev1, test1, prod1
     tenancy: str = Field("single", example="single")  # single or multi
     storage: int = Field(500, example=500)
     sandbox: str = Field("sbx-main", example="sbx-main")
@@ -186,6 +188,7 @@ def register_and_provision(payload: RegisterPayload, background_tasks: Backgroun
         adminName=payload.name,
         solution="data-foundation",
         region=payload.region,
+        env=payload.env or "dev1",
         tenancy=payload.tenancy,
         management="fully" if payload.tenancy == "single" else "self",
         storage=payload.storage,
@@ -214,6 +217,7 @@ def create_provision_order(payload: ProvisionPayload, background_tasks: Backgrou
         "name": payload.org,
         "solution": payload.solution,
         "region": payload.region,
+        "env": payload.env or "dev1",
         "tenancy": payload.tenancy,
         "management": payload.management,
         "status": "provisioning",
