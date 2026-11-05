@@ -535,6 +535,29 @@ def run_provisioning_workflow(
                 except Exception:
                     pass
 
+            # Auto-assign HIPAA/HITRUST 9.2 Initiative (Initiative ID: a169a624-5599-4385-a696-c8d643089fab)
+            notify("Verify", "run", f"[Policy] Auto-assigning HIPAA/HITRUST 9.2 regulatory initiative to '{rg_name}'...")
+            policy_assign_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Authorization/policyAssignments/hitrust-hipaa?api-version=2022-06-01"
+            policy_body = json.dumps({
+                "location": region,
+                "properties": {
+                    "displayName": f"HITRUST/HIPAA - {config_paths['prefix']}",
+                    "description": f"Technical HITRUST/HIPAA Azure Policy evidence for {config_paths['prefix']}. This does not constitute HIPAA or HITRUST certification.",
+                    "policyDefinitionId": "/providers/Microsoft.Authorization/policySetDefinitions/a169a624-5599-4385-a696-c8d643089fab",
+                    "scope": f"/subscriptions/{sub_id}/resourceGroups/{rg_name}",
+                    "enforcementMode": "Default"
+                },
+                "identity": {
+                    "type": "SystemAssigned"
+                }
+            }).encode("utf-8")
+            try:
+                req_pol = urllib.request.Request(policy_assign_url, data=policy_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                urllib.request.urlopen(req_pol, timeout=15)
+                notify("Verify", "run", f"[Policy] HIPAA/HITRUST 9.2 initiative successfully assigned to '{rg_name}'.")
+            except Exception as pe:
+                notify("Verify", "run", f"[Policy note] {pe}")
+
             # Compliance evaluation trigger
             notify("Verify", "run", f"[Policy] Triggering Azure Policy compliance scan for '{config_paths['poc_rg']}' (HIPAA/HITRUST)...")
             eval_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{config_paths['poc_rg']}/providers/Microsoft.PolicyInsights/policyStates/latest/triggerEvaluation?api-version=2019-10-01"
