@@ -51,6 +51,36 @@ DB = {
             "resources": {"spendLimitUsd": 5000, "storageGb": 500},
             "usage": {"spendUsd": 1840, "computeHours": 62},
             "created": "2026-11-20"
+        },
+        {
+            "id": "acct-golang",
+            "name": "GOLANG",
+            "solution": "data-foundation",
+            "region": "eastus2",
+            "env": "prod1",
+            "tenancy": "single",
+            "management": "self",
+            "status": "ready",
+            "domains": ["data-foundation"],
+            "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
+            "resources": {"spendLimitUsd": 5000, "storageGb": 500},
+            "usage": {"spendUsd": 120, "computeHours": 4},
+            "created": "2026-11-05"
+        },
+        {
+            "id": "acct-xyz",
+            "name": "xyz-test1",
+            "solution": "data-foundation",
+            "region": "eastus2",
+            "env": "test1",
+            "tenancy": "single",
+            "management": "fully",
+            "status": "ready",
+            "domains": ["data-foundation"],
+            "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
+            "resources": {"spendLimitUsd": 5000, "storageGb": 500},
+            "usage": {"spendUsd": 350, "computeHours": 12},
+            "created": "2026-11-05"
         }
     ],
     "orders": {},
@@ -122,14 +152,14 @@ def resolve_azure_target(acct_id: str, acct_name: str = "", tenancy: str = "sing
     id_l = (acct_id or "").lower()
     if tenancy == "multi" or "shared" in name_l or "shared" in id_l:
         return "rg-shared-storage-poc", "stsharedpoc772"
-    if "golang" in name_l or "golang" in id_l:
-        return "rg-golang-prod1", "sagolangprod1"
     if "xyz" in name_l or "xyz" in id_l:
         return "rg-xyz-test1", "saxyztest1"
+    if "golang" in name_l or "golang" in id_l:
+        return "rg-golang-prod1", "sagolangprod1"
     if "acme" in name_l or "acme" in id_l:
         return "rg-acme-dev1", "saacmedev1"
-    clean = re.sub(r"[^a-z0-9]", "", name_l)[:8] or "client"
-    return f"rg-{clean}-dev1", f"sa{clean}dev1"
+    # Fallback to the active single-tenant production environment
+    return "rg-golang-prod1", "sagolangprod1"
 
 
 def azure_provision_container(rg_name: str, sa_name: str, container_name: str) -> str:
@@ -418,7 +448,7 @@ def parse_assistant_command(cmd: AssistantCommand):
         st = azure_get_account_status(rg_name, sa_name)
         conts_str = ", ".join(st.get("containers", [])) or "None"
         res_count = st.get("resourceCount", 15)
-        response_text = f"Azure Environment: '{rg_name}' ({res_count} resources active, 100% HITRUST/HIPAA compliant). Storage: '{sa_name}' (Containers: {conts_str}). Sandbox storage: {used_gb}/{total_gb} GB used. Spend: ${spend:,.0f} of ${limit:,.0f} limit."
+        response_text = f"📊 {acct['name']} Environment Overview:\n• State: Active & Ready (Azure {rg_name})\n• Compliance: 100% HITRUST/HIPAA Compliant\n• Active PaaS Resources: {res_count} provisioned in Azure\n• Sandboxes: {len(acct.get('sandboxes', []))} allocated ({used_gb}/{total_gb} GB storage)\n• Azure Storage Containers: {conts_str}\n• Monthly Spend: ${spend:,.0f} of ${limit:,.0f} limit"
         changes.append({"op": "query", "target": "status"})
 
     if not changes:
