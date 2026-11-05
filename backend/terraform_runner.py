@@ -259,12 +259,12 @@ def run_provisioning_workflow(
                         "properties": {
                             "addressSpace": {"addressPrefixes": ["10.60.0.0/16", "10.61.0.0/16"]},
                             "subnets": [
-                                {"name": "snet-app", "properties": {"addressPrefix": "10.60.1.0/24"}},
-                                {"name": "snet-storage", "properties": {"addressPrefix": "10.60.2.0/24"}},
-                                {"name": "snet-sql", "properties": {"addressPrefix": "10.60.3.0/24"}},
-                                {"name": "snet-keyvault", "properties": {"addressPrefix": "10.60.4.0/24"}},
-                                {"name": "snet-dbx-public", "properties": {"addressPrefix": "10.61.1.0/24"}},
-                                {"name": "snet-dbx-private", "properties": {"addressPrefix": "10.61.2.0/24"}}
+                                {"name": "snet-app", "properties": {"addressPrefix": "10.60.1.0/24", "networkSecurityGroup": {"id": f"/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/networkSecurityGroups/nsg-dbx-private"}, "serviceEndpoints": [{"service": "Microsoft.Storage"}, {"service": "Microsoft.KeyVault"}, {"service": "Microsoft.ContainerRegistry"}]}},
+                                {"name": "snet-storage", "properties": {"addressPrefix": "10.60.2.0/24", "networkSecurityGroup": {"id": f"/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/networkSecurityGroups/nsg-dbx-private"}, "serviceEndpoints": [{"service": "Microsoft.Storage"}, {"service": "Microsoft.KeyVault"}, {"service": "Microsoft.ContainerRegistry"}]}},
+                                {"name": "snet-sql", "properties": {"addressPrefix": "10.60.3.0/24", "networkSecurityGroup": {"id": f"/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/networkSecurityGroups/nsg-dbx-private"}, "serviceEndpoints": [{"service": "Microsoft.Storage"}, {"service": "Microsoft.KeyVault"}, {"service": "Microsoft.ContainerRegistry"}]}},
+                                {"name": "snet-keyvault", "properties": {"addressPrefix": "10.60.4.0/24", "networkSecurityGroup": {"id": f"/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/networkSecurityGroups/nsg-dbx-private"}, "serviceEndpoints": [{"service": "Microsoft.Storage"}, {"service": "Microsoft.KeyVault"}, {"service": "Microsoft.ContainerRegistry"}]}},
+                                {"name": "snet-dbx-public", "properties": {"addressPrefix": "10.61.1.0/24", "networkSecurityGroup": {"id": f"/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/networkSecurityGroups/nsg-dbx-public"}}},
+                                {"name": "snet-dbx-private", "properties": {"addressPrefix": "10.61.2.0/24", "networkSecurityGroup": {"id": f"/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Network/networkSecurityGroups/nsg-dbx-private"}}}
                             ]
                         },
                         "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"]}
@@ -298,7 +298,8 @@ def run_provisioning_workflow(
                             "tenantId": tenant_id,
                             "sku": {"family": "A", "name": "standard"},
                             "accessPolicies": [],
-                            "enableSoftDelete": True
+                            "enableSoftDelete": True,
+                            "enablePurgeProtection": True
                         },
                         "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"]}
                     }).encode("utf-8")
@@ -306,7 +307,17 @@ def run_provisioning_workflow(
                     try:
                         req_kv = urllib.request.Request(kv_url, data=kv_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                         urllib.request.urlopen(req_kv, timeout=15)
-                        notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Key Vault '{kv_name}' active with soft-delete.")
+                        notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Key Vault '{kv_name}' active with soft-delete and purge protection.")
+                        # Diagnostic logging for Key Vault
+                        try:
+                            shared_law = f"/subscriptions/{sub_id}/resourceGroups/rg-shared-storage-poc/providers/Microsoft.OperationalInsights/workspaces/law-shared-adenv-poc"
+                            diag_kv_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.KeyVault/vaults/{kv_name}/providers/Microsoft.Insights/diagnosticSettings/diag-kv?api-version=2021-05-01-preview"
+                            d_body = json.dumps({"properties": {"workspaceId": shared_law, "logs": [{"categoryGroup": "allLogs", "enabled": True}], "metrics": [{"category": "AllMetrics", "enabled": True}]}}).encode("utf-8")
+                            req_diag = urllib.request.Request(diag_kv_url, data=d_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                            urllib.request.urlopen(req_diag, timeout=15)
+                            notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Audit diagnostic logging active for '{kv_name}'.")
+                        except Exception:
+                            pass
                     except Exception as kv_err:
                         print(f"Key Vault note: {kv_err}")
 
@@ -366,6 +377,16 @@ def run_provisioning_workflow(
                         req_sb = urllib.request.Request(sb_url, data=json.dumps({"location": region, "sku": {"name": "Standard"}}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                         urllib.request.urlopen(req_sb, timeout=15)
                         notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Azure Service Bus '{sb_name}' provisioned.")
+                        # Service Bus diagnostic settings
+                        try:
+                            shared_law = f"/subscriptions/{sub_id}/resourceGroups/rg-shared-storage-poc/providers/Microsoft.OperationalInsights/workspaces/law-shared-adenv-poc"
+                            diag_sb_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.ServiceBus/namespaces/{sb_name}/providers/Microsoft.Insights/diagnosticSettings/diag-sb?api-version=2021-05-01-preview"
+                            d_body = json.dumps({"properties": {"workspaceId": shared_law, "logs": [{"categoryGroup": "allLogs", "enabled": True}], "metrics": [{"category": "AllMetrics", "enabled": True}]}}).encode("utf-8")
+                            req_diag = urllib.request.Request(diag_sb_url, data=d_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                            urllib.request.urlopen(req_diag, timeout=15)
+                            notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Audit diagnostic logging active for '{sb_name}'.")
+                        except Exception:
+                            pass
                     except Exception as sb_err:
                         print(f"Service Bus note: {sb_err}")
 
@@ -401,7 +422,8 @@ def run_provisioning_workflow(
                             "isHnsEnabled": True,
                             "minimumTlsVersion": "TLS1_2",
                             "supportsHttpsTrafficOnly": True,
-                            "allowBlobPublicAccess": False
+                            "allowBlobPublicAccess": False,
+                            "networkAcls": {"defaultAction": "Deny", "bypass": "AzureServices"}
                         },
                         "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"], "Platform": "Enterprise-Trial"}
                     }).encode("utf-8")

@@ -312,6 +312,27 @@ def parse_assistant_command(cmd: AssistantCommand):
             changes.append({"op": "add", "target": "domain", "id": dom})
             response_text = f"Added domain '{dom}' to account {acct['name']}."
 
+    # 4. Invite user
+    m_inv = re.search(r"invite\s+([^\s@]+@[^\s@]+\.[^\s@]+)(?:\s+as\s+(admin|user))?", text)
+    if m_inv:
+        email = m_inv.group(1)
+        role = m_inv.group(2) or "user"
+        if not any(u.get("email") == email for u in DB["users"]):
+            DB["users"].append({"email": email, "name": email.split("@")[0].capitalize(), "role": role, "accountId": acct["id"], "password": "ad"})
+            changes.append({"op": "add", "target": "user", "email": email, "role": role})
+            response_text = f"Invited '{email}' as {role} to account {acct['name']}."
+        else:
+            response_text = f"User '{email}' is already registered in account {acct['name']}."
+
+    # 5. Status query
+    if "status" in text:
+        used_gb = sum(s.get("quotaGb", 0) for s in acct.get("sandboxes", []))
+        total_gb = acct.get("resources", {}).get("storageGb", 500)
+        spend = acct.get("usage", {}).get("spendUsd", 0)
+        limit = acct.get("resources", {}).get("spendLimitUsd", 5000)
+        response_text = f"Account {acct['name']} status: {acct.get('status', 'ready')}. {len(acct.get('domains', []))} domain(s), {len(acct.get('sandboxes', []))} sandbox(es) using {used_gb}/{total_gb} GB. Spend: ${spend:,.0f} of ${limit:,.0f} limit."
+        changes.append({"op": "query", "target": "status"})
+
     if not changes:
         response_text = f"I understood your request ('{cmd.text}'). No matching configuration mutation pattern found. Try: 'add sandbox dev 50 gb' or 'set spending limit to 6000'."
     else:
