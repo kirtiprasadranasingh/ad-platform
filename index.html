@@ -351,6 +351,19 @@ function approveOrder(o){
   const a=acct(o.accountId); const v=validate(a,o.changes);
   if(!v.ok){ o.validation=v; o.status="invalid"; save(); render(); return; }
   o.status="running"; log("config-order.approved",o.id); o.jobs=[["Service configuration (ADSvcConfig)","pending"],["Verify","pending"]]; save(); render();
+  if(window.fetch){
+    fetch('/api/orders/apply',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({accountId: a.id, orderId: o.id, changes: o.changes})
+    }).then(r=>r.json()).then(data=>{
+      if(data && data.azure_actions){
+        data.azure_actions.forEach(act=>log(act, o.id, "azure-arm"));
+        save();
+        render();
+      }
+    }).catch(e=>console.log("Apply sync error:", e));
+  }
   runJobs(o,()=>{ apply(a,o.changes); o.status="applied"; log("config-order.applied",o.id,"orchestrator"); save(); render(); });
 }
 function rejectOrder(o){ o.status="rejected"; log("config-order.rejected",o.id); save(); render(); }
@@ -473,12 +486,36 @@ function configgySay(text){
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({accountId: a.id, text: text})
+      }).then(r=>r.json()).then(data=>{
+        if(data && data.azure_action){
+          log(data.azure_action, o.id, "azure-arm");
+          save();
+        }
       }).catch(e=>console.log("Backend offline:", e));
     }
     c.push({r:"a",t:o.status==="pending"?`I drafted ${o.id} for ${a.name}. It passed validation and is waiting under Approvals.`:`I drafted ${o.id}, but it failed validation:\n- ${o.validation.errors.join("\n- ")}`,
       card:`<div class="mini"><div class="diff">${ch.map(x=>esc(describe(x))).join("<br>")}</div><div style="margin-top:6px"><a class="btn ghost sm" href="#/app/admin/approvals">Open approvals</a></div></div>`});
     S.ui.orderId=o.id;
-  } else if(/status|summary|usage|spend/.test(t)){
+  } else if(/status|summary|usage|spend|azure/.test(t)){
+    if(window.fetch){
+      fetch('/api/assistant/command',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({accountId: a.id, text: text})
+      }).then(r=>r.json()).then(data=>{
+        if(data && data.response){
+          c.push({r:"a",t:data.response});
+          save();
+          render();
+        }
+      }).catch(e=>{
+        const used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0);
+        c.push({r:"a",t:`${a.name}: ${a.status}. ${a.domains.length} domain(s), ${a.sandboxes.length} sandbox(es) using ${used}/${a.resources.storageGb} GB, spend $${a.usage.spendUsd.toLocaleString()} of $${a.resources.spendLimitUsd.toLocaleString()}.`});
+        save();
+        render();
+      });
+      return;
+    }
     const used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0);
     c.push({r:"a",t:`${a.name}: ${a.status}. ${a.domains.length} domain(s), ${a.sandboxes.length} sandbox(es) using ${used}/${a.resources.storageGb} GB, spend $${a.usage.spendUsd.toLocaleString()} of $${a.resources.spendLimitUsd.toLocaleString()}. ${S.orders.filter(o=>o.accountId===a.id&&o.status==="pending").length} order(s) awaiting approval.`});
   } else c.push({r:"a",t:"I draft config orders for this account; you approve them. Try:\n• add domain readygo-finance\n• add sandbox sbx-2 50gb\n• set spend limit 8000\n• invite x@y.com as admin\n• status\nChain requests with \"and\". For a quick fix, use the dashboard directly."});
