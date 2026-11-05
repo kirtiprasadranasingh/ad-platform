@@ -152,14 +152,25 @@ def resolve_azure_target(acct_id: str, acct_name: str = "", tenancy: str = "sing
     id_l = (acct_id or "").lower()
     if tenancy == "multi" or "shared" in name_l or "shared" in id_l:
         return "rg-shared-storage-poc", "stsharedpoc772"
+
+    clean = re.sub(r"[^a-z0-9]", "", name_l.replace("acct-", ""))[:8] or "client"
+    env = "test1" if "test" in id_l or "test" in name_l else ("prod1" if "prod" in id_l or "prod" in name_l else "dev1")
+    for a in DB.get("accounts", []):
+        if a.get("id") == acct_id or a.get("name", "").lower() == name_l:
+            env = a.get("env") or env
+            clean = re.sub(r"[^a-z0-9]", "", a.get("name", "").replace("acct-", "")).lower()[:8] or clean
+            break
+
     if "xyz" in name_l or "xyz" in id_l:
         return "rg-xyz-test1", "saxyztest1"
     if "golang" in name_l or "golang" in id_l:
         return "rg-golang-prod1", "sagolangprod1"
+    if "grow" in name_l or "grow" in id_l:
+        return f"rg-grow-{env}", f"sagrow{env}"
     if "acme" in name_l or "acme" in id_l:
         return "rg-acme-dev1", "saacmedev1"
-    # Fallback to the active single-tenant production environment
-    return "rg-golang-prod1", "sagolangprod1"
+
+    return f"rg-{clean}-{env}", f"sa{clean}{env}"
 
 
 def azure_provision_container(rg_name: str, sa_name: str, container_name: str) -> str:

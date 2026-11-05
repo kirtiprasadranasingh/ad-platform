@@ -499,8 +499,9 @@ function configgySay(text){
   } else if(/status|summary|usage|spend|azure/.test(t)){
     const used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0);
     const pendingCount = S.orders.filter(o=>o.accountId===a.id&&o.status==="pending").length;
+    const envTier = a.env || "test1";
     const formattedStatus = `📊 ${a.name} Environment Overview:
-• State: Active & Ready (Azure rg-${(a.name||"client").toLowerCase()}-prod1)
+• State: Active & Ready (Azure rg-${(a.name||"client").toLowerCase()}-${envTier})
 • Compliance: 100% HITRUST/HIPAA Compliant
 • Domains: ${a.domains.length} active (${a.domains.join(", ") || "data-foundation"})
 • Sandboxes: ${a.sandboxes.length} allocated (${used} GB of ${a.resources.storageGb} GB quota)

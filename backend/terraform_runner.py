@@ -336,7 +336,7 @@ def run_provisioning_workflow(
                     # 7. Create App Configuration Store
                     appcs_name = f"appcs-{config_paths['prefix']}"[:24]
                     appcs_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.AppConfiguration/configurationStores/{appcs_name}?api-version=2023-03-01"
-                    appcs_body = json.dumps({"location": region, "sku": {"name": "free"}, "tags": {"ManagedBy": "AD-Platform"}}).encode("utf-8")
+                    appcs_body = json.dumps({"location": region, "sku": {"name": "standard"}, "tags": {"ManagedBy": "AD-Platform"}}).encode("utf-8")
                     try:
                         req_appcs = urllib.request.Request(appcs_url, data=appcs_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                         urllib.request.urlopen(req_appcs, timeout=15)
