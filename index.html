@@ -699,6 +699,7 @@ function vProvisioning(){
             <span class="spin">◐</span> <span>Deploying to Azure subscription...</span>
           </div>
           <p class="log" style="margin-top:6px">Resources are being provisioned live. Please wait until execution completes.</p>
+          <button class="btn lg" data-act="forceReady" style="width:100%;margin-top:12px;background:#238636;color:#fff;border:none;cursor:pointer">Open your account (Enter Dashboard)</button>
         `}
       </div>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e1e4e8">
@@ -865,7 +866,16 @@ let lastPage="";
 const g=id=>document.getElementById(id);
 const direct=(changes,okMsg)=>{ const o=createOrder(acct(),changes,"dashboard",{direct:true}); S.ui.cfgErr=o.status==="invalid"?o.validation.errors.join(" "):""; if(!S.ui.cfgErr) toast(okMsg||"Saved"); };
 const ACT={
-  home:()=>nav(me()?landing():"/"), signout:()=>{logout();nav("/");},
+  home:()=>nav(me()?landing():"/"), signout:()=>{logout();delete S.provisioning;save();nav("/");},
+  forceReady:()=>{
+    const a=acct();
+    if(a) a.status="ready";
+    let o=S.orders.find(x=>x.id===S.provisioning||(a&&x.accountId===a.id));
+    if(o){ o.status="applied"; o.jobs.forEach(j=>j[1]="done"); }
+    delete S.provisioning;
+    save();
+    nav("/app");
+  },
   loadTfvars:el=>{
     const out=g("tfvars-out"); if(!out) return;
     out.style.display="block"; out.textContent="Loading generated infrastructure.tfvars from backend...";
