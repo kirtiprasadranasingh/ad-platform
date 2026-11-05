@@ -122,8 +122,8 @@ h1.xl{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margi
 .stat .d{color:var(--slate);font-size:13px;margin-top:4px}
 .section{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--slate);font-weight:700;margin:6px 0 10px}
 /* site */
-.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:44px;align-items:start}
-.hero p.lead{font-size:18px;color:var(--slate);line-height:1.6;margin:0 0 26px;max-width:540px}
+.hero{display:block;max-width:860px}
+.hero p.lead{font-size:18px;color:var(--slate);line-height:1.6;margin:0 0 26px;max-width:720px}
 .can{list-style:none;padding:0;margin:26px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .can li{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-weight:500;box-shadow:var(--sh)}
 .can li a{color:var(--ink)}
@@ -638,11 +638,10 @@ function chatHtml(list,id,placeholder,sugg){
 /* ============================== views: site ============================== */
 const siteFoot=()=>`<footer class="site">© Alida · AD as a Service</footer>`;
 function vHome(){
-  return `<div class="site"><div class="wrap"><div class="hero"><div>
+  return `<div class="site"><div class="wrap"><div class="hero">
    <h1 class="xl">Automate the safe production and exploration of data.</h1><p class="lead">AD produces integrated, peered datasets, explores them, and generates new models — deterministically, with every step verified and every change audited.</p>
    <div class="row"><a class="btn lg" href="#/register">Get started</a><a class="btn ghost lg" href="#/login">Sign in</a></div>
    <h2 style="margin-top:34px">With AD you can…</h2><ul class="can">${SEE.map(([t])=>`<li><a href="#/see">${t}</a></li>`).join("")}</ul></div>
-   <div class="card chatcard"><div class="head"><b>Talk to AD</b><small>Salesy · AD Sales agent</small></div>${chatHtml(S.chats.sales,"sales","Ask about AD, or say \"create an account\"",["What is AD?","Why is it safe?","What does it cost?","Create an account"])}</div></div>
    <div class="paths"><a class="path" href="#/see"><b>See</b><span>What AD can do</span><small>Eight things you can do with AD today.</small></a><a class="path" href="#/learn"><b>Learn</b><span>How AD works</span><small>The cycle, the agents, the work orders.</small></a><a class="path" href="#/understand"><b>Understand</b><span>Why AD is safe</span><small>Safe AI, deterministic results, control.</small></a><a class="path" href="#/partner"><b>Partner</b><span>Work with AD</span><small>Eight steps from account to first job.</small></a></div>
    ${me()?`<div class="info" style="margin-top:24px">You're signed in. <a href="#${landing()}">Go to your account</a>.</div>`:""}</div>${siteFoot()}</div>`;
 }
@@ -685,8 +684,7 @@ function vOnboard(){
   ][step]();
   return `<div class="content narrow">${stepper(1)}<div class="wiz"><ol>${WIZ.map((w,i)=>`<li class="${i===step?"on":i<step?"done":""}">${i<step?"✓ ":""}${w}</li>`).join("")}</ol>
   <div><div class="card">${body}${S.ui.onbErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.onbErr)}</div>`:""}
-  <div class="row" style="margin-top:18px;justify-content:space-between"><div>${step>0?`<button class="btn ghost" data-act="onbBack">Back</button>`:`<button class="btn ghost" data-act="onbCancel">${staff?"Cancel":"Save and sign out"}</button>`}</div><div>${step<5?`<button class="btn" data-act="onbNext">Continue</button>`:`<button class="btn" data-act="onbConfirm">${staff?"Confirm and provision":"Confirm and pay"}</button>`}</div></div></div></div></div></div>
-  ${staff?"":`<aside class="dock"><div class="head"><b>Salesy</b><small>Ask me anything while you fill this in</small></div>${chatHtml(S.chats.sales,"sales","Ask Salesy…")}</aside>`}`;
+  <div class="row" style="margin-top:18px;justify-content:space-between"><div>${step>0?`<button class="btn ghost" data-act="onbBack">Back</button>`:`<button class="btn ghost" data-act="onbCancel">${staff?"Cancel":"Save and sign out"}</button>`}</div><div>${step<5?`<button class="btn" data-act="onbNext">Continue</button>`:`<button class="btn" data-act="onbConfirm">${staff?"Confirm and provision":"Confirm and pay"}</button>`}</div></div></div></div></div></div>`;
 }
 function vProvisioning(){
   const a=acct();
