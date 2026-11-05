@@ -268,24 +268,32 @@ function pollBackendOrder(orderId, co, a, sol, d){
 
 const KEY="adaas-proto-v3";
 function seed(){
-  return { v:3, session:null, acting:null, provisioning:null, onbs:{}, seq:{so:1,co:1,wo:1,ds:3}, ui:{cfgErr:"",onbErr:"",orderId:null,editing:null,authErr:""},
+  return { v:4, session:{email:"bill@alidainc.com"}, acting:"acct-grow", provisioning:null, onbs:{}, seq:{so:1,co:6,wo:1,ds:3}, ui:{cfgErr:"",onbErr:"",orderId:null,editing:null,authErr:""},
     users:[
-      {email:"bill@alidainc.com",name:"Bill Sequeira",password:"ad",accountId:"alida-internal",role:"admin"},
-      {email:"dhananjay@alidainc.com",name:"Dhananjay Goel",password:"ad",accountId:"alida-internal",role:"user"},
+      {email:"bill@alidainc.com",name:"Bill Sequeira",password:"ad",accountId:"acct-grow",role:"admin"},
+      {email:"smith@client.com",name:"Smith",password:"ad",accountId:"acct-grow",role:"admin"},
+      {email:"dhananjay@alidainc.com",name:"Dhananjay Goel",password:"ad",accountId:"acct-grow",role:"user"},
       {email:"staff@alidainc.com",name:"Alida staff",password:"ad",accountId:null,role:"staff"}],
-    accounts:[{id:"alida-internal",name:"Alida Internal (first client)",solution:"data-foundation",region:"eastus2",tenancy:"single",management:"fully",status:"ready",
-      domains:["gendf","readygo-retail"],sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100}],resources:{spendLimitUsd:5000,storageGb:500},usage:{spendUsd:1840,computeHours:62},
-      datasets:[{name:"retail_orders_2025",gb:12.4,src:"UC"},{name:"store_master",gb:0.3,src:"import"}],created:"2026-11-20"}],
-    orders:[{id:"CO-0001",accountId:"alida-internal",kind:"provision",source:"staff",requestedBy:"staff@alidainc.com",status:"applied",created:"2026-11-20 09:12",validation:{ok:true,errors:[],warnings:[]},
-      changes:[{op:"provision",target:"environment",value:"eastus2 · single-tenant · fully managed"},{op:"add",target:"domain",id:"gendf"},{op:"add",target:"domain",id:"readygo-retail"},{op:"add",target:"sandbox",name:"sbx-main",mode:"dedicated",quotaGb:100},{op:"add",target:"user",email:"bill@alidainc.com",role:"admin"}],
+    accounts:[
+      {id:"acct-grow",name:"GROW",solution:"data-foundation",region:"eastus2",env:"test1",tenancy:"single",management:"fully",status:"ready",
+        domains:["gendf","readygo-finance"],sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100},{name:"sbx-2",mode:"dedicated",quotaGb:50}],resources:{spendLimitUsd:5000,storageGb:500},usage:{spendUsd:0,computeHours:0},
+        datasets:[{name:"retail_orders_2025",gb:12.4,src:"UC"},{name:"store_master",gb:0.3,src:"import"}],created:"2026-11-05"},
+      {id:"acct-golang",name:"GOLANG",solution:"data-foundation",region:"eastus2",env:"prod1",tenancy:"single",management:"self",status:"ready",
+        domains:["data-foundation"],sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100}],resources:{spendLimitUsd:5000,storageGb:500},usage:{spendUsd:120,computeHours:4},
+        datasets:[],created:"2026-11-05"},
+      {id:"alida-internal",name:"Alida Internal (first client)",solution:"data-foundation",region:"eastus2",tenancy:"single",management:"fully",status:"ready",
+        domains:["gendf","readygo-retail"],sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100}],resources:{spendLimitUsd:5000,storageGb:500},usage:{spendUsd:1840,computeHours:62},
+        datasets:[{name:"retail_orders_2025",gb:12.4,src:"UC"},{name:"store_master",gb:0.3,src:"import"}],created:"2026-11-20"}],
+    orders:[{id:"CO-0001",accountId:"acct-grow",kind:"provision",source:"staff",requestedBy:"bill@alidainc.com",status:"applied",created:"2026-11-05 09:12",validation:{ok:true,errors:[],warnings:[]},
+      changes:[{op:"provision",target:"environment",value:"eastus2 · single-tenant · fully managed"},{op:"add",target:"domain",id:"gendf"},{op:"add",target:"domain",id:"readygo-finance"},{op:"add",target:"sandbox",name:"sbx-main",mode:"dedicated",quotaGb:100},{op:"add",target:"sandbox",name:"sbx-2",mode:"dedicated",quotaGb:50},{op:"add",target:"user",email:"bill@alidainc.com",role:"admin"}],
       jobs:[["Validate sales order","done"],["Environment setup (ADAzEnvConfig)","done"],["Service configuration (ADSvcConfig)","done"],["Jumpstart AD","done"],["Verify","done"]]}],
-    works:[{id:"WO-0001",accountId:"alida-internal",by:"dhananjay@alidainc.com",verb:"PRODUCE",text:"Produce a data foundation from retail_orders_2025",status:"done",result:"Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged."}],
-    audit:[{t:"2026-11-20 09:31",actor:"orchestrator",action:"config-order.applied",ref:"CO-0001"},{t:"2026-11-20 09:14",actor:"staff@alidainc.com",action:"config-order.approved",ref:"CO-0001"},{t:"2026-11-20 09:12",actor:"staff@alidainc.com",action:"sales-order.received",ref:"SO-0001"}],
+    works:[{id:"WO-0001",accountId:"acct-grow",by:"dhananjay@alidainc.com",verb:"PRODUCE",text:"Produce a data foundation from retail_orders_2025",status:"done",result:"Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged."}],
+    audit:[{t:"2026-11-05 09:31",actor:"orchestrator",action:"config-order.applied",ref:"CO-0001"},{t:"2026-11-05 09:14",actor:"bill@alidainc.com",action:"config-order.approved",ref:"CO-0001"}],
     chats:{sales:[{r:"a",t:"Hi, I'm Salesy, the AD Sales agent. Ask me what AD can do, how it works, or why it's safe — or say \"create an account\" and I'll get you started."}],cfg:{},ad:{}}
   };
 }
 const store={get(){try{return localStorage.getItem(KEY);}catch(e){return null;}},set(v){try{localStorage.setItem(KEY,v);}catch(e){}},del(){try{localStorage.removeItem(KEY);}catch(e){}}};
-function load(){ try{ const s=JSON.parse(store.get()); if(s&&s.v===3) return s; }catch(e){} return seed(); }
+function load(){ try{ const s=JSON.parse(store.get()); if(s&&s.v===4) return s; }catch(e){} return seed(); }
 let S=load();
 const save=()=>store.set(JSON.stringify(S));
 

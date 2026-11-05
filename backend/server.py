@@ -81,6 +81,24 @@ DB = {
             "resources": {"spendLimitUsd": 5000, "storageGb": 500},
             "usage": {"spendUsd": 350, "computeHours": 12},
             "created": "2026-11-05"
+        },
+        {
+            "id": "acct-grow",
+            "name": "GROW",
+            "solution": "data-foundation",
+            "region": "eastus2",
+            "env": "test1",
+            "tenancy": "single",
+            "management": "fully",
+            "status": "ready",
+            "domains": ["data-foundation", "readygo-finance"],
+            "sandboxes": [
+                {"name": "sbx-main", "mode": "dedicated", "quotaGb": 100},
+                {"name": "sbx-2", "mode": "dedicated", "quotaGb": 50}
+            ],
+            "resources": {"spendLimitUsd": 5000, "storageGb": 500},
+            "usage": {"spendUsd": 0, "computeHours": 0},
+            "created": "2026-11-05"
         }
     ],
     "orders": {},
