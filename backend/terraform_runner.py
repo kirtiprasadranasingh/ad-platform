@@ -112,6 +112,8 @@ client_name          = "{org}"
         "prefix": prefix,
         "poc_rg": poc_rg,
         "sa_name": sa_name,
+        "org": org,
+        "env": env
     }
 
 
