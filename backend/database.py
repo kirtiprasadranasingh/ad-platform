@@ -98,7 +98,8 @@ def seed_db(conn):
         ("bill@alidainc.com", "Bill Sequeira", "ad", "admin", "acct-grow", now_str),
         ("smith@client.com", "Smith", "ad", "admin", "acct-grow", now_str),
         ("dhananjay@alidainc.com", "Dhananjay Goel", "ad", "user", "acct-grow", now_str),
-        ("staff@alidainc.com", "Alida staff", "ad", "staff", None, now_str)
+        ("staff@alidainc.com", "Alida staff", "ad", "staff", None, now_str),
+        ("yma@gmail.com", "ASIRBAD", "kIRT", "admin", "yma", now_str)
     ]
     cursor.executemany("""
     INSERT INTO users (email, name, password, role, account_id, created_at)
@@ -159,6 +160,17 @@ def seed_db(conn):
                 ]
             }),
             "2026-11-20"
+        ),
+        (
+            "yma", "YMA", "data-foundation", "eastus2", "test1", "single", "self", "ready",
+            json.dumps({
+                "domains": ["gendf"],
+                "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
+                "resources": {"spendLimitUsd": 5000, "storageGb": 500},
+                "usage": {"spendUsd": 0, "computeHours": 0},
+                "datasets": []
+            }),
+            "2026-11-06"
         )
     ]
     cursor.executemany("""

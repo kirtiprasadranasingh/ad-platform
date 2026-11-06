@@ -18,4 +18,7 @@ services:
       - ARM_CLIENT_SECRET
     volumes:
       - ./backend/runs:/app/backend/runs
-      - ./backend/data:/app/backend/data
+      - ad_data:/app/backend/data
+
+volumes:
+  ad_data:
