@@ -10,7 +10,7 @@
 html,body{height:100%}
 body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:14.5px;line-height:1.5;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
 a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
-header{height:60px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:18px;flex:none}
+header{height:60px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;gap:12px;flex:none;box-sizing:border-box;width:100%;max-width:100%}
 .brand{font-weight:800;font-size:17px;color:var(--navy);white-space:nowrap;cursor:pointer;letter-spacing:-.01em}.brand span{font-weight:500;color:var(--slate);margin-left:7px;font-size:13px}
 .spacer{flex:1}
 .hnav{display:flex;gap:2px}.hnav a{color:var(--slate);font-size:14px;font-weight:500;padding:7px 12px;border-radius:8px}.hnav a.on,.hnav a:hover{background:#f1f4f9;color:var(--navy);text-decoration:none}
@@ -84,8 +84,8 @@ pre{background:#0f1f3d;color:#dbe4f3;border-radius:8px;padding:14px;font-size:12
 .diff{font:13px/1.8 ui-monospace,Menlo,monospace}.diff .a{color:var(--green)}.diff .r{color:var(--red)}.diff .c{color:var(--amber)}
 .diff .x{all:unset;cursor:pointer;color:var(--red);margin-left:8px;font-weight:700}.diff input{width:80px;padding:2px 6px;font-size:12px;border-radius:6px}
 /* shell */
-.shell{flex:1;min-height:0;display:grid;grid-template-columns:224px 1fr auto}
-.shell.plain{grid-template-columns:1fr auto}
+.shell{flex:1;min-height:0;display:grid;grid-template-columns:224px minmax(0,1fr) auto;width:100%;max-width:100%;overflow:hidden}
+.shell.plain{grid-template-columns:minmax(0,1fr) auto;width:100%;max-width:100%;overflow:hidden}
 .side{background:var(--surface);border-right:1px solid var(--line);padding:14px 10px;overflow:auto}
 .side .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:18px 12px 6px}
 .side a{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;color:var(--slate);font-weight:500;margin-bottom:2px}
@@ -657,18 +657,22 @@ function topbar(){
   const tenant=u.role==="staff"||u.role==="admin"?`<select class="tenant" data-act="switchAcct">${S.accounts.map(x=>`<option value="${x.id}" ${(a&&a.id===x.id)?"selected":""}>${esc(x.name)} (Dedicated)</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)} (Dedicated)</span>`:"");
   const activeChat = S.ui.activeChat || (inAdmin() ? "cfg" : "ad");
   const astSelector = (a && a.status === "ready") ? `
-    <div style="display:inline-flex;align-items:center;gap:4px">
-      <select class="tenant" data-act="selectAssistant" title="Switch Assistant">
-        <option value="ad" ${activeChat==="ad"?"selected":""}>Assistant: AD</option>
-        <option value="cfg" ${activeChat==="cfg"?"selected":""}>Assistant: Configgy</option>
+    <div style="display:inline-flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:8px;padding:2px 6px">
+      <span style="font-size:12px;color:var(--slate);font-weight:600;margin-right:2px">Assistant:</span>
+      <select class="tenant" data-act="selectAssistant" title="Switch Assistant" style="border:none;background:transparent;padding:4px 6px;font-size:12.5px;font-weight:600;cursor:pointer">
+        <option value="ad" ${activeChat==="ad"&&S.ui.dock!==false?"selected":""}>AD</option>
+        <option value="cfg" ${activeChat==="cfg"&&S.ui.dock!==false?"selected":""}>Configgy</option>
+        <option value="toggle" ${S.ui.dock===false?"selected":""}>Closed</option>
       </select>
-      <button class="link ${S.ui.dock!==false?"on":""}" data-act="toggleDock" title="Toggle Assistant Panel">${S.ui.dock!==false?"Hide":"Open"}</button>
     </div>
   ` : "";
   return `<div class="brand" data-act="home">AD<span>as a Service</span></div>${tenant}<span class="spacer"></span>
-  ${(u.role==="staff"||u.role==="admin")?`<a class="link ${R.parts[1]==="accounts"?"on":""}" href="#/app/accounts">All Tenants</a>`:""}
-  ${astSelector}
-  <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida Staff":u.role==="admin"?"Client Admin":"Operator"}</small></span><button class="link" data-act="signout">Sign out</button>`;
+  <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+    ${(u.role==="staff"||u.role==="admin")?`<a class="link ${R.parts[1]==="accounts"?"on":""}" href="#/app/accounts">All Tenants</a>`:""}
+    ${astSelector}
+    <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida Staff":u.role==="admin"?"Client Admin":"Operator"}</small></span>
+    <button class="link" data-act="signout">Sign out</button>
+  </div>`;
 }
 function sidebar(){
   const u=me(), a=acct(), p1=R.parts[1]||"", p2=R.parts[2]||"";
@@ -1010,7 +1014,7 @@ const ACT={
     return "norender";
   },
   toggleDock:()=>{ S.ui.dock = !(S.ui.dock !== false); save(); },
-  selectAssistant:el=>{ S.ui.activeChat = el.value; S.ui.dock = true; save(); },
+  selectAssistant:el=>{ if(el.value==="toggle"){ S.ui.dock=false; } else { S.ui.activeChat=el.value; S.ui.dock=true; } save(); },
   switchChat:el=>{ S.ui.activeChat = el.dataset.v; S.ui.dock = true; save(); },
   switchAcct:el=>{S.acting=el.value||null;save();nav(el.value?"/app":"/app/accounts");},
   chooseSol:el=>{onb().d.solution=el.dataset.v;save();},
