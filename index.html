@@ -243,6 +243,7 @@ function fetchBackendState(){
       if(!d) return;
       if(d.users && d.users.length) {
         d.users.forEach(u => {
+          u.accountId = u.accountId || u.account_id;
           const idx = S.users.findIndex(x => x.email.toLowerCase() === u.email.toLowerCase());
           if(idx >= 0) S.users[idx] = Object.assign(S.users[idx], u);
           else S.users.push(u);
@@ -352,7 +353,7 @@ const save=()=>{ store.set(JSON.stringify(S)); syncBackend(); };
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const me=()=>S.session?S.users.find(u=>u.email===S.session.email):null;
-const acct=id=>{ if(id) return S.accounts.find(a=>a.id===id); const u=me(); if(!u) return null; return S.accounts.find(a=>a.id===(u.role==="staff"?S.acting:u.accountId))||null; };
+const acct=id=>{ if(id) return S.accounts.find(a=>a.id===id||a.id===("acct-"+id)||(a.id.replace("acct-","")===id.replace("acct-",""))); const u=me(); if(!u) return null; const aid=u.accountId||u.account_id; return S.accounts.find(a=>a.id===(u.role==="staff"?S.acting:aid)||a.id===("acct-"+aid)||(a.id.replace("acct-","")===aid?.replace("acct-","")))||null; };
 const accountUsers=a=>S.users.filter(u=>u.accountId===a.id);
 const nid=k=>{const p={so:"SO",co:"CO",wo:"WO",ds:"DS"}[k];return p+"-"+String(++S.seq[k]).padStart(4,"0");};
 const now=()=>new Date().toISOString().slice(0,16).replace("T"," ");
@@ -446,7 +447,7 @@ function login(email,password){
   S.session={email:u.email}; if(u.role==="staff") S.acting=null; log("sign-in ("+u.role+")",u.accountId||"portal",u.email); save(); return "";
 }
 function logout(){ if(me()) log("sign-out","portal"); S.session=null; S.acting=null; save(); }
-function landing(){ const u=me(); if(!u) return "/login"; if(u.role==="staff") return S.acting?"/app":"/app/accounts"; if(!u.accountId) return "/onboard"; const a=acct(); if(a.status!=="ready") return "/provisioning"; return "/app"; }
+function landing(){ const u=me(); if(!u) return "/login"; if(u.role==="staff") return S.acting?"/app":"/app/accounts"; const aid=u.accountId||u.account_id; if(!aid) return "/onboard"; const a=acct(); if(!a||a.status!=="ready") return "/provisioning"; return "/app"; }
 
 /* ============================== onboarding ============================== */
 function onbKey(){ const u=me(); return u.role==="staff"?"staff":u.email; }
@@ -899,7 +900,7 @@ function render(){
   const needUser=["onboard","provisioning","app"];
   if(needUser.includes(p)&&!u){ nav("/login",true); return; }
   if((p==="login"||p==="register")&&u){ nav(landing(),true); return; }
-  if(p==="onboard"){ if(u.role!=="staff"&&u.accountId){ nav(landing(),true); return; } if(!onb()) startOnboarding(u.role==="staff"?"staff":"sales"); }
+  if(p==="onboard"){ const aid=u.accountId||u.account_id; if(u.role!=="staff"&&aid){ nav(landing(),true); return; } if(!onb()) startOnboarding(u.role==="staff"?"staff":"sales"); }
   if(p==="app"){
     const sub=R.parts[1]||"";
     if(u.role==="staff"&&!S.acting&&sub!=="accounts"){ nav("/app/accounts",true); return; }
@@ -1014,12 +1015,20 @@ document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.targe
       .then(r => r.json())
       .then(res => {
         if(res.ok && res.user){
+          res.user.accountId = res.user.accountId || res.user.account_id;
           const idx = S.users.findIndex(u => u.email.toLowerCase() === res.user.email.toLowerCase());
-          if(idx >= 0) S.users[idx] = res.user;
+          if(idx >= 0) S.users[idx] = Object.assign(S.users[idx], res.user);
           else S.users.push(res.user);
+          if(res.state && res.state.accounts) {
+            res.state.accounts.forEach(a => {
+              const aidx = S.accounts.findIndex(x => x.id === a.id);
+              if(aidx >= 0) S.accounts[aidx] = Object.assign(S.accounts[aidx], a);
+              else S.accounts.push(a);
+            });
+          }
           S.session = {email: res.user.email};
           if(res.user.role === "staff") S.acting = null;
-          else if(res.user.account_id) S.acting = res.user.account_id;
+          else S.acting = res.user.accountId;
           save();
           nav(landing());
         } else {

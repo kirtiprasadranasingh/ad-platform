@@ -222,7 +222,9 @@ def get_user(email: str):
     row = conn.execute("SELECT * FROM users WHERE email = ? COLLATE NOCASE", (email.strip(),)).fetchone()
     conn.close()
     if row:
-        return dict(row)
+        u = dict(row)
+        u["accountId"] = u.get("account_id")
+        return u
     return None
 
 def authenticate_user(email: str, password: str):
@@ -253,7 +255,12 @@ def get_all_users():
     conn = get_connection()
     rows = conn.execute("SELECT email, name, password, role, account_id, created_at FROM users").fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    res = []
+    for r in rows:
+        u = dict(r)
+        u["accountId"] = u.get("account_id")
+        res.append(u)
+    return res
 
 # --- Accounts ---
 def get_all_accounts():
