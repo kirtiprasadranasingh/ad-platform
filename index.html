@@ -210,10 +210,10 @@ const PARTNER=[
  ["Create an account","Register, then onboarding step 2."],
  ["Choose your spending limits","Onboarding step 3."],
  ["Provide a list of AD users","Onboarding step 4. Users can be admins (configure and operate) or users (operate only)."],
- ["Allow AD to set up your account & access","Configgy provisions your environment after you confirm."],
+ ["Allow AD to set up your account & access","The platform provisions your environment after you confirm."],
  ["Tailor AD environment options","Onboarding step 5: region, tenancy, management, storage."],
  ["Take a tour of your new AD environment","After provisioning."],
- ["Run your first job","In AD, with ADy."]
+ ["Run your first job","In AD, with the platform assistant."]
 ];
 const WIZ=["Work solution","Account","Spending limit","Users","Environment","Review & confirm"];
 
@@ -657,7 +657,7 @@ function topbar(){
   const tenant=u.role==="staff"||u.role==="admin"?`<select class="tenant" data-act="switchAcct">${S.accounts.map(x=>`<option value="${x.id}" ${(a&&a.id===x.id)?"selected":""}>${esc(x.name)} (Dedicated)</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)} (Dedicated)</span>`:"");
   return `<div class="brand" data-act="home">AD<span>as a Service</span></div>${tenant}<span class="spacer"></span>
   ${(u.role==="staff"||u.role==="admin")?`<a class="link ${R.parts[1]==="accounts"?"on":""}" href="#/app/accounts">All Tenants</a>`:""}
-  ${a&&a.status==="ready"?`<button class="link ${S.ui.dock!==false?"on":""}" data-act="toggleDock">⚡ Assistant (Configgy)</button>`:""}
+  ${a&&a.status==="ready"?`<button class="link ${S.ui.dock!==false?"on":""}" data-act="toggleDock">Assistant</button>`:""}
   <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida Staff":u.role==="admin"?"Client Admin":"Operator"}</small></span><button class="link" data-act="signout">Sign out</button>`;
 }
 function sidebar(){
@@ -682,7 +682,7 @@ function dock(){
   S.chats.ad = S.chats.ad || {};
   const cfg=inAdmin();
   const list=cfg?chatFor(S.chats.cfg,a.id):chatFor(S.chats.ad,a.id);
-  return `<aside class="dock"><div class="head"><b>${cfg?"Configgy":"ADy"}</b><small>${cfg?"Directly configures and manages your dedicated environment":"Turns requests into work orders and reports back"}</small></div>
+  return `<aside class="dock"><div class="head"><b>${cfg?"Assistant":"AD Assistant"}</b><small>${cfg?"Directly configures and manages your dedicated environment":"Turns requests into work orders and reports back"}</small></div>
   ${chatHtml(list,cfg?"cfg":"ad",cfg?"e.g. add domain readygo-finance":"Tell ADy what you need",cfg?["add domain readygo-finance","invite ana@client.com as user","set spend limit 6000","status"]:["profile store_master","produce a data foundation from the retail datasets","explore which stores drive returns","add domain readygo-healthcare"])}</aside>`;
 }
 function stepper(cur){ const st=["Account","Set up","Environment","Ready"]; return `<ol class="stepper">${st.map((s,i)=>`<li class="${i<cur?"done":i===cur?"on":""}"><span>${i<cur?"✓":i+1}</span>${s}</li>`).join("")}</ol>`; }
