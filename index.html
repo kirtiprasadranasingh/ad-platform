@@ -303,7 +303,7 @@ function pollBackendOrder(orderId, co, a, sol, d){
 
 const KEY="adaas-proto-v3";
 function seed(){
-  return { v:4, session:{email:"bill@alidainc.com"}, acting:"acct-grow", provisioning:null, onbs:{}, seq:{so:1,co:6,wo:1,ds:3}, ui:{cfgErr:"",onbErr:"",orderId:null,editing:null,authErr:""},
+  return { v:4, session:{email:"bill@alidainc.com"}, acting:"acct-grow", provisioning:null, onbs:{}, seq:{so:1,co:6,wo:1,ds:3}, ui:{cfgErr:"",onbErr:"",orderId:null,editing:null,authErr:"",dock:true},
     users:[
       {email:"bill@alidainc.com",name:"Bill Sequeira",password:"ad",accountId:"acct-grow",role:"admin"},
       {email:"smith@client.com",name:"Smith",password:"ad",accountId:"acct-grow",role:"admin"},
@@ -360,7 +360,7 @@ const now=()=>new Date().toISOString().slice(0,16).replace("T"," ");
 const log=(action,ref,actor)=>S.audit.unshift({t:now(),actor:actor||me()?.email||"visitor",action,ref});
 const chip=st=>({applied:"ok",ready:"ok",done:"ok",pending:"warn",queued:"warn",provisioning:"run",running:"run",rejected:"bad",failed:"bad",invalid:"bad"}[st]||"");
 const isAdmin=()=>{const u=me();return !!u&&(u.role==="admin"||u.role==="staff");};
-const chatFor=(map,id)=>(map[id]=map[id]||[]);
+const chatFor=(map,id)=>{ if(!map) return []; return (map[id]=map[id]||[]); };
 
 /* ============================== config orders ============================== */
 function describe(c){
@@ -444,7 +444,7 @@ function register(name,org,email,password){
 }
 function login(email,password){
   const u=S.users.find(u=>u.email===email&&u.password===password); if(!u) return "Wrong email or password.";
-  S.session={email:u.email}; if(u.role==="staff") S.acting=null; log("sign-in ("+u.role+")",u.accountId||"portal",u.email); save(); return "";
+  S.session={email:u.email}; S.ui.dock=true; if(u.role==="staff") S.acting=null; log("sign-in ("+u.role+")",u.accountId||"portal",u.email); save(); return "";
 }
 function logout(){ if(me()) log("sign-out","portal"); S.session=null; S.acting=null; save(); }
 function landing(){ const u=me(); if(!u) return "/login"; if(u.role==="staff") return S.acting?"/app":"/app/accounts"; const aid=u.accountId||u.account_id; if(!aid) return "/onboard"; const a=acct(); if(!a||a.status!=="ready") return "/provisioning"; return "/app"; }
@@ -651,7 +651,7 @@ function topbar(){
   const tenant=u.role==="staff"?`<select class="tenant" data-act="switchAcct"><option value="">All accounts</option>${S.accounts.map(x=>`<option value="${x.id}" ${S.acting===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)}</span>`:"");
   return `<div class="brand" data-act="home">AD<span>as a Service</span></div>${tenant}<span class="spacer"></span>
   ${a&&isAdmin()&&a.status==="ready"?`<a class="link ${pend?"attn":""}" href="#/app/admin/approvals">Approvals${pend?` <b class="cnt">${pend}</b>`:""}</a>`:""}
-  ${a&&a.status==="ready"?`<button class="link ${S.ui.dock===false?"":"on"}" data-act="toggleDock">Assistant</button>`:""}
+  ${a&&a.status==="ready"?`<button class="link ${S.ui.dock!==false?"on":""}" data-act="toggleDock">Assistant</button>`:""}
   <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida staff":u.role}</small></span><button class="link" data-act="signout">Sign out</button>`;
 }
 function sidebar(){
@@ -670,7 +670,11 @@ function sidebar(){
   return `<nav class="side">${h}</nav>`;
 }
 function dock(){
-  const a=acct(); if(!a||a.status!=="ready"||S.ui.dock===false) return "";
+  const a=acct(); if(!a||a.status!=="ready") return "";
+  if(S.ui.dock===false) return "";
+  S.chats = S.chats || {};
+  S.chats.cfg = S.chats.cfg || {};
+  S.chats.ad = S.chats.ad || {};
   const cfg=inAdmin();
   const list=cfg?chatFor(S.chats.cfg,a.id):chatFor(S.chats.ad,a.id);
   return `<aside class="dock"><div class="head"><b>${cfg?"Configgy":"ADy"}</b><small>${cfg?"Drafts configuration changes for your approval":"Turns requests into work orders and reports back"}</small></div>
@@ -945,7 +949,7 @@ const ACT={
     fetch('/api/accounts/'+el.dataset.v+'/tfvars').then(r=>r.json()).then(d=>{ out.textContent=d.content||"No tfvars generated."; }).catch(()=>{ out.textContent="Backend offline."; });
     return "norender";
   },
-  toggleDock:()=>{S.ui.dock=S.ui.dock===false;save();}, switchAcct:el=>{S.acting=el.value||null;save();nav(el.value?"/app":"/app/accounts");},
+  toggleDock:()=>{ S.ui.dock = !(S.ui.dock !== false); save(); }, switchAcct:el=>{S.acting=el.value||null;save();nav(el.value?"/app":"/app/accounts");},
   chooseSol:el=>{onb().d.solution=el.dataset.v;save();},
   onbNext:()=>{ const o=onb(); S.ui.onbErr=onbValidate(o.step); if(!S.ui.onbErr) o.step++; save(); },
   onbBack:()=>{S.ui.onbErr="";onb().step--;save();},
@@ -1027,6 +1031,7 @@ document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.targe
             });
           }
           S.session = {email: res.user.email};
+          S.ui.dock = true;
           if(res.user.role === "staff") S.acting = null;
           else S.acting = res.user.accountId;
           save();

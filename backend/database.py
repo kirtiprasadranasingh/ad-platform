@@ -284,6 +284,7 @@ def get_all_accounts():
         acct = dict(r)
         extra = json.loads(acct.pop("data", "{}"))
         acct.update(extra)
+        acct["created"] = acct.get("created") or acct.get("created_at") or datetime.now().strftime("%Y-%m-%d")
         result.append(acct)
     return result
 
@@ -296,6 +297,7 @@ def get_account(account_id: str):
     acct = dict(row)
     extra = json.loads(acct.pop("data", "{}"))
     acct.update(extra)
+    acct["created"] = acct.get("created") or acct.get("created_at") or datetime.now().strftime("%Y-%m-%d")
     return acct
 
 def upsert_account(acct: dict):
