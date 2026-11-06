@@ -655,9 +655,19 @@ function topbar(){
   const u=me(), a=u?acct():null, p=R.parts[0]||"";
   if(!u) return `<div class="brand" data-act="home">AD<span>as a Service</span></div><nav class="hnav">${[["see","See"],["learn","Learn"],["understand","Understand"],["partner","Partner"]].map(([k,l])=>`<a href="#/${k}" class="${p===k?"on":""}">${l}</a>`).join("")}</nav><span class="spacer"></span><a class="btn sm" href="#/login">Sign in</a>`;
   const tenant=u.role==="staff"||u.role==="admin"?`<select class="tenant" data-act="switchAcct">${S.accounts.map(x=>`<option value="${x.id}" ${(a&&a.id===x.id)?"selected":""}>${esc(x.name)} (Dedicated)</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)} (Dedicated)</span>`:"");
+  const activeChat = S.ui.activeChat || (inAdmin() ? "cfg" : "ad");
+  const astSelector = (a && a.status === "ready") ? `
+    <div style="display:inline-flex;align-items:center;gap:4px">
+      <select class="tenant" data-act="selectAssistant" title="Switch Assistant">
+        <option value="ad" ${activeChat==="ad"?"selected":""}>Assistant: AD</option>
+        <option value="cfg" ${activeChat==="cfg"?"selected":""}>Assistant: Configgy</option>
+      </select>
+      <button class="link ${S.ui.dock!==false?"on":""}" data-act="toggleDock" title="Toggle Assistant Panel">${S.ui.dock!==false?"Hide":"Open"}</button>
+    </div>
+  ` : "";
   return `<div class="brand" data-act="home">AD<span>as a Service</span></div>${tenant}<span class="spacer"></span>
   ${(u.role==="staff"||u.role==="admin")?`<a class="link ${R.parts[1]==="accounts"?"on":""}" href="#/app/accounts">All Tenants</a>`:""}
-  ${a&&a.status==="ready"?`<button class="link ${S.ui.dock!==false?"on":""}" data-act="toggleDock">Assistant</button>`:""}
+  ${astSelector}
   <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida Staff":u.role==="admin"?"Client Admin":"Operator"}</small></span><button class="link" data-act="signout">Sign out</button>`;
 }
 function sidebar(){
@@ -680,10 +690,16 @@ function dock(){
   S.chats = S.chats || {};
   S.chats.cfg = S.chats.cfg || {};
   S.chats.ad = S.chats.ad || {};
-  const cfg=inAdmin();
-  const list=cfg?chatFor(S.chats.cfg,a.id):chatFor(S.chats.ad,a.id);
-  return `<aside class="dock"><div class="head"><b>${cfg?"Assistant":"AD Assistant"}</b><small>${cfg?"Directly configures and manages your dedicated environment":"Turns requests into work orders and reports back"}</small></div>
-  ${chatHtml(list,cfg?"cfg":"ad",cfg?"e.g. add domain readygo-finance":"Tell ADy what you need",cfg?["add domain readygo-finance","invite ana@client.com as user","set spend limit 6000","status"]:["profile store_master","produce a data foundation from the retail datasets","explore which stores drive returns","add domain readygo-healthcare"])}</aside>`;
+  const activeChat = S.ui.activeChat || (inAdmin() ? "cfg" : "ad");
+  const isCfg = activeChat === "cfg";
+  const list = isCfg ? chatFor(S.chats.cfg, a.id) : chatFor(S.chats.ad, a.id);
+  return `<aside class="dock">
+  <div style="display:flex;border-bottom:1px solid var(--line);background:#f8fafc;padding:6px;gap:6px">
+    <button data-act="switchChat" data-v="ad" style="flex:1;padding:7px 10px;font-size:12.5px;font-weight:600;border:1px solid ${!isCfg?'var(--line)':'transparent'};border-radius:6px;cursor:pointer;background:${!isCfg?'#fff':'transparent'};color:${!isCfg?'var(--navy)':'var(--slate)'};box-shadow:${!isCfg?'var(--sh)':'none'}">AD Assistant</button>
+    <button data-act="switchChat" data-v="cfg" style="flex:1;padding:7px 10px;font-size:12.5px;font-weight:600;border:1px solid ${isCfg?'var(--line)':'transparent'};border-radius:6px;cursor:pointer;background:${isCfg?'#fff':'transparent'};color:${isCfg?'var(--navy)':'var(--slate)'};box-shadow:${isCfg?'var(--sh)':'none'}">Configgy</button>
+  </div>
+  <div class="head"><b>${isCfg?"Configgy":"AD (ADy)"}</b><small>${isCfg?"Directly configures and manages your dedicated environment":"Turns requests into work orders and reports back"}</small></div>
+  ${chatHtml(list,isCfg?"cfg":"ad",isCfg?"e.g. add domain readygo-finance":"Tell ADy what you need",isCfg?["add domain readygo-finance","invite ana@client.com as user","set spend limit 6000","status"]:["profile store_master","produce a data foundation from the retail datasets","explore which stores drive returns","add domain readygo-healthcare"])}</aside>`;
 }
 function stepper(cur){ const st=["Account","Set up","Environment","Ready"]; return `<ol class="stepper">${st.map((s,i)=>`<li class="${i<cur?"done":i===cur?"on":""}"><span>${i<cur?"✓":i+1}</span>${s}</li>`).join("")}</ol>`; }
 const head=(title,sub,extra="")=>`<div class="phead"><div><h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:""}</div>${extra}</div>`;
@@ -993,7 +1009,10 @@ const ACT={
     fetch('/api/accounts/'+el.dataset.v+'/tfvars').then(r=>r.json()).then(d=>{ out.textContent=d.content||"No tfvars generated."; }).catch(()=>{ out.textContent="Backend offline."; });
     return "norender";
   },
-  toggleDock:()=>{ S.ui.dock = !(S.ui.dock !== false); save(); }, switchAcct:el=>{S.acting=el.value||null;save();nav(el.value?"/app":"/app/accounts");},
+  toggleDock:()=>{ S.ui.dock = !(S.ui.dock !== false); save(); },
+  selectAssistant:el=>{ S.ui.activeChat = el.value; S.ui.dock = true; save(); },
+  switchChat:el=>{ S.ui.activeChat = el.dataset.v; S.ui.dock = true; save(); },
+  switchAcct:el=>{S.acting=el.value||null;save();nav(el.value?"/app":"/app/accounts");},
   chooseSol:el=>{onb().d.solution=el.dataset.v;save();},
   onbNext:()=>{ const o=onb(); S.ui.onbErr=onbValidate(o.step); if(!S.ui.onbErr) o.step++; save(); },
   onbBack:()=>{S.ui.onbErr="";onb().step--;save();},
