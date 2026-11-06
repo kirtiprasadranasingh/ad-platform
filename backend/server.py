@@ -517,18 +517,17 @@ def parse_assistant_command(cmd: AssistantCommand):
 
     # 5. Status query
     if "status" in text or "azure" in text:
-        used_gb = sum(s.get("quotaGb", 0) for s in acct.get("sandboxes", []))
         total_gb = acct.get("resources", {}).get("storageGb", 500)
         spend = acct.get("usage", {}).get("spendUsd", 0)
         limit = acct.get("resources", {}).get("spendLimitUsd", 5000)
         st = azure_get_account_status(rg_name, sa_name)
         conts_str = ", ".join(st.get("containers", [])) or "None"
         res_count = st.get("resourceCount", 15)
-        response_text = f"📊 {acct['name']} Environment Overview:\n• State: Active & Ready (Azure {rg_name})\n• Compliance: 100% HITRUST/HIPAA Compliant\n• Active PaaS Resources: {res_count} provisioned in Azure\n• Sandboxes: {len(acct.get('sandboxes', []))} allocated ({used_gb}/{total_gb} GB storage)\n• Azure Storage Containers: {conts_str}\n• Monthly Spend: ${spend:,.0f} of ${limit:,.0f} limit"
+        response_text = f"📊 {acct['name']} Dedicated Environment Overview:\n• Tenancy: 100% Dedicated (Single-Tenant)\n• State: Active & Ready (Azure {rg_name})\n• Compliance: 100% HITRUST/HIPAA Compliant\n• Active PaaS Resources: {res_count} provisioned in Azure\n• Storage: {total_gb} GB dedicated cloud storage\n• Azure Storage Containers: {conts_str}\n• Monthly Spend: ${spend:,.0f} of ${limit:,.0f} limit\n• Direct Admin Mode: Active (all mutations apply immediately)"
         changes.append({"op": "query", "target": "status"})
 
     if not changes:
-        response_text = f"I understood your request ('{cmd.text}'). No matching configuration mutation pattern found. Try: 'add sandbox dev 50 gb' or 'set spending limit to 6000'."
+        response_text = f"I understood your request ('{cmd.text}'). No matching configuration mutation pattern found. Try: 'add domain readygo-finance' or 'set spending limit to 6000'."
     else:
         # Automatically synchronize updated parameters to client's .tfvars on disk
         try:

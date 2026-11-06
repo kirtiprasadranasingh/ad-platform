@@ -540,33 +540,37 @@ const isConfigIntent=t=>/\b(add|remove|drop|delete|invite|promote)\b.*\b(domain|
 function configgySay(text){
   const a=acct(); const c=chatFor(S.chats.cfg,a.id); c.push({r:"u",t:text}); const t=text.toLowerCase(); const ch=parseConfig(text);
   if(ch.length){
-    const o=createOrder(a,ch,"configgy");
+    const o=createOrder(a,ch,"configgy",{direct:true});
     if(window.fetch){
+      fetch('/api/orders/apply',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({accountId: a.id, orderId: o.id, changes: ch})
+      }).then(r=>r.json()).then(data=>{
+        if(data && data.azure_actions){
+          data.azure_actions.forEach(act=>log(act, o.id, "azure-arm"));
+          save();
+        }
+      }).catch(e=>console.log("Apply sync error:", e));
       fetch('/api/assistant/command',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({accountId: a.id, text: text})
-      }).then(r=>r.json()).then(data=>{
-        if(data && data.azure_action){
-          log(data.azure_action, o.id, "azure-arm");
-          save();
-        }
       }).catch(e=>console.log("Backend offline:", e));
     }
-    c.push({r:"a",t:o.status==="pending"?`I drafted ${o.id} for ${a.name}. It passed validation and is waiting under Approvals.`:`I drafted ${o.id}, but it failed validation:\n- ${o.validation.errors.join("\n- ")}`,
-      card:`<div class="mini"><div class="diff">${ch.map(x=>esc(describe(x))).join("<br>")}</div><div style="margin-top:6px"><a class="btn ghost sm" href="#/app/admin/approvals">Open approvals</a></div></div>`});
+    c.push({r:"a",t:o.status==="applied"?`✔ Configuration change applied directly to dedicated tenant ${a.name} (order ${o.id}). Azure ARM updated.`:`✕ Order ${o.id} failed validation:\n- ${o.validation.errors.join("\n- ")}`,
+      card:`<div class="mini"><div class="diff">${ch.map(x=>esc(describe(x))).join("<br>")}</div></div>`});
     S.ui.orderId=o.id;
   } else if(/status|summary|usage|spend|azure/.test(t)){
-    const used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0);
-    const pendingCount = S.orders.filter(o=>o.accountId===a.id&&o.status==="pending").length;
     const envTier = a.env || "test1";
-    const formattedStatus = `📊 ${a.name} Environment Overview:
+    const formattedStatus = `📊 ${a.name} Dedicated Environment Overview:
+• Tenancy: 100% Dedicated (Single-Tenant)
 • State: Active & Ready (Azure rg-${(a.name||"client").toLowerCase()}-${envTier})
 • Compliance: 100% HITRUST/HIPAA Compliant
 • Domains: ${a.domains.length} active (${a.domains.join(", ") || "data-foundation"})
-• Sandboxes: ${a.sandboxes.length} allocated (${used} GB of ${a.resources.storageGb} GB quota)
+• Storage: ${a.resources.storageGb} GB dedicated cloud storage
 • Spend: $${a.usage.spendUsd.toLocaleString()} of $${a.resources.spendLimitUsd.toLocaleString()} limit
-• Governance: ${pendingCount ? `${pendingCount} order(s) awaiting approval` : "All changes approved"}`;
+• Direct Admin Mode: Active (all mutations apply immediately)`;
     c.push({r:"a",t:formattedStatus});
     if(window.fetch){
       fetch('/api/assistant/command',{
@@ -575,18 +579,21 @@ function configgySay(text){
         body:JSON.stringify({accountId: a.id, text: text})
       }).catch(e=>console.log("Backend offline:", e));
     }
-  } else c.push({r:"a",t:"I draft config orders for this account; you approve them. Try:\n• add domain readygo-finance\n• add sandbox sbx-2 50gb\n• set spend limit 8000\n• invite x@y.com as admin\n• status\nChain requests with \"and\". For a quick fix, use the dashboard directly."});
+  } else c.push({r:"a",t:"I configure this dedicated tenant directly. Try:\n• add domain readygo-finance\n• set spend limit 8000\n• invite ana@client.com as admin\n• status\nChain requests with \"and\"."});
   save();
 }
 function adySay(text){
   const a=acct(); const c=chatFor(S.chats.ad,a.id); c.push({r:"u",t:text});
   if(isConfigIntent(text)){
     const ch=parseConfig(text);
-    if(!ch.length){ c.push({r:"a",t:"That sounds like a configuration change. I can't change the environment, but I can ask Configgy. Say it as, for example, \"add domain readygo-healthcare\"."}); save(); return; }
-    const o=createOrder(a,ch,"ady",{note:"Raised from AD by "+me().email});
-    const admins=accountUsers(a).filter(u=>u.role==="admin").map(u=>u.email).join(", ");
-    c.push({r:"a",t:o.status==="pending"?(isAdmin()?`That's a configuration change, which I can't do from here. I've raised ${o.id} with Configgy; you can approve it under Approvals.`:`That's a configuration change, which needs an admin. I've raised ${o.id} with Configgy and notified ${admins}.`):`I tried to raise a config order but it failed validation:\n- ${o.validation.errors.join("\n- ")}`,
-      card:isAdmin()&&o.status==="pending"?`<div class="mini"><a class="btn ghost sm" href="#/app/admin/approvals">Review it</a></div>`:""});
+    if(!ch.length){ c.push({r:"a",t:"That sounds like a configuration change. Try saying: \"add domain readygo-healthcare\"."}); save(); return; }
+    const o=createOrder(a,ch,"ady",{direct:isAdmin()});
+    if(isAdmin()){
+      c.push({r:"a",t:`✔ Applied configuration change directly to dedicated tenant ${a.name} (${o.id}).`,card:`<div class="mini"><div class="diff">${ch.map(x=>esc(describe(x))).join("<br>")}</div></div>`});
+    } else {
+      const admins=accountUsers(a).filter(u=>u.role==="admin").map(u=>u.email).join(", ");
+      c.push({r:"a",t:`Configuration changes require admin privileges. Contact your tenant admin (${admins}).`});
+    }
     save(); return;
   }
   const t=text.toLowerCase();
@@ -637,35 +644,33 @@ const hashNow=()=>HASH_OK?(location.hash||"#/"):memHash;
 function parseHash(){ const h=hashNow().slice(1); const [p,qs]=h.split("?"); const parts=p.split("/").filter(Boolean); return {path:"/"+parts.join("/"),parts,q:Object.fromEntries(new URLSearchParams(qs||""))}; }
 function nav(path,replace){ if(HASH_OK){ if(replace) location.replace("#"+path); else location.hash=path; } else { memHash="#"+path; render(); } }
 let R=parseHash();
-const PUBLIC=["","see","learn","understand","partner","register","login"];
+const PUBLIC=["","see","learn","understand","partner","login"];
 const AD_PAGES={data:"Data",produce:"Produce",explore:"Explore",generate:"Generate","work-orders":"Work orders"};
-const ADMIN_PAGES={setup:"Setup",domains:"Domains",sandboxes:"Sandboxes",people:"People",approvals:"Approvals",usage:"Usage",audit:"Audit log"};
+const ADMIN_PAGES={setup:"Setup",domains:"Domains",people:"People",usage:"Usage",audit:"Audit log"};
 const inAdmin=()=>R.parts[0]==="app"&&R.parts[1]==="admin";
 let toastT=null; function toast(msg){ let t=$("#toast"); if(!t){ t=document.createElement("div"); t.id="toast"; document.body.appendChild(t);} t.textContent=msg; t.className="show"; clearTimeout(toastT); toastT=setTimeout(()=>t.className="",2600); }
 
 /* ============================== shell ============================== */
 function topbar(){
   const u=me(), a=u?acct():null, p=R.parts[0]||"";
-  if(!u) return `<div class="brand" data-act="home">AD<span>as a Service</span></div><nav class="hnav">${[["see","See"],["learn","Learn"],["understand","Understand"],["partner","Partner"]].map(([k,l])=>`<a href="#/${k}" class="${p===k?"on":""}">${l}</a>`).join("")}</nav><span class="spacer"></span><a class="link" href="#/login">Sign in</a><a class="link cta" href="#/register">Get started</a>`;
-  const pend=a?S.orders.filter(o=>o.accountId===a.id&&o.status==="pending").length:0;
-  const tenant=u.role==="staff"?`<select class="tenant" data-act="switchAcct"><option value="">All accounts</option>${S.accounts.map(x=>`<option value="${x.id}" ${S.acting===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)}</span>`:"");
+  if(!u) return `<div class="brand" data-act="home">AD<span>as a Service</span></div><nav class="hnav">${[["see","See"],["learn","Learn"],["understand","Understand"],["partner","Partner"]].map(([k,l])=>`<a href="#/${k}" class="${p===k?"on":""}">${l}</a>`).join("")}</nav><span class="spacer"></span><a class="btn sm" href="#/login">Sign in</a>`;
+  const tenant=u.role==="staff"||u.role==="admin"?`<select class="tenant" data-act="switchAcct">${S.accounts.map(x=>`<option value="${x.id}" ${(a&&a.id===x.id)?"selected":""}>${esc(x.name)} (Dedicated)</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)} (Dedicated)</span>`:"");
   return `<div class="brand" data-act="home">AD<span>as a Service</span></div>${tenant}<span class="spacer"></span>
-  ${a&&isAdmin()&&a.status==="ready"?`<a class="link ${pend?"attn":""}" href="#/app/admin/approvals">Approvals${pend?` <b class="cnt">${pend}</b>`:""}</a>`:""}
-  ${a&&a.status==="ready"?`<button class="link ${S.ui.dock!==false?"on":""}" data-act="toggleDock">Assistant</button>`:""}
-  <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida staff":u.role}</small></span><button class="link" data-act="signout">Sign out</button>`;
+  ${(u.role==="staff"||u.role==="admin")?`<a class="link ${R.parts[1]==="accounts"?"on":""}" href="#/app/accounts">All Tenants</a>`:""}
+  ${a&&a.status==="ready"?`<button class="link ${S.ui.dock!==false?"on":""}" data-act="toggleDock">⚡ Assistant (Configgy)</button>`:""}
+  <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida Staff":u.role==="admin"?"Client Admin":"Operator"}</small></span><button class="link" data-act="signout">Sign out</button>`;
 }
 function sidebar(){
   const u=me(), a=acct(), p1=R.parts[1]||"", p2=R.parts[2]||"";
   const link=(href,label,on,badge)=>`<a href="${href}" class="${on?"on":""}">${label}${badge?`<span class="badge">${badge}</span>`:""}</a>`;
   const running=a?S.works.filter(w=>w.accountId===a.id&&w.status!=="done").length:0;
-  const pend=a?S.orders.filter(o=>o.accountId===a.id&&o.status==="pending").length:0;
   let h="";
-  if(u.role==="staff") h+=link("#/app/accounts","Accounts",p1==="accounts");
+  if(u.role==="staff"||u.role==="admin") h+=link("#/app/accounts","Tenants",p1==="accounts");
   if(a&&a.status==="ready"){
     h+=link("#/app","Overview",p1==="");
-    h+=`<div class="grp">AD</div>`+Object.entries(AD_PAGES).map(([k,l])=>link("#/app/"+k,l,p1===k,k==="work-orders"?running:0)).join("");
-    if(isAdmin()) h+=`<div class="grp">Configure</div>`+Object.entries(ADMIN_PAGES).map(([k,l])=>link("#/app/admin/"+k,l,p1==="admin"&&p2===k,k==="approvals"?pend:0)).join("");
-    else h+=`<div class="grp">Configure</div><div class="locked">Managed by your admins</div>`;
+    h+=`<div class="grp">OPERATE</div>`+Object.entries(AD_PAGES).map(([k,l])=>link("#/app/"+k,l,p1===k,k==="work-orders"?running:0)).join("");
+    if(isAdmin()) h+=`<div class="grp">CONFIGURE</div>`+Object.entries(ADMIN_PAGES).map(([k,l])=>link("#/app/admin/"+k,l,p1==="admin"&&p2===k)).join("");
+    else h+=`<div class="grp">CONFIGURE</div><div class="locked">Managed by your admins</div>`;
   }
   return `<nav class="side">${h}</nav>`;
 }
@@ -677,8 +682,8 @@ function dock(){
   S.chats.ad = S.chats.ad || {};
   const cfg=inAdmin();
   const list=cfg?chatFor(S.chats.cfg,a.id):chatFor(S.chats.ad,a.id);
-  return `<aside class="dock"><div class="head"><b>${cfg?"Configgy":"ADy"}</b><small>${cfg?"Drafts configuration changes for your approval":"Turns requests into work orders and reports back"}</small></div>
-  ${chatHtml(list,cfg?"cfg":"ad",cfg?"e.g. add domain readygo-finance":"Tell ADy what you need",cfg?["add domain readygo-finance","add sandbox sbx-2 50gb","invite ana@client.com as admin","status"]:["profile store_master","produce a data foundation from the retail datasets","explore which stores drive returns","add domain readygo-healthcare"])}</aside>`;
+  return `<aside class="dock"><div class="head"><b>${cfg?"Configgy":"ADy"}</b><small>${cfg?"Directly configures and manages your dedicated environment":"Turns requests into work orders and reports back"}</small></div>
+  ${chatHtml(list,cfg?"cfg":"ad",cfg?"e.g. add domain readygo-finance":"Tell ADy what you need",cfg?["add domain readygo-finance","invite ana@client.com as user","set spend limit 6000","status"]:["profile store_master","produce a data foundation from the retail datasets","explore which stores drive returns","add domain readygo-healthcare"])}</aside>`;
 }
 function stepper(cur){ const st=["Account","Set up","Environment","Ready"]; return `<ol class="stepper">${st.map((s,i)=>`<li class="${i<cur?"done":i===cur?"on":""}"><span>${i<cur?"✓":i+1}</span>${s}</li>`).join("")}</ol>`; }
 const head=(title,sub,extra="")=>`<div class="phead"><div><h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:""}</div>${extra}</div>`;
@@ -696,34 +701,24 @@ const siteFoot=()=>`<footer class="site">© Alida · AD as a Service</footer>`;
 function vHome(){
   return `<div class="site"><div class="wrap"><div class="hero">
    <h1 class="xl">Automate the safe production and exploration of data.</h1><p class="lead">AD produces integrated, peered datasets, explores them, and generates new models — deterministically, with every step verified and every change audited.</p>
-   <div class="row"><a class="btn lg" href="#/register">Get started</a><a class="btn ghost lg" href="#/login">Sign in</a></div>
+   <div class="row">${me()?`<a class="btn lg" href="#${landing()}">Go to Dedicated Dashboard</a>`:`<a class="btn lg" href="#/login">Sign in</a>`}</div>
    <h2 style="margin-top:34px">With AD you can…</h2><ul class="can">${SEE.map(([t])=>`<li><a href="#/see">${t}</a></li>`).join("")}</ul></div>
    <div class="paths"><a class="path" href="#/see"><b>See</b><span>What AD can do</span><small>Eight things you can do with AD today.</small></a><a class="path" href="#/learn"><b>Learn</b><span>How AD works</span><small>The cycle, the agents, the work orders.</small></a><a class="path" href="#/understand"><b>Understand</b><span>Why AD is safe</span><small>Safe AI, deterministic results, control.</small></a><a class="path" href="#/partner"><b>Partner</b><span>Work with AD</span><small>Eight steps from account to first job.</small></a></div>
    ${me()?`<div class="info" style="margin-top:24px">You're signed in. <a href="#${landing()}">Go to your account</a>.</div>`:""}</div>${siteFoot()}</div>`;
 }
 const qaPage=(title,sub,items,extra="")=>`<div class="site"><div class="wrap"><h1 class="xl">${title}</h1><p class="sub">${sub}</p>${items}${extra}</div>${siteFoot()}</div>`;
-const vSee=()=>qaPage("With AD you can…","The work solutions AD delivers. Pick one when you create your account.",`<div class="items">${SEE.map(([t,d])=>`<div><b>${t}</b><small>${d}</small></div>`).join("")}</div>`,`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/register">Get started</a><a class="btn ghost lg" href="#/learn">Learn how it works</a></div>`);
+const vSee=()=>qaPage("With AD you can…","The work solutions AD delivers.",`<div class="items">${SEE.map(([t,d])=>`<div><b>${t}</b><small>${d}</small></div>`).join("")}</div>`,`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/login">Sign in</a><a class="btn ghost lg" href="#/learn">Learn how it works</a></div>`);
 const vLearn=()=>qaPage("The key basics to understand AD","Short answers to the questions people ask first.",LEARN.map(([q,a])=>`<details class="qa"><summary>${q}</summary><p>${a}</p></details>`).join(""),`<div class="row" style="margin-top:28px"><a class="btn ghost lg" href="#/understand">Why AD is safe</a></div>`);
-const vUnderstand=()=>qaPage("Reasons why AD is safe to use","",UNDERSTAND.map(([q,a])=>`<details class="qa"><summary>${q}</summary><p>${a}</p></details>`).join(""),`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/partner">Work with AD</a></div>`);
-const vPartner=()=>qaPage("AD is with you every step of the way","The path from first look to first job.",`<ol class="vt">${PARTNER.map(([t,d],i)=>`<li><span class="num">${i+1}</span><div><b>${t}</b><small>${d}</small></div></li>`).join("")}</ol>`,`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/register">Create an account</a><a class="btn ghost lg" href="#/login">I already have one</a></div>`);
+const vUnderstand=()=>qaPage("Reasons why AD is safe to use","",UNDERSTAND.map(([q,a])=>`<details class="qa"><summary>${q}</summary><p>${a}</p></details>`).join(""),`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/login">Client Sign In</a></div>`);
+const vPartner=()=>qaPage("AD is with you every step of the way","The path from first look to first job.",`<ol class="vt">${PARTNER.map(([t,d],i)=>`<li><span class="num">${i+1}</span><div><b>${t}</b><small>${d}</small></div></li>`).join("")}</ol>`,`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/login">Sign in to Platform</a></div>`);
 function vRegister(){
-  return `<div class="site"><div class="wrap"><div class="auth card" style="max-width:560px"><h2>Create your account</h2><p class="sub">Environment provisioning runs automatically upon registration.</p>
-  <form data-form="register"><label>Your name</label><input name="name" required placeholder="Alice Smith"><label>Organisation</label><input name="org" required placeholder="Acme Co"><label>Work email</label><input name="email" type="email" required placeholder="you@acme.com"><label>Password</label><input name="password" type="password" required>
-  <div class="grid g2" style="margin-top:10px;gap:12px">
-    <div><label>Region</label><select name="region" style="width:100%"><option value="eastus2" selected>East US 2 (Azure)</option><option value="centralus">Central US</option><option value="westus2">West US 2</option></select></div>
-    <div><label>Tenancy Mode</label><select name="tenancy" style="width:100%"><option value="single" selected>Dedicated (Single-tenant)</option><option value="multi">Shared (Multi-tenant)</option></select></div>
-  </div>
-  <div style="margin-top:10px">
-    <label>Environment Tier</label>
-    <select name="env" style="width:100%"><option value="dev1" selected>Development (dev1)</option><option value="test1">Testing / QA (test1)</option><option value="prod1">Production (prod1)</option></select>
-  </div>
-  <p class="log" style="margin-top:10px">Terraform will automatically deploy your environment upon registration.</p>
-  ${S.ui.authErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.authErr)}</div>`:""}<div class="row" style="margin-top:18px"><button class="btn lg">Register & Provision</button><a href="#/login">Already registered? Sign in</a></div></form></div></div>${siteFoot()}</div>`;
+  return `<div class="site"><div class="wrap"><div class="auth card" style="max-width:560px;text-align:center"><h2>Admin-Driven Account Management</h2><p class="sub">Self-service registration is disabled. All dedicated environments are provisioned by Alida Administrators.</p>
+  <div class="row" style="margin-top:20px;justify-content:center"><a class="btn lg" href="#/login">Go to Sign In</a></div></div></div>${siteFoot()}</div>`;
 }
 function vLogin(){
-  return `<div class="site"><div class="wrap"><div class="auth card"><h2>Sign in</h2><p class="sub">Use your work email.</p>
-  <form data-form="login"><label>Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required>
-  ${S.ui.authErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.authErr)}</div>`:""}<div class="row" style="margin-top:18px"><button class="btn lg">Sign in</button><a href="#/register">No account? Get started</a></div></form>
+  return `<div class="site"><div class="wrap"><div class="auth card"><h2>Sign in</h2><p class="sub">Sign in to your dedicated environment.</p>
+  <form data-form="login"><label>Work Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required>
+  ${S.ui.authErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.authErr)}</div>`:""}<div class="row" style="margin-top:18px"><button class="btn lg">Sign in</button><span class="log" style="font-size:12px">Client accounts are managed by administrators.</span></div></form>
   <details class="creds"><summary>Accounts for this review</summary><table>${S.users.map(u=>`<tr><td>${esc(u.email)}</td><td>${esc(u.password)}</td><td>${u.role}${u.accountId?" · "+esc(acct(u.accountId)?.name||""):u.role==="staff"?"":" · no account yet"}</td></tr>`).join("")}</table>Users invited inside an account sign in with the password <code>welcome</code>. <a href="#/demo/reset">Reset all data</a>.</details></div></div>${siteFoot()}</div>`;
 }
 
@@ -803,13 +798,12 @@ function vProvisioning(){
 function vOverview(){
   const a=acct(), u=me(), sol=SOL.find(s=>s.id===a.solution), users=accountUsers(a);
   const ws=S.works.filter(w=>w.accountId===a.id), running=ws.filter(w=>w.status!=="done").length;
-  const pend=S.orders.filter(o=>o.accountId===a.id&&o.status==="pending").length;
   const pct=Math.round(a.usage.spendUsd/a.resources.spendLimitUsd*100);
   const checklist=[["Environment provisioned",true,"#/app/admin/setup"],["Invite your team",users.length>1,"#/app/admin/people"],["Run your first job",ws.length>0,"#/app/data"]];
   const showCheck=ws.length<2&&isAdmin();
-  const activity=[...ws.map(w=>({t:w.id,d:w.text,s:w.status,href:"#/app/work-orders"})),...S.orders.filter(o=>o.accountId===a.id).map(o=>({t:o.id,d:o.changes.map(describe).join(", "),s:o.status,href:"#/app/admin/approvals"}))].slice(0,6);
-  return `<div class="content">${head("Overview",`${sol.name} · ${a.region} · ${a.tenancy}-tenant`)}
-  <div class="stats">${stat(a.datasets.length,"Datasets",a.datasets.reduce((n,d)=>n+d.gb,0).toFixed(1)+" GB")}${stat(ws.length,"Work orders",running?running+" running":"none running")}${stat("$"+a.usage.spendUsd.toLocaleString(),"Spend this month",pct+"% of limit")}${isAdmin()?stat(pend,"Awaiting approval",pend?`<a href="#/app/admin/approvals">Review</a>`:"nothing pending"):stat(users.length,"People",users.filter(x=>x.role==="admin").length+" admin")}</div>
+  const activity=ws.map(w=>({t:w.id,d:w.text,s:w.status,href:"#/app/work-orders"})).slice(0,6);
+  return `<div class="content">${head("Overview",`${sol.name} · ${a.region} · Dedicated Single-Tenant`)}
+  <div class="stats">${stat(a.datasets.length,"Datasets",a.datasets.reduce((n,d)=>n+d.gb,0).toFixed(1)+" GB")}${stat(ws.length,"Work orders",running?running+" running":"none running")}${stat("$"+a.usage.spendUsd.toLocaleString(),"Spend this month",pct+"% of limit")}${stat(a.domains.length,"Active Domains",a.domains.join(", "))}</div>
   <div class="grid g2">
   ${showCheck?`<div class="card"><h3>Getting started</h3><ul class="check">${checklist.map(([t,done,href])=>`<li class="${done?"done":""}"><span>${done?"✓":""}</span><a href="${href}">${t}</a></li>`).join("")}</ul></div>`:`<div class="card"><h3>Work solution</h3><div class="big">${sol.name}</div><p class="log">${sol.blurb}</p>${sol.verbs.map(v=>`<span class="pill">${v}</span>`).join("")}</div>`}
   <div class="card"><h3>Recent activity</h3>${activity.map(x=>`<a class="act" href="${x.href}"><span><b>${x.t}</b> <span class="log">${esc(x.d)}</span></span><span class="chip ${chip(x.s)}">${x.s}</span></a>`).join("")||empty("Nothing yet. Ask ADy for something.")}</div></div></div>`;
@@ -824,28 +818,24 @@ function vVerb(k){
   return `<div class="content">${head(AD_PAGES[k],V[1],ok?"":`<span class="chip warn">Not in your work solution</span>`)}${ds}${woTable(ws.filter(w=>w.verb===V[0]))}</div>`;
 }
 function vAdmin(k){
-  const a=acct(), users=accountUsers(a), used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0);
+  const a=acct(), users=accountUsers(a);
   const err=S.ui.cfgErr?`<div class="err" style="margin-top:8px">✕ ${esc(S.ui.cfgErr)}</div>`:"";
   switch(k){
-   case "setup": return `<div class="content">${head("Setup","The environment this account runs on.")}<div class="grid g2"><div class="card"><h3>Environment</h3><div class="kv"><b>Work solution</b><span>${SOL.find(s=>s.id===a.solution)?.name}</span><b>Region</b><span>${a.region}</span><b>Environment Tier</b><span>${a.env||"dev1"}</span><b>Tenancy</b><span>${a.tenancy}-tenant</span><b>Management</b><span>${a.management}</span><b>Status</b><span><span class="chip ${chip(a.status)}">${a.status}</span></span><b>Created</b><span>${a.created}</span></div></div>
-    <div class="card"><h3>Allocation</h3><div class="row"><div><label>Spending limit (USD / month)</label><input id="rs" type="number" value="${a.resources.spendLimitUsd}" style="width:150px"></div><div><label>Storage (GB)</label><input id="rg" type="number" value="${a.resources.storageGb}" style="width:110px"></div><div style="align-self:flex-end"><button class="btn" data-act="setRes">Save</button></div></div><p class="log" style="margin-top:10px">${used} GB of ${a.resources.storageGb} GB is allocated to sandboxes.</p>${err}</div></div>
-    <div class="card" style="margin-top:16px"><h3>Generated Terraform Code (infrastructure.tfvars)</h3><p class="sub">View the live Terraform parameter configuration generated by the backend for this environment.</p>
+   case "setup": return `<div class="content">${head("Setup","The dedicated environment this account runs on.")}<div class="grid g2"><div class="card"><h3>Environment</h3><div class="kv"><b>Work solution</b><span>${SOL.find(s=>s.id===a.solution)?.name}</span><b>Region</b><span>${a.region}</span><b>Environment Tier</b><span>${a.env||"test1"}</span><b>Tenancy</b><span>Dedicated (Single-Tenant isolated Azure RG & VNet)</span><b>Management</b><span>Dedicated Managed</span><b>Status</b><span><span class="chip ${chip(a.status)}">${a.status}</span></span><b>Created</b><span>${a.created||a.created_at||"2026-11-05"}</span></div></div>
+    <div class="card"><h3>Allocation</h3><div class="row"><div><label>Spending limit (USD / month)</label><input id="rs" type="number" value="${a.resources.spendLimitUsd}" style="width:150px"></div><div><label>Storage (GB)</label><input id="rg" type="number" value="${a.resources.storageGb}" style="width:110px"></div><div style="align-self:flex-end"><button class="btn" data-act="setRes">Save</button></div></div><p class="log" style="margin-top:10px">Dedicated cloud storage allocated exclusively to this client tenant.</p>${err}</div></div>
+    <div class="card" style="margin-top:16px"><h3>Generated Terraform Code (infrastructure.tfvars)</h3><p class="sub">View the live Terraform parameter configuration generated by the backend for this dedicated environment.</p>
     <button class="btn sm" data-act="loadTfvars" data-v="${a.id}">View Generated .tfvars</button>
     <pre id="tfvars-out" class="log" style="display:none;background:#0f172a;color:#38bdf8;padding:14px;border-radius:8px;overflow:auto;margin-top:12px;font-size:12.5px;max-height:300px"></pre>
     </div></div>`;
    case "domains": return `<div class="content">${head("Domains","Capability domains available in this account.")}<div class="card flush"><table><tr><th>Domain</th><th>Id</th><th></th></tr>${a.domains.map(d=>`<tr><td>${REGISTRY[d]||d}</td><td class="log">${d}</td><td class="r"><button class="btn red sm" data-act="rmDomain" data-v="${d}">Remove</button></td></tr>`).join("")}</table></div>
     <div class="card"><h3>Add a domain</h3><div class="row"><select id="nd">${Object.entries(REGISTRY).filter(([k])=>!a.domains.includes(k)).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><button class="btn" data-act="addDomain">Add</button></div>${err}</div></div>`;
-   case "sandboxes": return `<div class="content">${head("Sandboxes",`${used} of ${a.resources.storageGb} GB allocated.`)}<div class="card flush"><table><tr><th>Name</th><th>Mode</th><th>Quota</th><th></th></tr>${a.sandboxes.map(s=>`<tr><td>${esc(s.name)}</td><td>${s.mode}</td><td>${s.quotaGb} GB</td><td class="r"><button class="btn red sm" data-act="rmSandbox" data-v="${esc(s.name)}">Remove</button></td></tr>`).join("")}</table></div>
-    <div class="card"><h3>Add a sandbox</h3><div class="row"><input id="ns" placeholder="sbx-2" style="width:140px"><select id="nm"><option>dedicated</option><option>shared</option></select><input id="nq" type="number" value="50" style="width:90px"> GB <button class="btn" data-act="addSandbox">Add</button></div>${err}</div></div>`;
    case "people": return `<div class="content">${head("People","Admins configure and operate; users operate only. At least one admin must remain.")}<div class="card flush"><table><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr>${users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td><select data-act="setRole" data-v="${esc(u.email)}"><option ${u.role==="user"?"selected":""}>user</option><option ${u.role==="admin"?"selected":""}>admin</option></select></td><td class="r"><button class="btn red sm" data-act="rmUser" data-v="${esc(u.email)}">Remove</button></td></tr>`).join("")}</table></div>
     <div class="card"><h3>Invite someone</h3><div class="row"><input id="nu" placeholder="name@company.com" style="width:260px"><select id="nur"><option>user</option><option>admin</option></select><button class="btn" data-act="addUser">Invite</button></div>${err}</div></div>`;
-   case "approvals": { const os=S.orders.filter(o=>o.accountId===a.id); const sel=os.find(o=>o.id===S.ui.orderId)||os.find(o=>o.status==="pending")||os[0];
-    return `<div class="content">${head("Approvals","Configuration changes and who asked for them.")}<div class="grid" style="grid-template-columns:1fr 1.3fr;align-items:start"><div class="card flush"><table><tr><th>Order</th><th>From</th><th>Status</th></tr>${os.map(o=>`<tr class="click ${sel&&sel.id===o.id?"sel":""}" data-act="selOrder" data-v="${o.id}"><td><b>${o.id}</b><br><span class="log">${o.created}</span></td><td>${o.source}</td><td><span class="chip ${chip(o.status)}">${o.status}</span></td></tr>`).join("")||`<tr><td colspan="3">${empty("No orders yet.")}</td></tr>`}</table></div><div>${sel?orderDetail(sel):""}</div></div></div>`; }
-   case "usage": { const pct=Math.min(100,Math.round(a.usage.spendUsd/a.resources.spendLimitUsd*100)); const spct=Math.min(100,Math.round(used/a.resources.storageGb*100));
-    return `<div class="content">${head("Usage","Spend and storage against what was allocated.")}<div class="grid g2"><div class="card"><h3>Spend this month</h3><div class="big">$${a.usage.spendUsd.toLocaleString()} <span class="log">of $${a.resources.spendLimitUsd.toLocaleString()}</span></div><div class="bar" style="margin:10px 0"><i class="${pct>=90?"bad":pct>=75?"warn":""}" style="width:${pct}%"></i></div>${pct>=75?`<div class="warn">${pct}% of the spending limit used.</div>`:""}<div class="kv" style="margin-top:10px"><b>Compute</b><span>${a.usage.computeHours} h</span><b>Data volume</b><span>${a.datasets.reduce((n,d)=>n+d.gb,0).toFixed(1)} GB</span></div></div>
-    <div class="card"><h3>Storage</h3><div class="big">${used} GB <span class="log">of ${a.resources.storageGb} GB</span></div><div class="bar" style="margin:10px 0"><i class="${spct>=90?"bad":spct>=75?"warn":""}" style="width:${spct}%"></i></div><p class="log">Allocated to sandboxes. Change the allocation under Setup.</p></div></div></div>`; }
+   case "usage": { const pct=Math.min(100,Math.round(a.usage.spendUsd/a.resources.spendLimitUsd*100)); const dsGb=a.datasets.reduce((n,d)=>n+d.gb,0); const spct=Math.min(100,Math.round(dsGb/a.resources.storageGb*100));
+    return `<div class="content">${head("Usage","Spend and storage against what was allocated.")}<div class="grid g2"><div class="card"><h3>Spend this month</h3><div class="big">$${a.usage.spendUsd.toLocaleString()} <span class="log">of $${a.resources.spendLimitUsd.toLocaleString()}</span></div><div class="bar" style="margin:10px 0"><i class="${pct>=90?"bad":pct>=75?"warn":""}" style="width:${pct}%"></i></div>${pct>=75?`<div class="warn">${pct}% of the spending limit used.</div>`:""}<div class="kv" style="margin-top:10px"><b>Compute</b><span>${a.usage.computeHours} h</span><b>Data volume</b><span>${dsGb.toFixed(1)} GB</span></div></div>
+    <div class="card"><h3>Storage</h3><div class="big">${dsGb.toFixed(1)} GB <span class="log">of ${a.resources.storageGb} GB</span></div><div class="bar" style="margin:10px 0"><i class="${spct>=90?"bad":spct>=75?"warn":""}" style="width:${spct}%"></i></div><p class="log">Dedicated client cloud storage. Change the total allocation under Setup.</p></div></div></div>`; }
    case "audit": { const ids=new Set([a.id,...S.orders.filter(o=>o.accountId===a.id).map(o=>o.id),...S.works.filter(w=>w.accountId===a.id).map(w=>w.id),...S.orders.filter(o=>o.accountId===a.id&&o.salesOrder).map(o=>o.salesOrder.salesOrderId),...accountUsers(a).map(u=>u.email)]);
-    return `<div class="content">${head("Audit log","Every order, approval, job and sign-in, with who did it.")}<div class="card flush"><table><tr><th>Time</th><th>Actor</th><th>Action</th><th>Ref</th></tr>${S.audit.filter(e=>ids.has(e.ref)||(e.ref==="SO-0001"&&a.id==="alida-internal")).map(e=>`<tr><td class="log">${e.t}</td><td>${esc(e.actor)}</td><td>${esc(e.action)}</td><td class="log">${esc(e.ref)}</td></tr>`).join("")}</table></div></div>`; }
+    return `<div class="content">${head("Audit log","Every order, action, job and sign-in, with who did it.")}<div class="card flush"><table><tr><th>Time</th><th>Actor</th><th>Action</th><th>Ref</th></tr>${S.audit.filter(e=>ids.has(e.ref)||(e.ref==="SO-0001"&&a.id==="alida-internal")).map(e=>`<tr><td class="log">${e.t}</td><td>${esc(e.actor)}</td><td>${esc(e.action)}</td><td class="log">${esc(e.ref)}</td></tr>`).join("")}</table></div></div>`; }
   }
   return `<div class="content">${empty("Not found.")}</div>`;
 }
@@ -864,10 +854,62 @@ function orderDetail(o){
   ${o.salesOrder?`<details style="margin-top:14px"><summary class="log" style="cursor:pointer">Sales order</summary><pre style="margin-top:8px">${esc(JSON.stringify(o.salesOrder,null,2))}</pre></details>`:""}</div>`;
 }
 function vAccounts(){
-  return `<div class="content">${head("Accounts","Every client environment.",`<a class="btn" href="#/onboard">Set up a client account</a>`)}
-  <div class="card flush"><table><tr><th>Account</th><th>Solution</th><th>Environment</th><th>People</th><th>Spend</th><th>Status</th><th></th></tr>
-  ${S.accounts.map(a=>`<tr><td><b>${esc(a.name)}</b><br><span class="log">${a.created}</span></td><td>${SOL.find(s=>s.id===a.solution)?.name||a.solution}</td><td>${a.region} · ${a.tenancy} · ${a.management}</td><td>${accountUsers(a).length}</td><td>$${a.usage.spendUsd.toLocaleString()} / $${a.resources.spendLimitUsd.toLocaleString()}</td><td><span class="chip ${chip(a.status)}">${a.status}</span></td><td class="r"><button class="btn ghost sm" data-act="openAccount" data-v="${a.id}" ${a.status!=="ready"?"disabled":""}>Open</button></td></tr>`).join("")}</table></div>
-  ${S.users.some(u=>!u.accountId&&u.role!=="staff")?`<div class="card"><h3>Registered, not yet set up</h3>${S.users.filter(u=>!u.accountId&&u.role!=="staff").map(u=>`<span class="pill">${esc(u.email)}${S.onbs[u.email]?" · step "+(S.onbs[u.email].step+1)+" of 6":""}</span>`).join("")}</div>`:""}</div>`;
+  const totalTenants = S.accounts.length;
+  const totalRes = totalTenants * 15;
+  const err = S.ui.adminProvErr ? `<div class="err" style="margin-top:10px">✕ ${esc(S.ui.adminProvErr)}</div>` : "";
+  return `<div class="content" style="max-width:1200px">
+  <div class="phead"><div><h1>Dedicated Admin Dashboard</h1><p class="sub">Provision and manage 100% dedicated single-tenant client environments.</p></div></div>
+  
+  <div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+    ${stat(totalTenants, "Dedicated Tenants", "100% Single-Tenant isolated")}
+    ${stat("15 / tenant", "Isolated PaaS Resources", totalRes + "+ active in Azure")}
+    ${stat("HITRUST / HIPAA", "Security Architecture", "Dedicated RG, VNet & Key Vault")}
+    ${stat(S.users.length, "Provisioned Users", S.users.filter(u=>u.role==="admin").length + " client admins")}
+  </div>
+
+  <div class="card" style="border-top:3px solid var(--blue);margin-bottom:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">Provision Dedicated Client Environment</h3>
+      <span class="chip ok">Admin-Driven Provisioning</span>
+    </div>
+    <p class="sub" style="margin-bottom:16px;font-size:13.5px">Create a client tenant with automated Azure Resource Group, VNet, Private Storage, and Admin credentials.</p>
+    <form data-form="adminCreateAccount" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;align-items:end">
+      <div><label>Client / Organization Name</label><input name="org" required placeholder="e.g. HealthFirst AI" style="width:100%"></div>
+      <div><label>Admin Full Name</label><input name="name" required placeholder="e.g. Dr. Alex Mercer" style="width:100%"></div>
+      <div><label>Admin Work Email</label><input name="email" type="email" required placeholder="e.g. alex@healthfirst.org" style="width:100%"></div>
+      <div><label>Azure Region</label><select name="region" style="width:100%"><option value="eastus2" selected>East US 2 (Azure)</option><option value="centralus">Central US</option><option value="westus2">West US 2</option></select></div>
+      <div><label>Environment Tier</label><select name="env" style="width:100%"><option value="prod1" selected>Production (prod1)</option><option value="test1">Testing / QA (test1)</option><option value="dev1">Development (dev1)</option></select></div>
+      <div><label>Work Solution</label><select name="solution" style="width:100%">${SOL.map(s=>`<option value="${s.id}">${s.name}</option>`).join("")}</select></div>
+      <div><label>Storage Quota (GB)</label><input name="storage" type="number" value="500" style="width:100%"></div>
+      <div><label>Monthly Spend Limit (USD)</label><input name="spend" type="number" value="5000" style="width:100%"></div>
+      <div><button class="btn lg" style="width:100%;background:var(--blue);font-weight:700">+ Provision Dedicated Tenant</button></div>
+    </form>
+    ${err}
+  </div>
+
+  <div class="card flush">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">Active Dedicated Client Tenants</h3>
+      <span class="log">Total: ${totalTenants} isolated environments</span>
+    </div>
+    <table>
+      <tr><th>Client Tenant</th><th>Solution</th><th>Azure Environment</th><th>Admin & People</th><th>Spend Limit</th><th>Status</th><th></th></tr>
+      ${S.accounts.map(a=>{
+        const adminUser = accountUsers(a).find(u=>u.role==="admin") || accountUsers(a)[0];
+        const isCurrent = (acct() && acct().id === a.id);
+        return `<tr>
+          <td><b>${esc(a.name)}</b> <span class="chip ok" style="font-size:10px;padding:1px 6px">Dedicated</span><br><span class="log">Created ${a.created||a.created_at||"2026-11-05"}</span></td>
+          <td>${SOL.find(s=>s.id===a.solution)?.name||a.solution}</td>
+          <td><span style="font-family:monospace;font-size:12px">rg-${esc(a.id)}-${a.env||"prod1"}</span><br><span class="log">${a.region} · Single-Tenant</span></td>
+          <td>${adminUser ? `<b>${esc(adminUser.name||adminUser.email)}</b><br><span class="log">${esc(adminUser.email)}</span>` : `<span class="log">${accountUsers(a).length} users</span>`}</td>
+          <td>$${a.usage.spendUsd.toLocaleString()} / $${a.resources.spendLimitUsd.toLocaleString()}<br><span class="log">${a.resources.storageGb} GB Storage</span></td>
+          <td><span class="chip ${chip(a.status)}">${a.status==="ready"?"Active / Ready":a.status}</span></td>
+          <td class="r">${isCurrent ? `<span class="pill" style="color:var(--blue);font-weight:600">Current</span>` : `<button class="btn ghost sm" data-act="openAccount" data-v="${a.id}">Switch Tenant</button>`}</td>
+        </tr>`;
+      }).join("")}
+    </table>
+  </div>
+</div>`;
 }
 
 /* ============================== demos (linked from flows.html) ============================== */
@@ -903,14 +945,16 @@ function render(){
   if(p==="demo"){ const f=DEMOS[R.parts[1]]; const to=f?f():"/"; save(); nav(to,true); return; }
   const needUser=["onboard","provisioning","app"];
   if(needUser.includes(p)&&!u){ nav("/login",true); return; }
-  if((p==="login"||p==="register")&&u){ nav(landing(),true); return; }
+  if(p==="register"){ nav("/login",true); return; }
+  if(p==="login"&&u){ nav(landing(),true); return; }
   if(p==="onboard"){ const aid=u.accountId||u.account_id; if(u.role!=="staff"&&aid){ nav(landing(),true); return; } if(!onb()) startOnboarding(u.role==="staff"?"staff":"sales"); }
   if(p==="app"){
     const sub=R.parts[1]||"";
     if(u.role==="staff"&&!S.acting&&sub!=="accounts"){ nav("/app/accounts",true); return; }
-    if(sub==="accounts"&&u.role!=="staff"){ nav("/app",true); return; }
+    if(sub==="accounts"&&u.role!=="staff"&&u.role!=="admin"){ nav("/app",true); return; }
     if(sub!=="accounts"){ const a=acct(); if(!a){ nav(landing(),true); return; } if(a.status!=="ready"){ nav("/provisioning",true); return; } }
     if(sub==="admin"&&!isAdmin()){ nav("/app",true); return; }
+    if(sub==="admin"&&(R.parts[2]==="approvals"||R.parts[2]==="sandboxes")){ nav("/app/admin/setup",true); return; }
   }
   $("#hdr").innerHTML=topbar();
   const app=$("#app"); const sc=app.querySelector(".content,.site")?.scrollTop||0;
@@ -973,6 +1017,46 @@ document.body.addEventListener("click",e=>{ const an=e.target.closest('a[href^="
 document.body.addEventListener("change",e=>{ const el=e.target; if(el.dataset.bind&&onb()){ onb().d[el.dataset.bind]=el.value; save(); return; } if(el.dataset.act&&ACT[el.dataset.act]){ ACT[el.dataset.act](el); render(); } });
 document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.target; const fd=new FormData(f);
   if(f.dataset.chat){ const inp=f.querySelector("input"); const v=inp.value.trim(); inp.value=""; sendChat(f.dataset.chat,v); render(); return; }
+  if(f.dataset.form==="adminCreateAccount"){
+    const org = fd.get("org").trim();
+    const name = fd.get("name").trim();
+    const email = fd.get("email").trim().toLowerCase();
+    const region = fd.get("region") || "eastus2";
+    const env = fd.get("env") || "prod1";
+    const solution = fd.get("solution") || "data-foundation";
+    const storage = +fd.get("storage") || 500;
+    const spend = +fd.get("spend") || 5000;
+    const id = "acct-" + org.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+    if(S.accounts.some(x=>x.id===id||x.name.toLowerCase()===org.toLowerCase())){
+      S.ui.adminProvErr = "A tenant with this organization name already exists.";
+      render(); return;
+    }
+    const newAcct = {
+      id, name: org, solution, region, env, tenancy: "single", management: "fully", status: "ready",
+      domains: ["gendf"], sandboxes: [{name: "sbx-main", mode: "dedicated", quotaGb: 100}],
+      resources: {spendLimitUsd: spend, storageGb: storage},
+      usage: {spendUsd: 0, computeHours: 0}, datasets: [], created: now().slice(0,10)
+    };
+    S.accounts.unshift(newAcct);
+    const existingU = S.users.find(u=>u.email===email);
+    if(existingU){ existingU.accountId = id; existingU.role = "admin"; }
+    else { S.users.push({email, name, password: "welcome", accountId: id, role: "admin", org}); }
+    
+    log("admin-provision-dedicated-tenant", id);
+    toast("Dedicated tenant provisioned: " + org);
+    S.ui.adminProvErr = "";
+    save();
+    
+    if(window.fetch){
+      fetch('/api/auth/register',{
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name, org, email, password: "welcome", region, tenancy: "single", env, storage, sandbox: "sbx-main", quota: 100, spend})
+      }).catch(e=>console.log("Backend register error:", e));
+    }
+    render();
+    return;
+  }
   if(f.dataset.form==="register"){
     const name = fd.get("name").trim();
     const org = fd.get("org").trim();
