@@ -1,5 +1,6 @@
 .git
 backend/runs/
+backend/data/*.db*
 backend/__pycache__/
 __pycache__/
 *.pyc

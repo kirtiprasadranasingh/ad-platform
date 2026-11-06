@@ -34,76 +34,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ----------------- IN-MEMORY STATE STORE -----------------
-# Stores multi-tenant accounts and provisioning orders
+# ----------------- SQLITE DATABASE & PERSISTENT STORE -----------------
+try:
+    from database import (
+        init_db, get_full_state, get_user, authenticate_user, create_user,
+        get_all_users, get_all_accounts, get_account as db_get_account,
+        upsert_account, get_all_orders, upsert_order, get_all_work_orders,
+        add_work_order, get_all_audit_logs, add_audit_log
+    )
+except ImportError:
+    from backend.database import (
+        init_db, get_full_state, get_user, authenticate_user, create_user,
+        get_all_users, get_all_accounts, get_account as db_get_account,
+        upsert_account, get_all_orders, upsert_order, get_all_work_orders,
+        add_work_order, get_all_audit_logs, add_audit_log
+    )
+
+init_db()
+
+# Synchronized in-memory cache backed by SQLite
 DB = {
-    "accounts": [
-        {
-            "id": "alida-internal",
-            "name": "Alida Internal (first client)",
-            "solution": "data-foundation",
-            "region": "eastus2",
-            "tenancy": "single",
-            "management": "fully",
-            "status": "ready",
-            "domains": ["gendf", "readygo-retail"],
-            "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
-            "resources": {"spendLimitUsd": 5000, "storageGb": 500},
-            "usage": {"spendUsd": 1840, "computeHours": 62},
-            "created": "2026-11-20"
-        },
-        {
-            "id": "acct-golang",
-            "name": "GOLANG",
-            "solution": "data-foundation",
-            "region": "eastus2",
-            "env": "prod1",
-            "tenancy": "single",
-            "management": "self",
-            "status": "ready",
-            "domains": ["data-foundation"],
-            "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
-            "resources": {"spendLimitUsd": 5000, "storageGb": 500},
-            "usage": {"spendUsd": 120, "computeHours": 4},
-            "created": "2026-11-05"
-        },
-        {
-            "id": "acct-xyz",
-            "name": "xyz-test1",
-            "solution": "data-foundation",
-            "region": "eastus2",
-            "env": "test1",
-            "tenancy": "single",
-            "management": "fully",
-            "status": "ready",
-            "domains": ["data-foundation"],
-            "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
-            "resources": {"spendLimitUsd": 5000, "storageGb": 500},
-            "usage": {"spendUsd": 350, "computeHours": 12},
-            "created": "2026-11-05"
-        },
-        {
-            "id": "acct-grow",
-            "name": "GROW",
-            "solution": "data-foundation",
-            "region": "eastus2",
-            "env": "test1",
-            "tenancy": "single",
-            "management": "fully",
-            "status": "ready",
-            "domains": ["data-foundation", "readygo-finance"],
-            "sandboxes": [
-                {"name": "sbx-main", "mode": "dedicated", "quotaGb": 100},
-                {"name": "sbx-2", "mode": "dedicated", "quotaGb": 50}
-            ],
-            "resources": {"spendLimitUsd": 5000, "storageGb": 500},
-            "usage": {"spendUsd": 0, "computeHours": 0},
-            "created": "2026-11-05"
-        }
-    ],
-    "orders": {},
-    "work_orders": [],
-    "logs": []
+    "accounts": get_all_accounts(),
+    "orders": {o["id"]: o for o in get_all_orders()},
+    "work_orders": get_all_work_orders(),
+    "logs": get_all_audit_logs(),
+    "users": get_all_users()
 }
 
 
@@ -138,6 +93,18 @@ class ApplyOrderPayload(BaseModel):
     accountId: str = Field("alida-internal", example="alida-internal")
     orderId: str = Field("CO-0001", example="CO-0001")
     changes: List[Dict[str, Any]] = []
+
+
+class LoginPayload(BaseModel):
+    email: str
+    password: str
+
+
+class SyncStatePayload(BaseModel):
+    users: Optional[List[Dict[str, Any]]] = None
+    accounts: Optional[List[Dict[str, Any]]] = None
+    orders: Optional[List[Dict[str, Any]]] = None
+    works: Optional[List[Dict[str, Any]]] = None
 
 
 def get_azure_credentials():
@@ -271,10 +238,14 @@ def async_provision_task(order_id: str, payload_dict: Dict[str, Any]):
         for acct in DB["accounts"]:
             if acct["id"] == order["accountId"]:
                 acct["status"] = "ready"
+                upsert_account(acct)
                 break
+        upsert_order(order)
+        add_audit_log("orchestrator", "config-order.applied", order_id)
     except Exception as e:
         order["status"] = "failed"
         order["error"] = str(e)
+        upsert_order(order)
 
 
 # ----------------- REST API ROUTES -----------------
@@ -285,6 +256,73 @@ def health_check():
         "dry_run_mode": DRY_RUN,
         "terraform_backend_ready": True
     }
+
+
+@app.get("/api/state")
+def get_state():
+    """Returns the central persistent SQLite database state for all clients."""
+    return get_full_state()
+
+
+@app.post("/api/auth/login")
+def auth_login(payload: LoginPayload):
+    user = authenticate_user(payload.email, payload.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Wrong email or password.")
+    add_audit_log(user["email"], f"sign-in ({user['role']})", user.get("account_id") or "portal")
+    return {
+        "ok": True,
+        "user": user,
+        "state": get_full_state()
+    }
+
+
+@app.post("/api/auth/register")
+def auth_register(payload: RegisterPayload, background_tasks: BackgroundTasks):
+    existing = get_user(payload.email)
+    if existing:
+        raise HTTPException(status_code=400, detail="That email is already registered. Sign in instead.")
+    clean_org = re.sub(r"[^a-z0-9]", "-", payload.org.lower()).strip("-")
+    account_id = f"acct-{clean_org}"
+    user = create_user(
+        email=payload.email,
+        name=payload.name,
+        password=payload.password,
+        role="admin",
+        account_id=account_id
+    )
+    add_audit_log(payload.email, "register", payload.email)
+    res = register_and_provision(payload, background_tasks)
+    return {
+        "ok": True,
+        "user": user,
+        "orderId": res.get("orderId"),
+        "accountId": account_id,
+        "state": get_full_state()
+    }
+
+
+@app.post("/api/state/sync")
+def sync_state(payload: SyncStatePayload):
+    if payload.users:
+        for u in payload.users:
+            create_user(
+                email=u.get("email"),
+                name=u.get("name", u.get("email")),
+                password=u.get("password", "welcome"),
+                role=u.get("role", "user"),
+                account_id=u.get("accountId")
+            )
+    if payload.accounts:
+        for a in payload.accounts:
+            upsert_account(a)
+    if payload.orders:
+        for o in payload.orders:
+            upsert_order(o)
+    if payload.works:
+        for w in payload.works:
+            add_work_order(w)
+    return {"ok": True, "state": get_full_state()}
 
 
 @app.get("/api/accounts")
@@ -367,6 +405,9 @@ def create_provision_order(payload: ProvisionPayload, background_tasks: Backgrou
         "created": datetime.date.today().isoformat()
     }
     DB["accounts"].append(new_account)
+    upsert_account(new_account)
+    if not get_user(payload.adminEmail):
+        create_user(payload.adminEmail, payload.adminName or payload.adminEmail, "welcome", "admin", account_id)
 
     # Initial order record matching frontend stepper
     order_record = {
@@ -390,6 +431,7 @@ def create_provision_order(payload: ProvisionPayload, background_tasks: Backgrou
         "logs": []
     }
     DB["orders"][order_id] = order_record
+    upsert_order(order_record)
 
     # Dispatch asynchronous Terraform workflow
     background_tasks.add_task(async_provision_task, order_id, payload.model_dump())
@@ -434,6 +476,7 @@ def parse_assistant_command(cmd: AssistantCommand):
         sbx_name = m_sbx.group(1)
         quota = int(m_sbx.group(2) or 50)
         acct["sandboxes"].append({"name": sbx_name, "mode": "dedicated", "quotaGb": quota})
+        upsert_account(acct)
         changes.append({"op": "add", "target": "sandbox", "name": sbx_name, "quotaGb": quota})
         azure_msg = azure_provision_container(rg_name, sa_name, f"sandbox-{sbx_name}")
         response_text = f"Added sandbox '{sbx_name}' with {quota} GB quota to {acct['name']}. {azure_msg}"
@@ -443,6 +486,7 @@ def parse_assistant_command(cmd: AssistantCommand):
     if m_spend:
         new_spend = float(m_spend.group(1))
         acct["resources"]["spendLimitUsd"] = new_spend
+        upsert_account(acct)
         changes.append({"op": "set", "target": "resources", "spendLimitUsd": new_spend})
         response_text = f"Updated spending limit to ${new_spend:,.0f} for account {acct['name']}. [Azure Policy] Enforced budget control guardrail."
 
@@ -452,6 +496,7 @@ def parse_assistant_command(cmd: AssistantCommand):
         dom = m_dom.group(1)
         if dom not in acct["domains"]:
             acct["domains"].append(dom)
+            upsert_account(acct)
             changes.append({"op": "add", "target": "domain", "id": dom})
             azure_msg = azure_provision_container(rg_name, sa_name, f"domain-{dom}")
             response_text = f"Added domain '{dom}' to account {acct['name']}. {azure_msg}"
@@ -462,7 +507,9 @@ def parse_assistant_command(cmd: AssistantCommand):
         email = m_inv.group(1)
         role = m_inv.group(2) or "user"
         if not any(u.get("email") == email for u in DB["users"]):
-            DB["users"].append({"email": email, "name": email.split("@")[0].capitalize(), "role": role, "accountId": acct["id"], "password": "ad"})
+            new_u = {"email": email, "name": email.split("@")[0].capitalize(), "role": role, "accountId": acct["id"], "password": "welcome"}
+            DB["users"].append(new_u)
+            create_user(email, new_u["name"], "welcome", role, acct["id"])
             changes.append({"op": "add", "target": "user", "email": email, "role": role})
             response_text = f"Invited '{email}' as {role} to account {acct['name']}. [Entra ID] Scoped access invitation dispatched."
         else:
@@ -549,6 +596,9 @@ def apply_change_order(payload: ApplyOrderPayload):
     except Exception:
         pass
 
+    upsert_account(acct)
+    add_audit_log("orchestrator", "config-order.applied", payload.orderId)
+
     return {
         "orderId": payload.orderId,
         "status": "applied",
@@ -603,6 +653,9 @@ def execute_work_order(req: WorkOrderRequest):
         "created": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
     DB["work_orders"].append(wo_record)
+    add_work_order(wo_record)
+    upsert_account(acct)
+    add_audit_log(req.by or "user", f"work-order.created ({verb})", wo_id)
 
     return {
         "workOrderId": wo_id,

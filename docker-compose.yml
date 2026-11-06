@@ -18,3 +18,4 @@ services:
       - ARM_CLIENT_SECRET
     volumes:
       - ./backend/runs:/app/backend/runs
+      - ./backend/data:/app/backend/data

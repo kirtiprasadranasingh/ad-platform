@@ -235,6 +235,40 @@ function checkBackendHealth(){
 }
 checkBackendHealth();
 
+function fetchBackendState(){
+  if(!window.fetch) return;
+  fetch('/api/state')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if(!d) return;
+      if(d.users && d.users.length) {
+        d.users.forEach(u => {
+          const idx = S.users.findIndex(x => x.email.toLowerCase() === u.email.toLowerCase());
+          if(idx >= 0) S.users[idx] = Object.assign(S.users[idx], u);
+          else S.users.push(u);
+        });
+      }
+      if(d.accounts && d.accounts.length) {
+        d.accounts.forEach(a => {
+          const idx = S.accounts.findIndex(x => x.id === a.id);
+          if(idx >= 0) S.accounts[idx] = Object.assign(S.accounts[idx], a);
+          else S.accounts.push(a);
+        });
+      }
+      if(d.orders && d.orders.length) {
+        d.orders.forEach(o => {
+          const idx = S.orders.findIndex(x => x.id === o.id);
+          if(idx >= 0) S.orders[idx] = Object.assign(S.orders[idx], o);
+          else S.orders.push(o);
+        });
+      }
+      store.set(JSON.stringify(S));
+      render();
+    })
+    .catch(()=>{});
+}
+fetchBackendState();
+
 function pollBackendOrder(orderId, co, a, sol, d){
   const interval = setInterval(() => {
     fetch('/api/orders/' + orderId)
@@ -295,7 +329,24 @@ function seed(){
 const store={get(){try{return localStorage.getItem(KEY);}catch(e){return null;}},set(v){try{localStorage.setItem(KEY,v);}catch(e){}},del(){try{localStorage.removeItem(KEY);}catch(e){}}};
 function load(){ try{ const s=JSON.parse(store.get()); if(s&&s.v===4) return s; }catch(e){} return seed(); }
 let S=load();
-const save=()=>store.set(JSON.stringify(S));
+let _syncTimer=null;
+function syncBackend(){
+  if(!window.fetch) return;
+  if(_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(()=>{
+    fetch('/api/state/sync', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        users: S.users,
+        accounts: S.accounts,
+        orders: S.orders,
+        works: S.works
+      })
+    }).catch(()=>{});
+  }, 400);
+}
+const save=()=>{ store.set(JSON.stringify(S)); syncBackend(); };
 
 /* ============================== helpers ============================== */
 const $=s=>document.querySelector(s);
@@ -937,9 +988,56 @@ document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.targe
         o.d.env = env;
       }
       confirmOnboarding();
+      if(window.fetch){
+        fetch('/api/auth/register',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({name, org, email, password, region, tenancy, env, storage:500, sandbox:"sbx-main", quota:100, spend:5000})
+        }).then(r=>r.json()).then(res=>{
+          if(res.ok && res.state && res.state.users){
+            S.users = res.state.users;
+            save();
+          }
+        }).catch(()=>{});
+      }
     }
   }
-  if(f.dataset.form==="login"){ S.ui.authErr=login(fd.get("email").trim().toLowerCase(),fd.get("password")); save(); if(S.ui.authErr) render(); else nav(landing()); }
+  if(f.dataset.form==="login"){
+    const email = fd.get("email").trim().toLowerCase();
+    const password = fd.get("password");
+    if(window.fetch){
+      fetch('/api/auth/login',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email, password})
+      })
+      .then(r => r.json())
+      .then(res => {
+        if(res.ok && res.user){
+          const idx = S.users.findIndex(u => u.email.toLowerCase() === res.user.email.toLowerCase());
+          if(idx >= 0) S.users[idx] = res.user;
+          else S.users.push(res.user);
+          S.session = {email: res.user.email};
+          if(res.user.role === "staff") S.acting = null;
+          else if(res.user.account_id) S.acting = res.user.account_id;
+          save();
+          nav(landing());
+        } else {
+          S.ui.authErr = res.detail || "Wrong email or password.";
+          render();
+        }
+      })
+      .catch(() => {
+        S.ui.authErr = login(email, password);
+        save();
+        if(S.ui.authErr) render(); else nav(landing());
+      });
+    } else {
+      S.ui.authErr = login(email, password);
+      save();
+      if(S.ui.authErr) render(); else nav(landing());
+    }
+  }
 });
 window.addEventListener("hashchange",render);
 render();
