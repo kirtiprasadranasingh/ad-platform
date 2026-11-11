@@ -877,7 +877,7 @@ function vAccounts(){
   const totalTenants = S.accounts.length;
   const totalRes = totalTenants * 15;
   const err = S.ui.adminProvErr ? `<div class="err" style="margin-top:10px">✕ ${esc(S.ui.adminProvErr)}</div>` : "";
-  return `<div class="content" style="max-width:1200px">
+  return `<div class="content" style="width:100%;max-width:100%;box-sizing:border-box">
   <div class="phead"><div><h1>Dedicated Admin Dashboard</h1><p class="sub">Provision and manage 100% dedicated single-tenant client environments.</p></div></div>
   
   <div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
