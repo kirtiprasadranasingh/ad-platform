@@ -892,17 +892,18 @@ function vAccounts(){
       <h3 style="margin:0">Provision Dedicated Client Environment</h3>
       <span class="chip ok">Admin-Driven Provisioning</span>
     </div>
-    <p class="sub" style="margin-bottom:16px;font-size:13.5px">Create a client tenant with automated Azure Resource Group, VNet, Private Storage, and Admin credentials.</p>
+    <p class="sub" style="margin-bottom:16px;font-size:13.5px">Create a client tenant with automated Azure Resource Group, VNet, Private Storage, and initial user credentials.</p>
     <form data-form="adminCreateAccount" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;align-items:end">
       <div><label>Client / Organization Name</label><input name="org" required placeholder="e.g. HealthFirst AI" style="width:100%"></div>
-      <div><label>Admin Full Name</label><input name="name" required placeholder="e.g. Dr. Alex Mercer" style="width:100%"></div>
-      <div><label>Admin Work Email</label><input name="email" type="email" required placeholder="e.g. alex@healthfirst.org" style="width:100%"></div>
+      <div><label>Primary Contact / User Name</label><input name="name" required placeholder="e.g. Dr. Alex Mercer" style="width:100%"></div>
+      <div><label>Primary Work Email</label><input name="email" type="email" required placeholder="e.g. alex@healthfirst.org" style="width:100%"></div>
+      <div><label>User Role in Tenant</label><select name="role" style="width:100%"><option value="admin" selected>Tenant Admin (Can invite users & configure)</option><option value="user">Standard User (Operator only)</option></select></div>
       <div><label>Azure Region</label><select name="region" style="width:100%"><option value="eastus2" selected>East US 2 (Azure)</option><option value="centralus">Central US</option><option value="westus2">West US 2</option></select></div>
       <div><label>Environment Tier</label><select name="env" style="width:100%"><option value="prod1" selected>Production (prod1)</option><option value="test1">Testing / QA (test1)</option><option value="dev1">Development (dev1)</option></select></div>
       <div><label>Work Solution</label><select name="solution" style="width:100%">${SOL.map(s=>`<option value="${s.id}">${s.name}</option>`).join("")}</select></div>
       <div><label>Storage Quota (GB)</label><input name="storage" type="number" value="500" style="width:100%"></div>
       <div><label>Monthly Spend Limit (USD)</label><input name="spend" type="number" value="5000" style="width:100%"></div>
-      <div><button class="btn lg" style="width:100%;background:var(--blue);font-weight:700">+ Provision Dedicated Tenant</button></div>
+      <div style="grid-column:span 3;margin-top:6px"><button class="btn lg" style="width:100%;background:var(--blue);font-weight:700">+ Provision Dedicated Tenant</button></div>
     </form>
     ${err}
   </div>
@@ -913,15 +914,15 @@ function vAccounts(){
       <span class="log">Total: ${totalTenants} isolated environments</span>
     </div>
     <table>
-      <tr><th>Client Tenant</th><th>Solution</th><th>Azure Environment</th><th>Admin & People</th><th>Spend Limit</th><th>Status</th><th></th></tr>
+      <tr><th>Client Tenant</th><th>Solution</th><th>Azure Environment</th><th>Primary Contact & Role</th><th>Spend Limit</th><th>Status</th><th></th></tr>
       ${S.accounts.map(a=>{
-        const adminUser = accountUsers(a).find(u=>u.role==="admin") || accountUsers(a)[0];
+        const primaryUser = accountUsers(a).find(u=>u.role==="admin") || accountUsers(a)[0];
         const isCurrent = (acct() && acct().id === a.id);
         return `<tr>
           <td><b>${esc(a.name)}</b> <span class="chip ok" style="font-size:10px;padding:1px 6px">Dedicated</span><br><span class="log">Created ${a.created||a.created_at||"2026-11-05"}</span></td>
           <td>${SOL.find(s=>s.id===a.solution)?.name||a.solution}</td>
           <td><span style="font-family:monospace;font-size:12px">rg-${esc(a.id)}-${a.env||"prod1"}</span><br><span class="log">${a.region} · Single-Tenant</span></td>
-          <td>${adminUser ? `<b>${esc(adminUser.name||adminUser.email)}</b><br><span class="log">${esc(adminUser.email)}</span>` : `<span class="log">${accountUsers(a).length} users</span>`}</td>
+          <td>${primaryUser ? `<b>${esc(primaryUser.name||primaryUser.email)}</b> <span class="chip ${primaryUser.role==='admin'?'ok':'warn'}" style="font-size:10px;padding:1px 6px">${primaryUser.role==='admin'?'Tenant Admin':'Standard User'}</span><br><span class="log">${esc(primaryUser.email)}</span>` : `<span class="log">${accountUsers(a).length} users</span>`}</td>
           <td>$${a.usage.spendUsd.toLocaleString()} / $${a.resources.spendLimitUsd.toLocaleString()}<br><span class="log">${a.resources.storageGb} GB Storage</span></td>
           <td><span class="chip ${chip(a.status)}">${a.status==="ready"?"Active / Ready":a.status}</span></td>
           <td class="r">${isCurrent ? `<span class="pill" style="color:var(--blue);font-weight:600">Current</span>` : `<button class="btn ghost sm" data-act="openAccount" data-v="${a.id}">Switch Tenant</button>`}</td>
@@ -1044,6 +1045,7 @@ document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.targe
     const org = fd.get("org").trim();
     const name = fd.get("name").trim();
     const email = fd.get("email").trim().toLowerCase();
+    const role = fd.get("role") || "admin";
     const region = fd.get("region") || "eastus2";
     const env = fd.get("env") || "prod1";
     const solution = fd.get("solution") || "data-foundation";
@@ -1062,8 +1064,8 @@ document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.targe
     };
     S.accounts.unshift(newAcct);
     const existingU = S.users.find(u=>u.email===email);
-    if(existingU){ existingU.accountId = id; existingU.role = "admin"; }
-    else { S.users.push({email, name, password: "welcome", accountId: id, role: "admin", org}); }
+    if(existingU){ existingU.accountId = id; existingU.role = role; }
+    else { S.users.push({email, name, password: "welcome", accountId: id, role, org}); }
     
     log("admin-provision-dedicated-tenant", id);
     toast("Dedicated tenant provisioned: " + org);
@@ -1074,7 +1076,7 @@ document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.targe
       fetch('/api/auth/register',{
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({name, org, email, password: "welcome", region, tenancy: "single", env, storage, sandbox: "sbx-main", quota: 100, spend})
+        body: JSON.stringify({name, org, email, password: "welcome", role, region, tenancy: "single", env, storage, sandbox: "sbx-main", quota: 100, spend})
       }).catch(e=>console.log("Backend register error:", e));
     }
     render();

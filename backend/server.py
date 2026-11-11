@@ -211,6 +211,7 @@ class RegisterPayload(BaseModel):
     sandbox: str = Field("sbx-main", example="sbx-main")
     quota: int = Field(100, example=100)
     spend: float = Field(5000.0, example=5000.0)
+    role: Optional[str] = Field("admin", example="admin")
 
 
 # ----------------- BACKGROUND WORKER -----------------
@@ -284,11 +285,12 @@ def auth_register(payload: RegisterPayload, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail="That email is already registered. Sign in instead.")
     clean_org = re.sub(r"[^a-z0-9]", "-", payload.org.lower()).strip("-")
     account_id = f"acct-{clean_org}"
+    user_role = payload.role if payload.role in ("admin", "user") else "admin"
     user = create_user(
         email=payload.email,
         name=payload.name,
         password=payload.password,
-        role="admin",
+        role=user_role,
         account_id=account_id
     )
     add_audit_log(payload.email, "register", payload.email)
