@@ -176,7 +176,7 @@ function syncBackend(){
     fetch('/api/state/sync',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({users:S.users,accounts:S.accounts,orders:S.orders,works:S.works})
+      body:JSON.stringify({users:S.users,accounts:S.accounts,orders:S.orders.filter(o=>o.kind!=="provision"),works:S.works})
     }).catch(()=>{});
   },350);
 }
@@ -206,11 +206,16 @@ function mergeBackendState(d){
     if(S.acting&&!S.accounts.some(a=>a.id===S.acting)) S.acting=null;
   }
   if(d.orders && d.orders.length){
+    const backProvAccts=new Set(d.orders.filter(o=>o.kind==="provision").map(o=>o.accountId));
+    S.orders=S.orders.filter(o=>o.kind!=="provision"||d.orders.some(x=>x.id===o.id)||!backProvAccts.has(o.accountId));
     d.orders.forEach(o=>{
       const idx=S.orders.findIndex(x=>x.id===o.id);
       if(idx>=0) S.orders[idx]=Object.assign(S.orders[idx],o);
       else S.orders.push(o);
     });
+    if(S.provisioning&&!S.orders.some(x=>x.id===S.provisioning)){
+      S.provisioning=d.orders.find(x=>x.accountId===S.acting&&x.kind==="provision")?.id||null;
+    }
   }
   if(Array.isArray(d.works) && (d.works.length || (d.accounts && d.accounts.length))){
     S.works=d.works.map(w=>Object.assign({},w,{metrics:Array.isArray(w.metrics)?w.metrics:[],promoted:!!w.promoted}));
@@ -390,36 +395,45 @@ function onbValidate(step){
   }
   return "";
 }
-let _pollTimer=null;
+let _pollTimer=null, _pollingOrderId=null;
 function pollBackendOrder(orderId,co,a,sol){
   if(_pollTimer) clearInterval(_pollTimer);
-  _pollTimer=setInterval(()=>{
-    fetch('/api/orders/'+orderId)
-      .then(r=>r.json())
+  _pollingOrderId=orderId;
+  let errs=0;
+  const tick=()=>{
+    fetch('/api/orders/'+encodeURIComponent(orderId))
+      .then(r=>{ if(!r.ok){ const e=new Error("HTTP "+r.status); e.status=r.status; throw e; } return r.json(); })
       .then(orderData=>{
+        errs=0;
         if(orderData&&orderData.jobs){
           co.jobs=orderData.jobs;
-          if(orderData.logs) co.logs=orderData.logs;
+          if(Array.isArray(orderData.logs)) co.logs=orderData.logs;
+          if(orderData.error) co.error=orderData.error;
           if(orderData.status==="applied"){
-            clearInterval(_pollTimer); _pollTimer=null;
-            a.domains=sol.domains.slice();
-            a.status="ready";
+            clearInterval(_pollTimer); _pollTimer=null; _pollingOrderId=null;
+            if(a){ a.domains=(sol?.domains||a.domains||["gendf"]).slice(); a.status="ready"; }
             co.status="applied";
             co.jobs.forEach(j=>j[1]="done");
             log("config-order.applied",co.id,"orchestrator");
-            log("jumpstart.done",a.id,"orchestrator");
+            log("jumpstart.done",a?.id||co.accountId,"orchestrator");
             save(); render();
           } else if(orderData.status==="failed"){
-            clearInterval(_pollTimer); _pollTimer=null;
+            clearInterval(_pollTimer); _pollTimer=null; _pollingOrderId=null;
             co.status="failed";
-            save(); render();
+            store.set(JSON.stringify(S)); render();
           } else {
-            render();
+            co.status=orderData.status||"running";
+            store.set(JSON.stringify(S)); render();
           }
         }
       })
-      .catch(()=>{ clearInterval(_pollTimer); _pollTimer=null; });
-  },1000);
+      .catch(err=>{
+        errs++;
+        if(err?.status===404||errs>=30){ clearInterval(_pollTimer); _pollTimer=null; _pollingOrderId=null; }
+      });
+  };
+  tick();
+  _pollTimer=setInterval(tick,1200);
 }
 function confirmOnboarding(){
   const d=onb().d, so=salesOrder(); so.salesOrderId=nid("so");
@@ -436,11 +450,13 @@ function confirmOnboarding(){
   log("sales-order.received",so.salesOrderId,actorEmail);
   const changes=[{op:"provision",target:"environment",value:`${d.region} · ${env} · dedicated · fully managed`},...sol.domains.map(id=>({op:"add",target:"domain",id})),...accountUsers(a).map(u=>({op:"add",target:"user",email:u.email})),...accountUsers(a).map(u=>({op:"set",target:"access",email:u.email,catalogs:sol.domains.slice()}))];
   const co={id:nid("co"),accountId:a.id,kind:"provision",source:"staff",requestedBy:actorEmail,status:"running",validation:{ok:true,errors:[],warnings:[]},changes,created:now(),salesOrder:so,jobs:STACK_JOBS.map(n=>[n,"pending"]),logs:[]};
-  S.orders.unshift(co); log("config-order.created (provision)",co.id,"configgy");
-  S.acting=a.id; delete S.onbs.staff; S.provisioning=co.id; save();
+  S.orders.unshift(co);
+  S.acting=a.id; delete S.onbs.staff; S.provisioning=co.id;
+  store.set(JSON.stringify(S));
   nav("/provisioning");
-  const runLocalFallback=()=>setTimeout(()=>runJobs(co,()=>{ a.domains=sol.domains.slice(); a.status="ready"; co.status="applied"; log("config-order.applied",co.id,"orchestrator"); log("jumpstart.done",a.id,"orchestrator"); save(); render(); }),500);
+  const runLocalFallback=()=>{ log("config-order.created (provision)",co.id,"configgy"); runJobs(co,()=>{ a.domains=sol.domains.slice(); a.status="ready"; co.status="applied"; log("config-order.applied",co.id,"orchestrator"); log("jumpstart.done",a.id,"orchestrator"); save(); render(); }); };
   if(window.fetch){
+    co._dispatching=true;
     fetch('/api/orders/provision',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -459,11 +475,18 @@ function confirmOnboarding(){
         users:d.users.map(u=>({email:u.email,role:"user",access:{catalogs:sol.domains.slice()}}))
       })
     }).then(r=>r.json()).then(data=>{
+      delete co._dispatching;
       if(data&&data.orderId){
-        co.id=data.orderId;
+        if(data.accountId&&data.accountId!==a.id){
+          const prevId=a.id; a.id=data.accountId; co.accountId=a.id; S.acting=a.id;
+          S.users.forEach(u=>{ if(u.accountId===prevId) u.accountId=a.id; });
+        }
+        co.id=data.orderId; S.provisioning=data.orderId;
+        log("config-order.created (provision)",co.id,"configgy");
+        store.set(JSON.stringify(S));
         pollBackendOrder(data.orderId,co,a,sol);
       } else runLocalFallback();
-    }).catch(()=>runLocalFallback());
+    }).catch(()=>{ delete co._dispatching; runLocalFallback(); });
   } else runLocalFallback();
 }
 
@@ -657,9 +680,10 @@ function vProvisioning(){
       <h3>Progress</h3>
       <ul class="steps">${(o.jobs||[]).map(([n,st])=>`<li><span class="dot ${st==="done"?"done":st==="run"?"run":st==="error"?"error":""}"></span><span>${n} <span class="log">${st==="run"?"running…":st==="done"?"done":st==="error"?"error":""}</span></span></li>`).join("")}</ul>
       <div class="row" style="margin-top:16px">
-        ${ready?`<a class="btn lg" href="#/app" style="width:100%">Open your account</a>`:`<button class="btn lg" data-act="forceReady" style="width:100%">Open your account</button>`}
+        ${ready?`<a class="btn lg" href="#/app" style="width:100%">Open your account</a>`:o.status==="failed"?`<button class="btn red lg" disabled style="width:100%">Provisioning failed</button>`:`<button class="btn lg" disabled style="width:100%">Provisioning in progress…</button>`}
         ${isAdmin()?`<a class="btn ghost sm" href="#/app/accounts" style="width:100%">Back to All accounts</a>`:""}
       </div>
+      ${o.error?`<div class="err" style="margin-top:10px">✕ ${esc(o.error)}</div>`:""}
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
         <details><summary class="log" style="cursor:pointer">What is being set up</summary>
           <div class="diff" style="margin-top:8px">${(o.changes||[]).map(c=>`<div>${esc(describe(c))}</div>`).join("")}</div>
@@ -771,7 +795,11 @@ function render(){
   let html;
   if(PUBLIC.includes(p)) html=vLogin();
   else if(p==="onboard") html=`<div class="shell plain">${vOnboard()}</div>`;
-  else if(p==="provisioning") html=`<div class="shell plain">${vProvisioning()}</div>`;
+  else if(p==="provisioning"){
+    html=`<div class="shell plain">${vProvisioning()}</div>`;
+    const a=acct(); const o=S.orders.find(x=>x.id===S.provisioning)||(a&&S.orders.find(x=>x.accountId===a.id&&x.kind==="provision"));
+    if(o&&o.status==="running"&&!o._dispatching&&_pollingOrderId!==o.id){ const ta=acct(o.accountId)||a; pollBackendOrder(o.id,o,ta,SOL.find(s=>s.id===ta?.solution)||SOL[0]); }
+  }
   else if(p==="app"){ const sub=R.parts[1]||""; let main;
     if(sub==="accounts") main=vAccounts(); else if(sub==="") main=vOverview(); else if(sub==="setup") main=vSetup(R.parts[2]||"environment"); else if(sub==="reports") main=vDash(R.parts[2]||"usage"); else main=`<div class="content">${empty("Not found.")}</div>`;
     html=`<div class="shell">${sidebar()}${main}${staffOnly?"":dock()}</div>`; }

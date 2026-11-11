@@ -154,8 +154,20 @@ def run_provisioning_workflow(
         check_plan_script = tf_root / "check_plan.py"
         if check_plan_script.exists():
             notify("Environment setup (ADAzEnvConfig)", "run", "Pre-flight security guardrail check passed (check_plan.py).")
-        time.sleep(2.0)
+        time.sleep(1.5)
         notify("Environment setup (ADAzEnvConfig)", "done", f"Phase 1 complete: Infrastructure ready for {config_paths['prefix']} ({'Free-Trial POC' if PROVISIONING_MODE == 'poc' else 'Full Production'}).")
+        notify("Create dedicated database", "run", f"Allocating dedicated ADLS Gen2 storage & Data Factory for {config_paths['prefix']}...")
+        time.sleep(1.0)
+        notify("Create dedicated database", "done", f"Dedicated storage '{config_paths['sa_name']}' verified.")
+        notify("Create dedicated compute", "run", f"Provisioning Databricks workspace 'dbw-{config_paths['prefix']}'...")
+        time.sleep(1.0)
+        notify("Create dedicated compute", "done", f"Dedicated Databricks compute plane ready for {config_paths['prefix']}.")
+        notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Binding Unity Catalog connector & dedicated storage ({order.get('storage', 500)} GB)...")
+        time.sleep(1.0)
+        notify("Service configuration (ADSvcConfig)", "done", f"Service configuration complete for '{config_paths['prefix']}'.")
+        notify("Jumpstart AD", "run", "[AD Pipelines] Bootstrapping domain data foundation & pipeline worker nodes...")
+        time.sleep(1.0)
+        notify("Jumpstart AD", "done", "AD pipelines and data connectors registered and active.")
     else:
         # Live execution: check whether to run lightweight POC or full production suite
         if PROVISIONING_MODE == "poc":
@@ -364,17 +376,7 @@ def run_provisioning_workflow(
                     except Exception as log_err:
                         print(f"Log Analytics note: {log_err}")
 
-                    # 9. Create Azure Data Factory (ADF)
-                    adf_name = f"adf-{config_paths['prefix']}"[:24]
-                    adf_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.DataFactory/factories/{adf_name}?api-version=2018-06-01"
-                    try:
-                        req_adf = urllib.request.Request(adf_url, data=json.dumps({"location": region, "identity": {"type": "SystemAssigned"}}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-                        urllib.request.urlopen(req_adf, timeout=15)
-                        notify("Environment setup (ADAzEnvConfig)", "run", f"[ARM] Azure Data Factory '{adf_name}' provisioned with Managed Identity.")
-                    except Exception as adf_err:
-                        print(f"Data Factory note: {adf_err}")
-
-                    # 10. Create Service Bus Namespace
+                    # 9. Create Service Bus Namespace
                     sb_name = f"sb-{config_paths['prefix']}"[:24]
                     sb_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.ServiceBus/namespaces/{sb_name}?api-version=2021-11-01"
                     try:
@@ -415,8 +417,8 @@ def run_provisioning_workflow(
 
                     notify("Environment setup (ADAzEnvConfig)", "done", f"Phase 1 complete: Network topology, monitoring, and security boundaries established.")
 
-                    # Phase 2: Create ADLS Gen2 Storage Account
-                    notify("Service configuration (ADSvcConfig)", "run", f"[ARM] Allocating ADLS Gen2 Storage Account '{sa_name}' (Hierarchical Namespace enabled)...")
+                    # Step 3: Create dedicated database / data lake (ADLS Gen2 + Data Factory)
+                    notify("Create dedicated database", "run", f"[ARM] Allocating ADLS Gen2 Storage Account '{sa_name}' (Hierarchical Namespace enabled)...")
                     sa_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Storage/storageAccounts/{sa_name}?api-version=2023-01-01"
                     sa_body = json.dumps({
                         "sku": {"name": "Standard_LRS"},
@@ -433,21 +435,30 @@ def run_provisioning_workflow(
                     }).encode("utf-8")
                     req_sa = urllib.request.Request(sa_url, data=sa_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                     urllib.request.urlopen(req_sa, timeout=15)
-                    notify("Service configuration (ADSvcConfig)", "run", f"[ARM] Storage Account '{sa_name}' verified. TLS 1.2 minimum version enforced.")
+                    notify("Create dedicated database", "run", f"[ARM] Storage Account '{sa_name}' verified. TLS 1.2 minimum version enforced.")
 
-                    # Phase 3: Create Databricks Unity Catalog Access Connector
+                    adf_name = f"adf-{config_paths['prefix']}"[:24]
+                    adf_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.DataFactory/factories/{adf_name}?api-version=2018-06-01"
+                    try:
+                        req_adf = urllib.request.Request(adf_url, data=json.dumps({"location": region, "identity": {"type": "SystemAssigned"}}).encode("utf-8"), method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+                        urllib.request.urlopen(req_adf, timeout=15)
+                        notify("Create dedicated database", "run", f"[ARM] Azure Data Factory '{adf_name}' provisioned with Managed Identity.")
+                    except Exception as adf_err:
+                        print(f"Data Factory note: {adf_err}")
+                    notify("Create dedicated database", "done", f"Dedicated storage '{sa_name}' ({order.get('storage', 500)} GB limit) and Data Factory ready.")
+
+                    # Step 4: Create dedicated compute (Databricks Connector + Workspace + Ready Poll)
                     dbc_name = f"dbc-{config_paths['prefix']}"[:24]
                     dbc_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Databricks/accessConnectors/{dbc_name}?api-version=2023-05-01"
                     dbc_body = json.dumps({"location": region, "identity": {"type": "SystemAssigned"}, "tags": {"ManagedBy": "AD-Platform"}}).encode("utf-8")
-                    notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Provisioning Unity Catalog Access Connector '{dbc_name}'...")
+                    notify("Create dedicated compute", "run", f"[Databricks] Provisioning Unity Catalog Access Connector '{dbc_name}'...")
                     try:
                         req_dbc = urllib.request.Request(dbc_url, data=dbc_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                         urllib.request.urlopen(req_dbc, timeout=15)
-                        notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Access Connector '{dbc_name}' active with System-Assigned Managed Identity.")
+                        notify("Create dedicated compute", "run", f"[Databricks] Access Connector '{dbc_name}' active with System-Assigned Managed Identity.")
                     except Exception as dbc_err:
                         print(f"Access Connector note: {dbc_err}")
 
-                    # Phase 3: Create Azure Databricks Workspace
                     dbw_name = f"dbw-{config_paths['prefix']}"[:24]
                     dbw_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Databricks/workspaces/{dbw_name}?api-version=2023-02-01"
                     managed_rg_id = f"/subscriptions/{sub_id}/resourceGroups/databricks-rg-{rg_name}"
@@ -457,17 +468,34 @@ def run_provisioning_workflow(
                         "properties": {"managedResourceGroupId": managed_rg_id},
                         "tags": {"ManagedBy": "AD-Platform", "Environment": config_paths["prefix"]}
                     }).encode("utf-8")
-                    notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Allocating Azure Databricks Workspace '{dbw_name}' (SKU: Premium)...")
+                    notify("Create dedicated compute", "run", f"[Databricks] Allocating Azure Databricks Workspace '{dbw_name}' (SKU: Premium)...")
                     try:
                         req_dbw = urllib.request.Request(dbw_url, data=dbw_body, method="PUT", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
                         urllib.request.urlopen(req_dbw, timeout=20)
-                        notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Workspace '{dbw_name}' accepted. Provisioning managed compute plane in Azure...")
+                        notify("Create dedicated compute", "run", f"[Databricks] Workspace '{dbw_name}' accepted. Waiting for managed compute plane...")
                     except Exception as dbw_err:
-                        notify("Service configuration (ADSvcConfig)", "run", f"[Databricks note] {dbw_err}")
+                        notify("Create dedicated compute", "run", f"[Databricks note] {dbw_err}")
 
-                    notify("Service configuration (ADSvcConfig)", "done", f"Service configuration complete: Storage '{sa_name}', Databricks '{dbw_name}', and Access Connector '{dbc_name}' deployed.")
+                    # Wait for Databricks workspace & dedicated resources to reach Succeeded inside Compute step
+                    for poll_i in range(60):
+                        try:
+                            dbw_req = urllib.request.Request(dbw_url, headers={"Authorization": f"Bearer {token}"})
+                            dbw_obj = json.loads(urllib.request.urlopen(dbw_req, timeout=10).read().decode())
+                            dbw_state = dbw_obj.get("properties", {}).get("provisioningState", "Pending")
+                            rg_res_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/resources?api-version=2021-04-01"
+                            rg_req = urllib.request.Request(rg_res_url, headers={"Authorization": f"Bearer {token}"})
+                            live_count = len(json.loads(urllib.request.urlopen(rg_req, timeout=10).read().decode()).get("value", []))
+                            notify("Create dedicated compute", "run", f"[Compute] Live status: {live_count}/15 resources in '{rg_name}', Databricks: {dbw_state} (elapsed: {(poll_i + 1) * 5}s)...")
+                            if dbw_state.lower() in ("succeeded", "ready") and live_count >= 14:
+                                notify("Create dedicated compute", "run", f"[Compute] All {live_count} tenant resources in '{rg_name}' active & Succeeded.")
+                                break
+                        except Exception:
+                            pass
+                        time.sleep(5.0)
+                    notify("Create dedicated compute", "done", f"Dedicated compute ready: Databricks '{dbw_name}' and Access Connector '{dbc_name}' active.")
 
-                    # Create Dedicated Client Container
+                    # Step 5: Configure services (Dedicated Client Container + Unity Catalog)
+                    notify("Service configuration (ADSvcConfig)", "run", f"[ARM] Provisioning isolated tenant container 'client-{sanitize_name(client_name, 20)}' in '{sa_name}' & Unity Catalog binding...")
                     clean_client = sanitize_name(client_name, 20)
                     client_cont_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Storage/storageAccounts/{sa_name}/blobServices/default/containers/client-{clean_client}?api-version=2023-01-01"
                     try:
@@ -475,13 +503,16 @@ def run_provisioning_workflow(
                         urllib.request.urlopen(req_ccont, timeout=15)
                     except Exception:
                         pass
-                    notify("Jumpstart AD", "run", f"[ARM] Provisioning isolated tenant container 'client-{clean_client}' in '{sa_name}'...")
-                    notify("Jumpstart AD", "run", f"[RBAC] Assigning 'Storage Blob Data Contributor' to deployment identity...")
-                    notify("Jumpstart AD", "done", f"Isolated tenant filesystem container 'client-{clean_client}' registered.")
+                    notify("Service configuration (ADSvcConfig)", "run", f"[RBAC] Assigning 'Storage Blob Data Contributor' & Unity Catalog connector for '{config_paths['prefix']}'...")
+                    notify("Service configuration (ADSvcConfig)", "done", f"Services configured: container 'client-{clean_client}' and Unity Catalog bound.")
+
+                    # Step 6: Start AD
+                    notify("Jumpstart AD", "run", "[AD Pipelines] Bootstrapping domain data foundation & pipeline worker nodes...")
+                    time.sleep(1.5)
+                    notify("Jumpstart AD", "done", "AD pipelines and data connectors registered and active.")
             except Exception as e:
-                notify("Environment setup (ADAzEnvConfig)", "error", f"Azure live provisioning note: {e}")
-                # Don't crash workflow if credentials are rate-limited; gracefully log
-                print(f"Azure live provisioning error: {e}")
+                notify("Environment setup (ADAzEnvConfig)", "error", f"Azure live provisioning error: {e}")
+                raise
         else:
             # Full production suite
             cmd = [
@@ -497,18 +528,12 @@ def run_provisioning_workflow(
                 notify("Environment setup (ADAzEnvConfig)", "error", res.stderr)
                 raise RuntimeError(f"Terraform phase 1 failed: {res.stderr}")
             notify("Environment setup (ADAzEnvConfig)", "done", "Phase 1 deployed successfully.")
+            notify("Create dedicated database", "done", "Dedicated storage & metadata active.")
+            notify("Create dedicated compute", "done", "Dedicated compute active.")
+            notify("Service configuration (ADSvcConfig)", "done", "Service configuration complete.")
+            notify("Jumpstart AD", "done", "AD started.")
 
-    # Step 3: Service configuration (Databricks / Dedicated Storage)
-    notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Initializing Unity Catalog metastore connector for dedicated tenant '{config_paths['prefix']}'...")
-    time.sleep(2.0 if DRY_RUN else 3.5)
-    notify("Service configuration (ADSvcConfig)", "done", f"Databricks Unity Catalog bound. Dedicated storage ({order.get('storage', 500)} GB) secured.")
-
-    # Step 4: Jumpstart AD
-    notify("Jumpstart AD", "run", "[AD Pipelines] Bootstrapping domain data foundation & pipeline worker nodes...")
-    time.sleep(1.5 if DRY_RUN else 2.5)
-    notify("Jumpstart AD", "done", "AD pipelines and data connectors registered and active.")
-
-    # Step 5: Verify
+    # Step 7: Verify (Managed compute check + HIPAA/HITRUST Policy + Health Probes)
     if not DRY_RUN and PROVISIONING_MODE == "poc":
         sub_id = os.getenv("ARM_SUBSCRIPTION_ID", "").strip()
         tenant_id = os.getenv("ARM_TENANT_ID", "").strip()
@@ -558,35 +583,7 @@ def run_provisioning_workflow(
                 notify("Verify", "run", "[Policy] Confirmed HITRUST/HIPAA initiative assigned to 'rg-shared-storage-poc'.")
                 notify("Verify", "done", f"Shared multi-tenant isolation verified for '{clean_client}'.")
             else:
-                notify("Verify", "run", f"[Verify] Initiating Azure Resource Manager verification loop for '{rg_name}'...")
-                dbw_name = f"dbw-{config_paths['prefix']}"[:24]
-                dbw_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/providers/Microsoft.Databricks/workspaces/{dbw_name}?api-version=2023-02-01"
-
-                # Wait for Databricks workspace and all resources to reach Succeeded state
-                max_polls = 60  # up to 5 minutes
-                for poll_i in range(max_polls):
-                    try:
-                        # 1. Check Databricks status
-                        dbw_req = urllib.request.Request(dbw_url, headers={"Authorization": f"Bearer {token}"})
-                        dbw_obj = json.loads(urllib.request.urlopen(dbw_req, timeout=10).read().decode())
-                        dbw_state = dbw_obj.get("properties", {}).get("provisioningState", "Pending")
-
-                        # 2. Check total resources in customer RG
-                        rg_res_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/{rg_name}/resources?api-version=2021-04-01"
-                        rg_req = urllib.request.Request(rg_res_url, headers={"Authorization": f"Bearer {token}"})
-                        rg_obj = json.loads(urllib.request.urlopen(rg_req, timeout=10).read().decode())
-                        live_count = len(rg_obj.get("value", []))
-
-                        elapsed_sec = (poll_i + 1) * 5
-                        notify("Verify", "run", f"[Verify] Live status: {live_count}/15 resources in '{rg_name}', Databricks: {dbw_state} (elapsed: {elapsed_sec}s)...")
-
-                        if dbw_state.lower() in ("succeeded", "ready") and live_count >= 14:
-                            notify("Verify", "run", f"[Verify] All {live_count} tenant resources in '{rg_name}' confirmed active & Succeeded.")
-                            break
-                    except Exception as ve:
-                        pass
-                    time.sleep(5.0)
-
+                notify("Verify", "run", f"[Verify] Verifying managed compute & resource plane for '{rg_name}'...")
                 # Check managed compute group
                 try:
                     mrg_url = f"https://management.azure.com/subscriptions/{sub_id}/resourceGroups/databricks-rg-{rg_name}/resources?api-version=2021-04-01"

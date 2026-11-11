@@ -221,11 +221,9 @@ class RegisterPayload(BaseModel):
 # ----------------- BACKGROUND WORKER -----------------
 STEP_JOB_MAP = {
     "Validate sales order": ["Check the order"],
-    "Environment setup (ADAzEnvConfig)": [
-        "Create dedicated environment",
-        "Create dedicated database",
-        "Create dedicated compute",
-    ],
+    "Environment setup (ADAzEnvConfig)": ["Create dedicated environment"],
+    "Create dedicated database": ["Create dedicated database"],
+    "Create dedicated compute": ["Create dedicated compute"],
     "Service configuration (ADSvcConfig)": ["Configure services"],
     "Jumpstart AD": ["Start AD"],
     "Verify": ["Verify"],
@@ -240,7 +238,8 @@ def async_provision_task(order_id: str, payload_dict: Dict[str, Any]):
         for target_job in mapped:
             for job in order["jobs"]:
                 if job[0] == target_job:
-                    job[1] = status
+                    if job[1] != "done" or status == "error":
+                        job[1] = status
                     break
         order["logs"].append({
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -248,6 +247,10 @@ def async_provision_task(order_id: str, payload_dict: Dict[str, Any]):
             "status": status,
             "message": log_msg
         })
+        try:
+            upsert_order(order)
+        except Exception:
+            pass
 
     try:
         result = run_provisioning_workflow(payload_dict, progress_callback=on_progress)
@@ -343,12 +346,19 @@ def sync_state(payload: SyncStatePayload):
         DB["users"] = get_all_users()
     if payload.accounts:
         for a in payload.accounts:
+            existing_a = next((x for x in DB["accounts"] if x.get("id") == a.get("id")), None)
+            if existing_a and existing_a.get("status") == "ready" and a.get("status") == "provisioning":
+                continue
             upsert_account(a)
         DB["accounts"] = get_all_accounts()
     if payload.orders:
         for o in payload.orders:
+            oid = o.get("id")
+            existing_o = DB["orders"].get(oid)
+            if o.get("kind") == "provision" or (existing_o and (existing_o.get("kind") == "provision" or existing_o.get("status") in ("running", "applied"))):
+                continue
             upsert_order(o)
-        DB["orders"] = {o["id"]: o for o in get_all_orders()}
+            DB["orders"][oid] = o
     if payload.works:
         for w in payload.works:
             add_work_order(w)
@@ -502,6 +512,10 @@ def create_provision_order(payload: ProvisionPayload, background_tasks: Backgrou
 def get_order_status(order_id: str):
     """Poll live job progress and step status for the frontend stepper."""
     order = DB["orders"].get(order_id)
+    if not order:
+        order = next((o for o in get_all_orders() if o.get("id") == order_id), None)
+        if order:
+            DB["orders"][order_id] = order
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
