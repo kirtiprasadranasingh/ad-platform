@@ -766,6 +766,18 @@ def list_work_orders(accountId: Optional[str] = None):
     return DB["work_orders"]
 
 
+@app.post("/api/workorders/{wo_id}/promote")
+def promote_work_order(wo_id: str, actor: str = "user"):
+    """Promote a completed work order to the catalog and persist in SQLite."""
+    w = next((x for x in DB["work_orders"] if x["id"] == wo_id), None)
+    if not w:
+        raise HTTPException(status_code=404, detail="Work order not found")
+    w["promoted"] = True
+    add_work_order(w)
+    add_audit_log(actor, "work-order.promoted", wo_id)
+    return {"ok": True, "workOrder": w}
+
+
 # Mount the root frontend directory so opening http://localhost:8000 serves index.html
 if BASE_DIR.exists():
     app.mount("/", StaticFiles(directory=str(BASE_DIR), html=True), name="static")

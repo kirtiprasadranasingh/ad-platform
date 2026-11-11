@@ -72,7 +72,7 @@ pre{background:#0f1f3d;color:#dbe4f3;border-radius:8px;padding:14px;font-size:12
 .side a:hover{background:#f1f4f9;color:var(--navy);text-decoration:none}.side a.on{background:var(--blue-soft);color:var(--blue);font-weight:600}
 .side .badge{background:var(--blue);color:#fff;font-size:11px;border-radius:999px;padding:1px 7px}
 .side a.sub{padding:6px 12px 6px 28px;font-size:13.5px;font-weight:500;color:var(--slate)}.side a.sub.on{color:var(--blue);font-weight:700;background:none}.side .locked{padding:6px 12px;color:var(--muted);font-size:13px}
-.content{overflow:auto;padding:30px 36px;width:100%}.content.narrow{max-width:980px;width:100%;margin:0 auto}
+.content{overflow:auto;padding:30px 36px;width:100%;min-width:0}.content.narrow{max-width:980px;width:100%;margin:0 auto}
 .dock{width:380px;border-left:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:0}
 .dock .head{padding:16px 20px;border-bottom:1px solid var(--line)}.dock .head b{font-size:15px;color:var(--navy)}.dock .head small{display:block;color:var(--slate);margin-top:2px;font-size:12.5px}
 .phead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}.phead h1{font-size:26px;margin:0;font-weight:700}.phead .sub{margin:4px 0 0}
@@ -85,7 +85,7 @@ pre{background:#0f1f3d;color:#dbe4f3;border-radius:8px;padding:14px;font-size:12
 .stepper li span{width:24px;height:24px;border-radius:50%;background:#eef1f5;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:12px}
 .stepper li.on{color:var(--navy)}.stepper li.on span{background:var(--navy);color:#fff}.stepper li.done{color:var(--green)}.stepper li.done span{background:var(--green-soft);color:var(--green)}
 .stepper li+li::before{content:"";width:28px;height:1px;background:var(--line);margin-right:8px}
-.card.flush{padding:0;overflow:hidden}.card.flush table th:first-child,.card.flush table td:first-child{padding-left:18px}
+.card.flush{padding:0;overflow-x:auto}.card.flush table th:first-child,.card.flush table td:first-child{padding-left:18px}
 td.r{text-align:right}tr.sel td{background:var(--blue-soft)}
 .big{font-size:22px;font-weight:700;color:var(--navy)}
 .check{list-style:none;padding:0;margin:0}.check li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eef1f5}.check li:last-child{border:0}
@@ -535,6 +535,7 @@ function adySay(text){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({id:w.id,accountId:a.id,verb,text,by:me().email})
     }).then(r=>r.json()).then(d=>{
+      if(d.workOrderId) w.id=d.workOrderId;
       const fallbackMetrics={DATA:[["Rows","480k"],["Columns","9"],["Quality issues","2"],["Time","40s"]],PRODUCE:[["Rows","1.2M"],["Entities","14"],["Transformations","38"],["Quality","98%"],["Time","3m 20s"]],EXPLORE:[["Patterns","3"],["Confidence","0.91"],["Stores flagged","4"],["Time","1m 05s"]],GENERATE:[["Metrics","2"],["Fit","0.87"],["Time","2m 10s"]]}[verb];
       finishWork(d.result||"Completed.", d.metrics||fallbackMetrics);
     }).catch(()=>{
@@ -828,7 +829,13 @@ const ACT={
   saveAccess:el=>{ const em=el.dataset.v; direct([{op:"set",target:"access",email:em,catalogs:[...document.querySelectorAll(".ea-cat:checked")].map(x=>x.value)}],"Access updated"); if(!S.ui.cfgErr) S.ui.editUser=null; },
   addUser:()=>{ const em=g("nu").value.trim().toLowerCase(); const ch=[{op:"add",target:"user",email:em}]; const w=[...document.querySelectorAll(".nu-work:checked")].map(x=>x.value); if(w.length) ch.push({op:"set",target:"access",email:em,catalogs:w}); direct(ch,"User added"); },
   rmUser:el=>{ if(confirm("Remove "+el.dataset.v+"?")) direct([{op:"remove",target:"user",email:el.dataset.v}],"Removed"); },
-  promote:el=>{ const w=S.works.find(x=>x.id===el.dataset.v); if(w){ w.promoted=true; log("work-order.promoted",w.id); save(); toast("Promoted to the catalog"); } },
+  promote:el=>{
+    const w=S.works.find(x=>x.id===el.dataset.v);
+    if(w){
+      w.promoted=true; log("work-order.promoted",w.id); save(); toast("Promoted to the catalog");
+      if(window.fetch) fetch('/api/workorders/'+encodeURIComponent(w.id)+'/promote?actor='+encodeURIComponent(me()?.email||'user'),{method:'POST'}).catch(()=>{});
+    }
+  },
   setRes:()=>direct([{op:"set",target:"resources",value:{spendLimitUsd:+g("rs").value,storageGb:+g("rg").value}}],"Allocation saved"),
   sugg:el=>sendChat(el.dataset.chat,el.dataset.v)
 };
