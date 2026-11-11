@@ -184,45 +184,42 @@ const save=()=>{ store.set(JSON.stringify(S)); syncBackend(); };
 
 function mergeBackendState(d){
   if(!d) return;
+  const maxNum=(arr,pfx)=>arr.reduce((m,x)=>{ const mt=String(x.id||"").match(new RegExp("^"+pfx+"-(\\d+)$")); return mt?Math.max(m,+mt[1]):m; },0);
   if(d.users && d.users.length){
-    d.users.forEach(u=>{
-      u.accountId=u.accountId||u.account_id||null;
-      const role = u.role==="staff" ? "staff" : "user";
-      const access = u.access && Array.isArray(u.access.catalogs) ? u.access : {catalogs:[]};
-      const normalized = Object.assign({}, u, {role, access});
-      const idx=S.users.findIndex(x=>x.email.toLowerCase()===u.email.toLowerCase());
-      if(idx>=0) S.users[idx]=Object.assign(S.users[idx], normalized);
-      else S.users.push(normalized);
+    const prevUsers=S.users;
+    S.users=d.users.map(u=>{
+      const accountId=u.accountId||u.account_id||null;
+      const role=u.role==="staff"?"staff":"user";
+      const access=u.access&&Array.isArray(u.access.catalogs)?u.access:{catalogs:[]};
+      const old=prevUsers.find(x=>x.email.toLowerCase()===u.email.toLowerCase());
+      return Object.assign({},old||{},u,{accountId,role,access,password:u.password||old?.password||"welcome"});
     });
   }
   if(d.accounts && d.accounts.length){
-    d.accounts.forEach(a=>{
-      const norm = Object.assign({}, a, {
-        tenancy:"dedicated",
-        domains:Array.isArray(a.domains)?a.domains:["gendf"],
-        resources:a.resources||{spendLimitUsd:5000,storageGb:500},
-        usage:a.usage||{spendUsd:0,computeHours:0},
-        datasets:Array.isArray(a.datasets)?a.datasets:[]
-      });
-      const idx=S.accounts.findIndex(x=>x.id===a.id);
-      if(idx>=0) S.accounts[idx]=Object.assign(S.accounts[idx], norm);
-      else S.accounts.push(norm);
-    });
+    S.accounts=d.accounts.map(a=>Object.assign({},a,{
+      tenancy:"dedicated",
+      domains:Array.isArray(a.domains)?a.domains:["gendf"],
+      resources:a.resources||{spendLimitUsd:5000,storageGb:500},
+      usage:a.usage||{spendUsd:0,computeHours:0},
+      datasets:Array.isArray(a.datasets)?a.datasets:[]
+    }));
+    if(S.acting&&!S.accounts.some(a=>a.id===S.acting)) S.acting=null;
   }
   if(d.orders && d.orders.length){
     d.orders.forEach(o=>{
       const idx=S.orders.findIndex(x=>x.id===o.id);
-      if(idx>=0) S.orders[idx]=Object.assign(S.orders[idx], o);
+      if(idx>=0) S.orders[idx]=Object.assign(S.orders[idx],o);
       else S.orders.push(o);
     });
   }
-  if(d.works && d.works.length){
-    d.works.forEach(w=>{
-      const idx=S.works.findIndex(x=>x.id===w.id);
-      if(idx>=0) S.works[idx]=Object.assign(S.works[idx], w);
-      else S.works.push(w);
-    });
+  if(Array.isArray(d.works) && (d.works.length || (d.accounts && d.accounts.length))){
+    S.works=d.works.map(w=>Object.assign({},w,{metrics:Array.isArray(w.metrics)?w.metrics:[],promoted:!!w.promoted}));
   }
+  if(Array.isArray(d.audit) && d.audit.length){
+    S.audit=d.audit.slice();
+  }
+  S.seq.co=Math.max(S.seq.co||1,maxNum(S.orders,"CO"));
+  S.seq.wo=Math.max(S.seq.wo||1,maxNum(S.works,"WO"));
   store.set(JSON.stringify(S));
 }
 
@@ -536,7 +533,7 @@ function adySay(text){
     fetch('/api/assistant/workorder',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({accountId:a.id,verb,text,by:me().email})
+      body:JSON.stringify({id:w.id,accountId:a.id,verb,text,by:me().email})
     }).then(r=>r.json()).then(d=>{
       const fallbackMetrics={DATA:[["Rows","480k"],["Columns","9"],["Quality issues","2"],["Time","40s"]],PRODUCE:[["Rows","1.2M"],["Entities","14"],["Transformations","38"],["Quality","98%"],["Time","3m 20s"]],EXPLORE:[["Patterns","3"],["Confidence","0.91"],["Stores flagged","4"],["Time","1m 05s"]],GENERATE:[["Metrics","2"],["Fit","0.87"],["Time","2m 10s"]]}[verb];
       finishWork(d.result||"Completed.", d.metrics||fallbackMetrics);
@@ -737,7 +734,7 @@ function vDash(k){
 function vAccounts(){
   return `<div class="content">${head("Accounts","Every dedicated client account and its stack.",`<a class="btn" href="#/onboard">Set up a client account</a>`)}
   <div class="card flush"><table><tr><th>Account</th><th>Use case</th><th>Stack</th><th>Users</th><th>Balance</th><th>Status</th><th></th></tr>
-  ${S.accounts.map(a=>`<tr><td><b>${esc(a.name)}</b> <span class="chip ok" style="font-size:10px;padding:1px 6px">Dedicated</span><br><span class="log">${a.created||a.created_at||""}</span></td><td>${capName(a)}</td><td><span style="font-family:monospace;font-size:12px">${rgName(a)}</span><br><span class="log">${a.region} · ${a.env||"prod1"}</span></td><td>${accountUsers(a).length}</td><td>$${balance(a).toLocaleString()} of $${a.resources.spendLimitUsd.toLocaleString()}</td><td><span class="chip ${chip(a.status)}">${a.status}</span></td><td class="r"><button class="btn ghost sm" data-act="openAccount" data-v="${a.id}" ${a.status!=="ready"?"disabled":""}>Open</button></td></tr>`).join("")}</table></div></div>`;
+  ${S.accounts.map(a=>`<tr><td><b>${esc(a.name)}</b> <span class="chip ok" style="font-size:10px;padding:1px 6px">Dedicated</span><br><span class="log">${a.created||a.created_at||""}</span></td><td>${capName(a)}</td><td><span style="font-family:monospace;font-size:12px">${rgName(a)}</span><br><span class="log">${a.region} · ${a.env||"prod1"}</span></td><td>${accountUsers(a).length}</td><td>$${balance(a).toLocaleString()} of $${a.resources.spendLimitUsd.toLocaleString()}</td><td><span class="chip ${chip(a.status)}">${a.status}</span></td><td class="r">${a.status==="provisioning"?`<button class="btn ghost sm" data-act="viewProvisioning" data-v="${a.id}">View progress</button>`:`<button class="btn ghost sm" data-act="openAccount" data-v="${a.id}" ${a.status!=="ready"?"disabled":""}>Open</button>`}</td></tr>`).join("")}</table></div></div>`;
 }
 
 /* ============================== demos ============================== */
@@ -819,6 +816,12 @@ const ACT={
     return "norender";
   },
   openAccount:el=>{S.acting=el.dataset.v;save();nav("/app");},
+  viewProvisioning:el=>{
+    const a=S.accounts.find(x=>x.id===el.dataset.v); if(!a) return;
+    const o=S.orders.find(x=>x.accountId===a.id&&x.kind==="provision");
+    S.acting=a.id; if(o) S.provisioning=o.id; save(); nav("/provisioning");
+    if(o&&o.status!=="applied"){ const sol=SOL.find(s=>s.id===a.solution)||SOL[0]; pollBackendOrder(o.id,o,a,sol); }
+  },
   addDomain:()=>{ const v=g("nd")?.value; if(v) direct([{op:"add",target:"domain",id:v}],"Work added"); },
   rmDomain:el=>{ if(confirm("Remove work "+(REGISTRY[el.dataset.v]||el.dataset.v)+"?")) direct([{op:"remove",target:"domain",id:el.dataset.v}],"Work removed"); },
   editAccess:el=>{S.ui.editUser=el.dataset.v;S.ui.cfgErr="";}, cancelAccess:()=>{S.ui.editUser=null;S.ui.cfgErr="";},

@@ -196,6 +196,7 @@ def azure_get_account_status(rg_name: str, sa_name: str) -> dict:
 
 
 class WorkOrderRequest(BaseModel):
+    id: Optional[str] = None
     accountId: str = Field("alida-internal", example="alida-internal")
     verb: str = Field(..., example="PRODUCE")
     text: str = Field(..., example="produce a data foundation from the retail datasets")
@@ -372,17 +373,27 @@ def get_account(account_id: str):
 @app.get("/api/accounts/{account_id}/tfvars")
 def get_account_tfvars(account_id: str):
     """Returns the live generated infrastructure.tfvars file for this tenant."""
-    acct = next((a for a in DB["accounts"] if a["id"] == account_id), None)
-    raw_name = acct.get("name") if acct else account_id
-    clean_org = re.sub(r"[^a-z0-9]", "", raw_name.replace("acct-", "").lower())[:8]
-    env = (acct.get("env") if acct else None) or "prod1"
+    acct = next((a for a in DB["accounts"] if a["id"] == account_id), None) or db_get_account(account_id)
+    if not acct:
+        return {"found": False, "filename": "", "content": "# Account not found."}
+    raw_name = acct.get("name") or account_id
+    clean_org = re.sub(r"[^a-z0-9]", "", re.sub(r"^acct-", "", raw_name, flags=re.I).lower())[:8]
+    env = acct.get("env") or "prod1"
     runs_dir = Path(__file__).resolve().parent / "runs"
     preferred = runs_dir / clean_org / env / "infrastructure.tfvars"
     if preferred.exists():
         return {"found": True, "filename": str(preferred), "content": preferred.read_text(encoding="utf-8")}
     for p in runs_dir.glob(f"*{clean_org}*/**/infrastructure.tfvars"):
         return {"found": True, "filename": str(p), "content": p.read_text(encoding="utf-8")}
-    return {"found": False, "filename": "", "content": "# Configuration pending generation..."}
+    generated = generate_tfvars({
+        "org": re.sub(r"^acct-", "", raw_name, flags=re.I),
+        "env": env,
+        "region": acct.get("region") or "eastus2",
+        "tenancy": "single",
+        "storage": (acct.get("resources") or {}).get("storageGb") or 500,
+    }, runs_dir=runs_dir)
+    tfvars_path = generated["tfvars"]
+    return {"found": True, "filename": str(tfvars_path), "content": tfvars_path.read_text(encoding="utf-8")}
 
 
 @app.post("/api/register")
@@ -684,7 +695,12 @@ def execute_work_order(req: WorkOrderRequest):
     if not acct:
         raise HTTPException(status_code=404, detail="Account not found")
 
-    wo_id = f"WO-{len(DB['work_orders']) + 1:04d}"
+    existing_ids = {w["id"] for w in DB["work_orders"]}
+    if req.id and req.id not in existing_ids:
+        wo_id = req.id
+    else:
+        n = max((int(m.group(1)) for w in DB["work_orders"] for m in [re.match(r"^WO-(\d+)$", w.get("id", ""))] if m), default=0) + 1
+        wo_id = f"WO-{n:04d}"
     verb = req.verb.upper()
     text_lower = req.text.lower()
     result_msg = ""
