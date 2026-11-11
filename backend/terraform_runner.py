@@ -67,25 +67,29 @@ use_msi              = true
     # In shared tenancy, we point to shared cluster resources
     is_shared = tenancy == "multi"
 
-    tfvars_content = f"""# Deployment inputs for {prefix} (Tenancy: {tenancy})
+    tenant_id = os.getenv("ARM_TENANT_ID") or os.getenv("AZURE_TENANT_ID", "00000000-0000-0000-0000-000000000000")
+    sub_id = os.getenv("ARM_SUBSCRIPTION_ID") or os.getenv("AZURE_SUBSCRIPTION_ID", "00000000-0000-0000-0000-000000000000")
+    client_id = os.getenv("ARM_CLIENT_ID") or os.getenv("AZURE_CLIENT_ID", "00000000-0000-0000-0000-000000000000")
+
+    tfvars_content = f"""# Deployment inputs for {prefix} (Tenancy: dedicated)
 client_name                  = "{org}"
 env_name                     = "{env}"
 prefix                       = "{prefix}"
 storage_account_name         = "{sa_name}"
 resource_group_name          = "{'rg-shared-storage-poc' if is_shared else f'rg-{prefix}'}"
 region                       = "{region}"
-tenant_id                    = "{os.getenv('AZURE_TENANT_ID', '00000000-0000-0000-0000-000000000000')}"
-subscription_id              = "{os.getenv('AZURE_SUBSCRIPTION_ID', '00000000-0000-0000-0000-000000000000')}"
-deployment_identity_client_id= "{os.getenv('AZURE_CLIENT_ID', '00000000-0000-0000-0000-000000000000')}"
+tenant_id                    = "{tenant_id}"
+subscription_id              = "{sub_id}"
+deployment_identity_client_id= "{client_id}"
 sql_admin_group_object_id    = "{os.getenv('AZURE_SQL_ADMIN_GROUP', '00000000-0000-0000-0000-000000000000')}"
 vnet_cidr                    = "{'10.80.0.0/16,10.81.0.0/16' if is_shared else '10.60.0.0/16,10.61.0.0/16'}"
 approved_client_cidrs        = ["10.62.0.0/24"]
 approved_egress_fqdns        = ["login.microsoftonline.com", "{region}.databricks.azure.net"]
 application_image            = "api@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-application_registry_id      = "/subscriptions/{os.getenv('AZURE_SUBSCRIPTION_ID', '00000000-0000-0000-0000-000000000000')}/resourceGroups/{'rg-shared-storage-poc' if is_shared else f'rg-{prefix}'}/providers/Microsoft.ContainerRegistry/registries/cradplatform"
+application_registry_id      = "/subscriptions/{sub_id}/resourceGroups/{'rg-shared-storage-poc' if is_shared else f'rg-{prefix}'}/providers/Microsoft.ContainerRegistry/registries/cradplatform"
 application_registry_host    = "cradplatform.azurecr.io"
-entra_application_client_id  = "{os.getenv('AZURE_ENTRA_APP_ID', '00000000-0000-0000-0000-000000000000')}"
-authentication_vault_id      = "/subscriptions/{os.getenv('AZURE_SUBSCRIPTION_ID', '00000000-0000-0000-0000-000000000000')}/resourceGroups/{'rg-shared-storage-poc' if is_shared else f'rg-{prefix}'}/providers/Microsoft.KeyVault/vaults/kv-adplatform"
+entra_application_client_id  = "{os.getenv('AZURE_ENTRA_APP_ID', client_id)}"
+authentication_vault_id      = "/subscriptions/{sub_id}/resourceGroups/{'rg-shared-storage-poc' if is_shared else f'rg-{prefix}'}/providers/Microsoft.KeyVault/vaults/kv-adplatform"
 authentication_secret_uri    = "https://kv-adplatform.vault.azure.net/secrets/app-token"
 """
     tfvars_path = client_run_dir / "infrastructure.tfvars"
@@ -494,10 +498,10 @@ def run_provisioning_workflow(
                 raise RuntimeError(f"Terraform phase 1 failed: {res.stderr}")
             notify("Environment setup (ADAzEnvConfig)", "done", "Phase 1 deployed successfully.")
 
-    # Step 3: Service configuration (Databricks / Sandboxes)
-    notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Initializing Unity Catalog metastore connector for sandbox '{order.get('sandbox', 'sbx-main')}'...")
+    # Step 3: Service configuration (Databricks / Dedicated Storage)
+    notify("Service configuration (ADSvcConfig)", "run", f"[Databricks] Initializing Unity Catalog metastore connector for dedicated tenant '{config_paths['prefix']}'...")
     time.sleep(2.0 if DRY_RUN else 3.5)
-    notify("Service configuration (ADSvcConfig)", "done", f"Databricks Unity Catalog bound. Sandbox '{order.get('sandbox', 'sbx-main')}' secured.")
+    notify("Service configuration (ADSvcConfig)", "done", f"Databricks Unity Catalog bound. Dedicated storage ({order.get('storage', 500)} GB) secured.")
 
     # Step 4: Jumpstart AD
     notify("Jumpstart AD", "run", "[AD Pipelines] Bootstrapping domain data foundation & pipeline worker nodes...")

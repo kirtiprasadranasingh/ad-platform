@@ -10,32 +10,17 @@
 html,body{height:100%}
 body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:14.5px;line-height:1.5;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
 a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
-header{height:60px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;gap:12px;flex:none;box-sizing:border-box;width:100%;max-width:100%}
+header{height:60px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:14px;flex:none;width:100%;max-width:100%}
 .brand{font-weight:800;font-size:17px;color:var(--navy);white-space:nowrap;cursor:pointer;letter-spacing:-.01em}.brand span{font-weight:500;color:var(--slate);margin-left:7px;font-size:13px}
 .spacer{flex:1}
 .hnav{display:flex;gap:2px}.hnav a{color:var(--slate);font-size:14px;font-weight:500;padding:7px 12px;border-radius:8px}.hnav a.on,.hnav a:hover{background:#f1f4f9;color:var(--navy);text-decoration:none}
 .link{all:unset;cursor:pointer;color:var(--slate);font-size:14px;font-weight:500;padding:7px 12px;border-radius:8px;white-space:nowrap}.link:hover{background:#f1f4f9;color:var(--navy);text-decoration:none}
 .link.cta{background:var(--navy);color:#fff}.link.cta:hover{background:#1a2f5a}
 #who{font-size:13px;color:var(--slate);white-space:nowrap;max-width:230px;overflow:hidden;text-overflow:ellipsis}#who b{color:var(--ink);font-weight:600}
-.tl{display:flex;align-items:center;gap:4px}
-.tl .n{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;color:var(--muted);font-size:13.5px;font-weight:600;white-space:nowrap}
-.tl .n .d{width:8px;height:8px;border-radius:50%;background:#cfd6e0;flex:none}
-.tl .n.avail{color:var(--navy);cursor:pointer}.tl .n.avail:hover{background:#f1f4f9}.tl .n.avail .d{background:var(--navy)}
-.tl .n.active{background:var(--navy);color:#fff}.tl .n.active .d{background:#fff}.tl .n.active small{color:#c7d3e3}
-.tl .n.done{color:var(--green);cursor:pointer}.tl .n.done .d{background:var(--green)}
-.tl .n.off{opacity:.55}.tl .n.lock .d{background:transparent;border:2px solid var(--muted)}
-.tl .seg{width:18px;height:2px;background:var(--line)}
-.tl .sub{display:flex;gap:2px;margin-left:8px;padding-left:12px;border-left:1px solid var(--line)}
-.tl .sub a{font-size:13px;font-weight:500;padding:5px 10px;border-radius:999px;color:var(--slate)}.tl .sub a.on{background:var(--blue-soft);color:var(--blue)}.tl .sub a:hover{text-decoration:none;background:#f1f4f9}
-.tl .n small{font-weight:500;font-size:11.5px;color:var(--muted)}
 #app{flex:1;min-height:0;display:flex}
 .page{flex:1;overflow:auto;padding:32px 40px}
 .site{flex:1;overflow:auto}
 .wrap{max-width:1120px;margin:0 auto;padding:48px 36px}
-.split{flex:1;min-height:0;display:grid;grid-template-columns:400px 1fr}
-.agent{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
-.agent .head{padding:16px 20px;border-bottom:1px solid var(--line)}.agent .head b{font-size:15px;color:var(--navy)}
-.agent .head small{display:block;color:var(--slate);margin-top:2px;font-size:12.5px}
 .chat{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px;background:#fafbfc}
 .msg{max-width:90%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.5;white-space:pre-wrap}
 .msg.u{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}.msg.a{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px;box-shadow:var(--sh)}
@@ -46,8 +31,6 @@ header{height:60px;background:var(--surface);border-bottom:1px solid var(--line)
 h1{margin:0 0 12px;font-size:40px;font-weight:800;color:var(--navy);line-height:1.1;letter-spacing:-.02em}
 h2{margin:0 0 4px;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:-.01em}
 .sub{color:var(--slate);margin:0 0 22px;font-size:15px}
-.mode{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:999px;margin-bottom:12px}
-.mode.sales{background:var(--amber-soft);color:var(--amber)}.mode.config{background:var(--blue-soft);color:var(--blue)}.mode.ad{background:var(--green-soft);color:var(--green)}.mode.staff{background:#f1f4f9;color:var(--slate)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:18px;box-shadow:var(--sh)}
 .card h3{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--slate);font-weight:700}
 .grid{display:grid;gap:18px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g4{grid-template-columns:repeat(4,1fr)}
@@ -65,24 +48,21 @@ tr.click{cursor:pointer}tr.click:hover td{background:#f7f9fc}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .kv{display:grid;grid-template-columns:150px 1fr;gap:8px 14px}.kv b{color:var(--slate);font-weight:500}
 input,select{font:inherit;padding:9px 11px;border:1px solid #cfd6e0;border-radius:8px;background:#fff;color:var(--ink)}
-input:focus,select:focus{outline:3px solid rgba(37,99,235,.18);border-color:var(--blue)}
+input:focus,select:focus,textarea:focus{outline:3px solid rgba(37,99,235,.18);border-color:var(--blue)}
 input[readonly]{background:#f7f9fc;color:var(--slate)}
 label{display:block;font-size:12.5px;font-weight:600;color:var(--slate);margin:12px 0 5px}
 pre{background:#0f1f3d;color:#dbe4f3;border-radius:8px;padding:14px;font-size:12.5px;line-height:1.55;overflow:auto;max-height:320px;margin:0}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px}
-.tabs a{padding:9px 14px;font-weight:500;color:var(--slate);border-bottom:2px solid transparent;margin-bottom:-1px}
-.tabs a:hover{text-decoration:none;color:var(--navy)}.tabs a.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
-.tabs .badge{background:var(--blue);color:#fff;font-size:11px;border-radius:999px;padding:1px 7px;margin-left:6px}
 .pill{display:inline-block;background:#f1f4f9;border-radius:999px;padding:2px 10px;margin:0 6px 6px 0;font-size:12.5px;color:var(--ink)}
 .steps{list-style:none;padding:0;margin:0}.steps li{display:grid;grid-template-columns:20px 1fr;gap:10px;padding:6px 0}
-.dot{width:12px;height:12px;border-radius:50%;background:var(--line);margin-top:5px}.dot.done{background:var(--green)}.dot.run{background:var(--blue);animation:p 1s infinite}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line);margin-top:5px}.dot.done{background:var(--green)}.dot.run{background:var(--blue);animation:p 1s infinite}.dot.error{background:var(--red)}
 @keyframes p{50%{opacity:.35}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin 1s linear infinite}
 .log{font-size:12.5px;color:var(--slate)}.err{color:var(--red);font-size:13px}.warn{color:var(--amber);font-size:13px}.empty{color:var(--slate)}
 .note{background:var(--amber-soft);border:1px solid #f3dcaa;color:#7a4b06;border-radius:8px;padding:10px 14px;font-size:13.5px;margin:12px 0}
 .info{background:var(--blue-soft);border:1px solid #c7d7fb;color:#1e3a8a;border-radius:8px;padding:10px 14px;font-size:13.5px;margin:12px 0}
 .bar{height:8px;background:#eef1f5;border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);border-radius:999px}.bar i.warn{background:var(--amber)}.bar i.bad{background:var(--red)}
 .diff{font:13px/1.8 ui-monospace,Menlo,monospace}.diff .a{color:var(--green)}.diff .r{color:var(--red)}.diff .c{color:var(--amber)}
-.diff .x{all:unset;cursor:pointer;color:var(--red);margin-left:8px;font-weight:700}.diff input{width:80px;padding:2px 6px;font-size:12px;border-radius:6px}
 /* shell */
 .shell{flex:1;min-height:0;display:grid;grid-template-columns:224px minmax(0,1fr) auto;width:100%;max-width:100%;overflow:hidden}
 .shell.plain{grid-template-columns:minmax(0,1fr) auto;width:100%;max-width:100%;overflow:hidden}
@@ -91,15 +71,15 @@ pre{background:#0f1f3d;color:#dbe4f3;border-radius:8px;padding:14px;font-size:12
 .side a{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;color:var(--slate);font-weight:500;margin-bottom:2px}
 .side a:hover{background:#f1f4f9;color:var(--navy);text-decoration:none}.side a.on{background:var(--blue-soft);color:var(--blue);font-weight:600}
 .side .badge{background:var(--blue);color:#fff;font-size:11px;border-radius:999px;padding:1px 7px}
-.side .locked{padding:6px 12px;color:var(--muted);font-size:13px}
-.content{overflow:auto;padding:30px 36px}.content.narrow{max-width:980px;width:100%;margin:0 auto}
+.side a.sub{padding:6px 12px 6px 28px;font-size:13.5px;font-weight:500;color:var(--slate)}.side a.sub.on{color:var(--blue);font-weight:700;background:none}.side .locked{padding:6px 12px;color:var(--muted);font-size:13px}
+.content{overflow:auto;padding:30px 36px;width:100%}.content.narrow{max-width:980px;width:100%;margin:0 auto}
 .dock{width:380px;border-left:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:0}
 .dock .head{padding:16px 20px;border-bottom:1px solid var(--line)}.dock .head b{font-size:15px;color:var(--navy)}.dock .head small{display:block;color:var(--slate);margin-top:2px;font-size:12.5px}
 .phead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}.phead h1{font-size:26px;margin:0;font-weight:700}.phead .sub{margin:4px 0 0}
 .tenant{font:inherit;font-weight:600;color:var(--navy);border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fff}
 .tenant-name{font-weight:600;color:var(--navy);padding-left:14px;border-left:1px solid var(--line)}
 .user{display:flex;flex-direction:column;line-height:1.15;text-align:right;padding-left:6px}.user b{font-size:13px;color:var(--ink)}.user small{color:var(--slate);font-size:11.5px}
-.link.on{background:var(--blue-soft);color:var(--blue)}.link.attn{color:var(--amber);font-weight:600}.link .cnt{background:var(--amber);color:#fff;border-radius:999px;padding:0 6px;font-size:11px}
+.link.on{background:var(--blue-soft);color:var(--blue)}
 .stepper{list-style:none;display:flex;gap:8px;padding:0;margin:0 0 24px}
 .stepper li{display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:600;font-size:13px}
 .stepper li span{width:24px;height:24px;border-radius:50%;background:#eef1f5;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:12px}
@@ -112,38 +92,16 @@ td.r{text-align:right}tr.sel td{background:var(--blue-soft)}
 .check li span{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#fff}.check li.done span{background:var(--green);border-color:var(--green)}.check li.done a{color:var(--slate);text-decoration:line-through}
 .act{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #eef1f5;color:var(--ink)}.act:last-child{border:0}.act:hover{text-decoration:none;background:#fafbfc}.act b{color:var(--navy)}
 .empty-state{color:var(--slate);padding:18px;text-align:center}
+.ck{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--ink);margin:6px 0;text-transform:none;letter-spacing:0}
+.metrics{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.metrics span{display:inline-flex;flex-direction:column;background:#f1f4f9;border-radius:6px;padding:3px 8px;line-height:1.2}.metrics small{font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:.05em}.metrics b{font-size:12.5px;color:var(--navy)}
 #toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,10px);background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;font-size:13.5px;opacity:0;transition:.2s;pointer-events:none;z-index:20}#toast.show{opacity:1;transform:translate(-50%,0)}
-h1.xl{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 12px}
 /* page head & stats */
-.phead{margin-bottom:6px}.phead h2{margin:0}.phead .sub{margin:4px 0 18px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
 .stat b{display:block;font-size:26px;font-weight:800;color:var(--navy);line-height:1.1;letter-spacing:-.02em}.stat small{color:var(--slate);font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
 .stat .d{color:var(--slate);font-size:13px;margin-top:4px}
-.section{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--slate);font-weight:700;margin:6px 0 10px}
-/* site */
-.hero{display:block;max-width:860px}
-.hero p.lead{font-size:18px;color:var(--slate);line-height:1.6;margin:0 0 26px;max-width:720px}
-.can{list-style:none;padding:0;margin:26px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.can li{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-weight:500;box-shadow:var(--sh)}
-.can li a{color:var(--ink)}
-.paths{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:44px}
-.path{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;color:var(--ink);box-shadow:var(--sh);transition:transform .12s,border-color .12s}.path:hover{border-color:var(--blue);text-decoration:none;transform:translateY(-2px)}
-.path b{display:block;color:var(--blue);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}.path span{display:block;font-size:17px;font-weight:700;color:var(--navy);margin:6px 0 6px}.path small{color:var(--slate)}
-.chatcard{display:flex;flex-direction:column;height:520px;padding:0;overflow:hidden}
-.chatcard .head{padding:14px 18px;border-bottom:1px solid var(--line)}.chatcard .head b{color:var(--navy);font-size:15px}.chatcard .head small{display:block;color:var(--slate);font-size:12.5px}
-.qa{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;box-shadow:var(--sh)}
-.qa summary{cursor:pointer;padding:14px 18px;font-weight:600;color:var(--navy);list-style:none;display:flex;justify-content:space-between;font-size:15px}
-.qa summary::-webkit-details-marker{display:none}
-.qa summary::after{content:"+";color:var(--muted);font-weight:400}.qa[open] summary::after{content:"–"}
-.qa p{margin:0;padding:0 18px 16px;color:var(--ink);line-height:1.6}
-.items{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.items div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh)}.items b{display:block;color:var(--navy);margin-bottom:6px;font-size:15px}.items small{color:var(--slate);line-height:1.5;display:block;font-size:13.5px}
-.vt{list-style:none;padding:0;margin:0}.vt li{display:grid;grid-template-columns:40px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
-.vt .num{width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
-.vt b{display:block;color:var(--navy);font-size:15px}.vt small{color:var(--slate)}
 footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;padding:22px 32px;text-align:center}
-.auth{max-width:540px;margin:36px auto}
+.auth{max-width:460px;margin:36px auto}
 .auth input{width:100%}
 /* wizard */
 .wiz{display:grid;grid-template-columns:240px 1fr;gap:28px}
@@ -154,9 +112,6 @@ footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px
 .sol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .sol div{border:1px solid var(--line);border-radius:var(--r);padding:16px;cursor:pointer;background:var(--surface)}.sol div:hover{border-color:#cfd6e0}.sol div.on{border-color:var(--blue);background:var(--blue-soft);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .sol b{display:block;color:var(--navy);margin-bottom:4px;font-size:15px}.sol small{color:var(--slate)}
-.choose{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:840px}
-.choose a{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px;color:var(--ink);display:block;box-shadow:var(--sh);transition:transform .12s,border-color .12s}.choose a:hover{border-color:var(--blue);text-decoration:none;transform:translateY(-2px)}
-.choose h3{margin:0 0 8px;font-size:20px;color:var(--navy);text-transform:none;letter-spacing:0;font-weight:700}.choose p{margin:0;color:var(--slate)}
 .creds{font-size:12.5px;color:var(--slate);margin-top:22px;border-top:1px solid var(--line);padding-top:14px}.creds b{color:var(--ink)}.creds table td{padding:5px 8px;font-size:12.5px;border:0}
 </style>
 </head>
@@ -166,356 +121,352 @@ footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px
 
 <script>
 /* ============================== content ============================== */
-const REGISTRY={gendf:"GenDF Domain","readygo-retail":"ReadyGo Retail","readygo-finance":"ReadyGo Finance","readygo-healthcare":"ReadyGo Healthcare","transaction-enhancer":"Transaction Enhancer"};
+const REGISTRY={gendf:"GenDF","readygo-retail":"ReadyGo Retail","readygo-finance":"ReadyGo Finance","readygo-healthcare":"ReadyGo Healthcare","transaction-enhancer":"Transaction Enhancer"};
+const WORK_INFO={gendf:"Integrates datasets into one governed foundation","readygo-retail":"Orders, stores, products and promotions","readygo-finance":"Transactions, accounts and balances","readygo-healthcare":"Patients, encounters and billing records","transaction-enhancer":"Recommendations on each transaction as it happens"};
+const workLabel=d=>`${REGISTRY[d]||d} <span class="log">· ${WORK_INFO[d]||""}</span>`;
 const REGIONS=["eastus2","westus3","centralus"];
+const ENVS=[{id:"prod1",label:"Production (prod1)"},{id:"test1",label:"Testing / QA (test1)"},{id:"dev1",label:"Development / POC (dev1)"}];
 const MAX_SPEND=50000;
+const OPERATOR="demetrius@alidainc.com"; // every account is managed by an Alida admin; clients are users only
+const HRS={DATA:2,PRODUCE:8,EXPLORE:4,GENERATE:6};
+const STACK_JOBS=["Check the order","Create dedicated environment","Create dedicated database","Create dedicated compute","Configure services","Start AD","Verify"];
 const SOL=[
- {id:"data-foundation",name:"Produce a Data Foundation",blurb:"Integrated, peered datasets with rich metadata. The default work solution.",domains:["gendf"],verbs:["DATA","PRODUCE","EXPLORE","GENERATE"]},
+ {id:"data-foundation",name:"Produce a Data Foundation",blurb:"Integrated, peered datasets with rich metadata. The default use case.",domains:["gendf"],verbs:["DATA","PRODUCE","EXPLORE","GENERATE"]},
  {id:"explore-industry",name:"Explore Industry Datasets",blurb:"Subscribe to curated datasets and explore them. No Produce.",domains:["gendf","readygo-retail"],verbs:["EXPLORE"]},
  {id:"byod",name:"Explore Your Own Data (BYOD)",blurb:"Import your own datasets and explore them.",domains:["gendf"],verbs:["DATA","EXPLORE"]},
  {id:"transaction",name:"Add Per-Transaction Value",blurb:"JIT transaction processing with recommendations per transaction.",domains:["gendf","transaction-enhancer"],verbs:["PRODUCE"]}
 ];
-const SEE=[
- ["Produce Automated (Large Scale) Data Solutions","Tailored Produce, Explore and feedback pipelines over your data, run and maintained by AD."],
- ["Augment Your Technical Capabilities","Subscribe to capability and dataset packs. Your team produces more without more IT."],
- ["Produce Deterministic Adaptive Self-Healing Pipelines","Pipelines that give repeatable results and adapt to change without breaking."],
- ["Extract Actionable Value from Datasets","Find the patterns, metrics and causal effects you can act on."],
- ["Explore Datasets (Industry or BYOD) / Sell Datasets","Explore curated industry datasets or your own. Publish datasets for others."],
- ["Add Per Transaction Value Using Your Own Data","Recommendations and insight for every transaction, just in time."],
- ["Create Cloud AI Automation Apps","Package domains and models into automation you run from the cloud."],
- ["Or Start Small, One Step at a Time","Begin with a single dataset and one job. Grow from there."]
-];
-const LEARN=[
- ["What is AD?","AD (Autonomous Data) intelligently automates the safe production and exploration of data to generate value through insight. You bring data; AD produces integrated, peered datasets and lets you explore them and generate new models."],
- ["What does AD do?","Data → Produce → Explore. Data is brought in and profiled, Produce builds integrated datasets with full metadata, Explore finds patterns, metrics and insights. Generate feeds new models back into Produce."],
- ["What are the cycles behind AD that help you?","The Produce ⇄ Explore feedback loop. Every exploration can generate a model; every model can be put back into production, so the system improves with use."],
- ["How does it fit in your workflow?","You describe the work in plain language. ADy turns it into a work order, a domain runs it, and you get a report. Nothing runs that was not described and verified first."],
- ["What is Collaborative Interaction?","The conversation between you and ADy that produces a job description. You stay in control of what is asked for."],
- ["What is Collaborative Intelligence?","The agents behind ADy (coordinator, strategizer, orchestrator) that turn a job description into model work orders and target-platform jobs, with validation at each step."],
- ["What are Capabilities and Process Augmentation?","Capabilities are the units you subscribe to (a data foundation, a transaction enhancer). They augment your team's processes without exposing the internals of domains and models."],
- ["Take an AD Tour","Available once your environment is set up. Create an account to get there."]
-];
-const UNDERSTAND=[
- ["What is Safe AI?","AI that proposes but never executes directly. Every action goes through verified, logged scripts and work orders, with a human in control of what is allowed."],
- ["What is a deterministic, repeatable result?","The same work order over the same data gives the same result, every time. No hidden randomness in production."],
- ["Are you in control of the process run by AI?","Yes. You see every work order before it runs, every result after, and every configuration change needs an admin."],
- ["What are AD work orders?","Structured, validated descriptions of work (data, produce, explore, generate) that domains execute. They are the only way work gets done."],
- ["How are AD work orders verified?","Spec validation and flow QA check each work order against the domain's patterns before execution."],
- ["Can verified processes be executed automatically?","Yes. Once a work order is verified it can be scheduled and repeated without re-approval, within your spending limit."],
- ["How does AD adapt?","Pipelines detect change in data and adapt within their verified patterns. Anything outside the pattern becomes a new, visible work order."],
- ["Let AD show you how safe AI works","Every account has a full audit log: who asked for what, what was approved, what ran, what it produced."]
-];
-const PARTNER=[
- ["Choose from a variety of WORK solutions or create your own","Onboarding step 1."],
- ["Create an account","Register, then onboarding step 2."],
- ["Choose your spending limits","Onboarding step 3."],
- ["Provide a list of AD users","Onboarding step 4. Users can be admins (configure and operate) or users (operate only)."],
- ["Allow AD to set up your account & access","The platform provisions your environment after you confirm."],
- ["Tailor AD environment options","Onboarding step 5: region, tenancy, management, storage."],
- ["Take a tour of your new AD environment","After provisioning."],
- ["Run your first job","In AD, with the platform assistant."]
-];
-const WIZ=["Work solution","Account","Spending limit","Users","Environment","Review & confirm"];
+const DEFAULTS={region:"eastus2",env:"prod1",spend:5000,storage:500};
+const WIZ=["Account","Use case","Stack","Users","Review & confirm"];
 
-/* ============================== state ============================== */
-let BACKEND_ONLINE = false;
-function checkBackendHealth(){
-  if(!window.fetch) return;
-  fetch('/api/health')
-    .then(r => r.json())
-    .then(d => {
-      if(d && d.status === "healthy"){
-        BACKEND_ONLINE = true;
-        render();
-      }
-    })
-    .catch(() => {
-      BACKEND_ONLINE = false;
-    });
-}
-checkBackendHealth();
-
-function fetchBackendState(){
-  if(!window.fetch) return;
-  fetch('/api/state')
-    .then(r => r.ok ? r.json() : null)
-    .then(d => {
-      if(!d) return;
-      if(d.users && d.users.length) {
-        d.users.forEach(u => {
-          u.accountId = u.accountId || u.account_id;
-          const idx = S.users.findIndex(x => x.email.toLowerCase() === u.email.toLowerCase());
-          if(idx >= 0) S.users[idx] = Object.assign(S.users[idx], u);
-          else S.users.push(u);
-        });
-      }
-      if(d.accounts && d.accounts.length) {
-        d.accounts.forEach(a => {
-          const idx = S.accounts.findIndex(x => x.id === a.id);
-          if(idx >= 0) S.accounts[idx] = Object.assign(S.accounts[idx], a);
-          else S.accounts.push(a);
-        });
-      }
-      if(d.orders && d.orders.length) {
-        d.orders.forEach(o => {
-          const idx = S.orders.findIndex(x => x.id === o.id);
-          if(idx >= 0) S.orders[idx] = Object.assign(S.orders[idx], o);
-          else S.orders.push(o);
-        });
-      }
-      store.set(JSON.stringify(S));
-      render();
-    })
-    .catch(()=>{});
-}
-fetchBackendState();
-
-function pollBackendOrder(orderId, co, a, sol, d){
-  const interval = setInterval(() => {
-    fetch('/api/orders/' + orderId)
-      .then(r => r.json())
-      .then(orderData => {
-        if(orderData && orderData.jobs){
-          co.jobs = orderData.jobs;
-          if(orderData.logs) co.logs = orderData.logs;
-          if(orderData.status === "applied"){
-            clearInterval(interval);
-            a.domains = sol.domains.slice();
-            a.sandboxes = [{name: d.sandbox, mode: "dedicated", quotaGb: +d.quota}];
-            a.status = "ready";
-            co.status = "applied";
-            log("config-order.applied", co.id, "orchestrator");
-            log("jumpstart.done", a.id, "orchestrator");
-            save();
-            render();
-          } else if(orderData.status === "failed"){
-            clearInterval(interval);
-            co.status = "failed";
-            render();
-          } else {
-            render();
-          }
-        }
-      })
-      .catch(() => clearInterval(interval));
-  }, 1000);
-}
-
-const KEY="adaas-proto-v3";
+/* ============================== backend sync & state ============================== */
+const KEY="adaas-proto-v7";
 function seed(){
-  return { v:4, session:{email:"bill@alidainc.com"}, acting:"acct-grow", provisioning:null, onbs:{}, seq:{so:1,co:6,wo:1,ds:3}, ui:{cfgErr:"",onbErr:"",orderId:null,editing:null,authErr:"",dock:true},
+  return { v:7, session:null, acting:null, provisioning:null, onbs:{}, seq:{so:1,co:1,wo:1,ds:3}, ui:{cfgErr:"",onbErr:"",orderId:null,editing:null,authErr:"",dock:true},
     users:[
-      {email:"bill@alidainc.com",name:"Bill Sequeira",password:"ad",accountId:"acct-grow",role:"admin"},
-      {email:"smith@client.com",name:"Smith",password:"ad",accountId:"acct-grow",role:"admin"},
-      {email:"dhananjay@alidainc.com",name:"Dhananjay Goel",password:"ad",accountId:"acct-grow",role:"user"},
-      {email:"staff@alidainc.com",name:"Alida staff",password:"ad",accountId:null,role:"staff"}],
+      {email:"demetrius@alidainc.com",name:"Demetrius",password:"ad",accountId:null,role:"staff",access:{catalogs:[]}},
+      {email:"staff@alidainc.com",name:"Alida staff",password:"ad",accountId:null,role:"staff",access:{catalogs:[]}},
+      {email:"bill@alidainc.com",name:"Bill Sequeira",password:"ad",accountId:"alida-internal",role:"user",access:{catalogs:["gendf","readygo-retail"]}},
+      {email:"dhananjay@alidainc.com",name:"Dhananjay Goel",password:"ad",accountId:"alida-internal",role:"user",access:{catalogs:["readygo-retail"]}},
+      {email:"maya@mercy.org",name:"Maya Chen",password:"ad",accountId:"mercy-clinics",role:"user",access:{catalogs:["gendf"]}},
+      {email:"raj@mercy.org",name:"Raj Patel",password:"ad",accountId:"mercy-clinics",role:"user",access:{catalogs:["gendf"]}}],
     accounts:[
-      {id:"acct-grow",name:"GROW",solution:"data-foundation",region:"eastus2",env:"test1",tenancy:"single",management:"fully",status:"ready",
-        domains:["gendf","readygo-finance"],sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100},{name:"sbx-2",mode:"dedicated",quotaGb:50}],resources:{spendLimitUsd:5000,storageGb:500},usage:{spendUsd:0,computeHours:0},
-        datasets:[{name:"retail_orders_2025",gb:12.4,src:"UC"},{name:"store_master",gb:0.3,src:"import"}],created:"2026-11-05"},
-      {id:"acct-golang",name:"GOLANG",solution:"data-foundation",region:"eastus2",env:"prod1",tenancy:"single",management:"self",status:"ready",
-        domains:["data-foundation"],sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100}],resources:{spendLimitUsd:5000,storageGb:500},usage:{spendUsd:120,computeHours:4},
-        datasets:[],created:"2026-11-05"},
-      {id:"alida-internal",name:"Alida Internal (first client)",solution:"data-foundation",region:"eastus2",tenancy:"single",management:"fully",status:"ready",
-        domains:["gendf","readygo-retail"],sandboxes:[{name:"sbx-main",mode:"dedicated",quotaGb:100}],resources:{spendLimitUsd:5000,storageGb:500},usage:{spendUsd:1840,computeHours:62},
-        datasets:[{name:"retail_orders_2025",gb:12.4,src:"UC"},{name:"store_master",gb:0.3,src:"import"}],created:"2026-11-20"}],
-    orders:[{id:"CO-0001",accountId:"acct-grow",kind:"provision",source:"staff",requestedBy:"bill@alidainc.com",status:"applied",created:"2026-11-05 09:12",validation:{ok:true,errors:[],warnings:[]},
-      changes:[{op:"provision",target:"environment",value:"eastus2 · single-tenant · fully managed"},{op:"add",target:"domain",id:"gendf"},{op:"add",target:"domain",id:"readygo-finance"},{op:"add",target:"sandbox",name:"sbx-main",mode:"dedicated",quotaGb:100},{op:"add",target:"sandbox",name:"sbx-2",mode:"dedicated",quotaGb:50},{op:"add",target:"user",email:"bill@alidainc.com",role:"admin"}],
-      jobs:[["Validate sales order","done"],["Environment setup (ADAzEnvConfig)","done"],["Service configuration (ADSvcConfig)","done"],["Jumpstart AD","done"],["Verify","done"]]}],
-    works:[{id:"WO-0001",accountId:"acct-grow",by:"dhananjay@alidainc.com",verb:"PRODUCE",text:"Produce a data foundation from retail_orders_2025",status:"done",result:"Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged."}],
-    audit:[{t:"2026-11-05 09:31",actor:"orchestrator",action:"config-order.applied",ref:"CO-0001"},{t:"2026-11-05 09:14",actor:"bill@alidainc.com",action:"config-order.approved",ref:"CO-0001"}],
-    chats:{cfg:{},ad:{}}
+      {id:"alida-internal",name:"Alida Internal (first client)",solution:"data-foundation",region:"eastus2",env:"dev1",tenancy:"dedicated",management:"fully",status:"ready",
+        domains:["gendf","readygo-retail"],resources:{spendLimitUsd:5000,storageGb:500},usage:{spendUsd:1840,computeHours:62},
+        datasets:[{name:"retail_orders_2025",gb:12.4,src:"UC"},{name:"store_master",gb:0.3,src:"import"}],created:"2026-11-20"},
+      {id:"mercy-clinics",name:"Mercy Clinics",solution:"data-foundation",region:"eastus2",env:"prod1",tenancy:"dedicated",management:"fully",status:"ready",
+        domains:["gendf"],resources:{spendLimitUsd:12000,storageGb:1000},usage:{spendUsd:3100,computeHours:90},
+        datasets:[{name:"encounters_2025",gb:40.2,src:"import"}],created:"2026-11-22"}],
+    orders:[{id:"CO-0001",accountId:"alida-internal",kind:"provision",source:"staff",requestedBy:"demetrius@alidainc.com",status:"applied",created:"2026-11-20 09:12",validation:{ok:true,errors:[],warnings:[]},
+      changes:[{op:"provision",target:"environment",value:"eastus2 · dev1 · dedicated · fully managed"},{op:"add",target:"domain",id:"gendf"},{op:"add",target:"domain",id:"readygo-retail"},{op:"add",target:"user",email:"bill@alidainc.com"},{op:"set",target:"access",email:"bill@alidainc.com",catalogs:["gendf","readygo-retail"]}],
+      jobs:STACK_JOBS.map(n=>[n,"done"]),logs:[]}],
+    works:[{id:"WO-0001",accountId:"alida-internal",by:"dhananjay@alidainc.com",verb:"PRODUCE",text:"Produce a data foundation from retail_orders_2025",status:"done",result:"2 datasets integrated into one foundation.",metrics:[["Rows","1.2M"],["Entities","14"],["Transformations","38"],["Quality","98%"],["Time","3m 20s"]],promoted:false}],
+    audit:[{t:"2026-11-20 09:31",actor:"orchestrator",action:"config-order.applied",ref:"CO-0001"},{t:"2026-11-20 09:14",actor:"demetrius@alidainc.com",action:"sales-order.received",ref:"SO-0001"}],
+    chats:{sales:[{r:"a",t:"Hi, I'm Configgy. I'll help you set up this client's account: the use case, who will use it, and where it runs. Ask me anything as you go."}],cfg:{},ad:{}}
   };
 }
 const store={get(){try{return localStorage.getItem(KEY);}catch(e){return null;}},set(v){try{localStorage.setItem(KEY,v);}catch(e){}},del(){try{localStorage.removeItem(KEY);}catch(e){}}};
-function load(){ try{ const s=JSON.parse(store.get()); if(s&&s.v===4) return s; }catch(e){} return seed(); }
+function load(){ try{ const s=JSON.parse(store.get()); if(s&&s.v===7) return s; }catch(e){} return seed(); }
 let S=load();
 let _syncTimer=null;
 function syncBackend(){
   if(!window.fetch) return;
   if(_syncTimer) clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(()=>{
-    fetch('/api/state/sync', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        users: S.users,
-        accounts: S.accounts,
-        orders: S.orders,
-        works: S.works
-      })
+  _syncTimer=setTimeout(()=>{
+    fetch('/api/state/sync',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({users:S.users,accounts:S.accounts,orders:S.orders,works:S.works})
     }).catch(()=>{});
-  }, 400);
+  },350);
 }
 const save=()=>{ store.set(JSON.stringify(S)); syncBackend(); };
+
+function mergeBackendState(d){
+  if(!d) return;
+  if(d.users && d.users.length){
+    d.users.forEach(u=>{
+      u.accountId=u.accountId||u.account_id||null;
+      const role = u.role==="staff" ? "staff" : "user";
+      const access = u.access && Array.isArray(u.access.catalogs) ? u.access : {catalogs:[]};
+      const normalized = Object.assign({}, u, {role, access});
+      const idx=S.users.findIndex(x=>x.email.toLowerCase()===u.email.toLowerCase());
+      if(idx>=0) S.users[idx]=Object.assign(S.users[idx], normalized);
+      else S.users.push(normalized);
+    });
+  }
+  if(d.accounts && d.accounts.length){
+    d.accounts.forEach(a=>{
+      const norm = Object.assign({}, a, {
+        tenancy:"dedicated",
+        domains:Array.isArray(a.domains)?a.domains:["gendf"],
+        resources:a.resources||{spendLimitUsd:5000,storageGb:500},
+        usage:a.usage||{spendUsd:0,computeHours:0},
+        datasets:Array.isArray(a.datasets)?a.datasets:[]
+      });
+      const idx=S.accounts.findIndex(x=>x.id===a.id);
+      if(idx>=0) S.accounts[idx]=Object.assign(S.accounts[idx], norm);
+      else S.accounts.push(norm);
+    });
+  }
+  if(d.orders && d.orders.length){
+    d.orders.forEach(o=>{
+      const idx=S.orders.findIndex(x=>x.id===o.id);
+      if(idx>=0) S.orders[idx]=Object.assign(S.orders[idx], o);
+      else S.orders.push(o);
+    });
+  }
+  if(d.works && d.works.length){
+    d.works.forEach(w=>{
+      const idx=S.works.findIndex(x=>x.id===w.id);
+      if(idx>=0) S.works[idx]=Object.assign(S.works[idx], w);
+      else S.works.push(w);
+    });
+  }
+  store.set(JSON.stringify(S));
+}
+
+function fetchBackendState(){
+  if(!window.fetch) return;
+  fetch('/api/state')
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{ if(d){ mergeBackendState(d); render(); } })
+    .catch(()=>{});
+}
+fetchBackendState();
 
 /* ============================== helpers ============================== */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const me=()=>S.session?S.users.find(u=>u.email===S.session.email):null;
-const acct=id=>{ if(id) return S.accounts.find(a=>a.id===id||a.id===("acct-"+id)||(a.id.replace("acct-","")===id.replace("acct-",""))); const u=me(); if(!u) return null; const aid=u.accountId||u.account_id; return S.accounts.find(a=>a.id===(u.role==="staff"?S.acting:aid)||a.id===("acct-"+aid)||(a.id.replace("acct-","")===aid?.replace("acct-","")))||null; };
-const accountUsers=a=>S.users.filter(u=>u.accountId===a.id);
+const me=()=>S.session?S.users.find(u=>u.email.toLowerCase()===S.session.email.toLowerCase()):null;
+const acct=id=>{
+  if(id) return S.accounts.find(a=>a.id===id||a.id===("acct-"+id)||a.id.replace("acct-","")===id.replace("acct-",""))||null;
+  const u=me(); if(!u) return null;
+  const target=u.role==="staff"?S.acting:(u.accountId||u.account_id);
+  if(!target) return null;
+  return S.accounts.find(a=>a.id===target||a.id===("acct-"+target)||a.id.replace("acct-","")===String(target).replace("acct-",""))||null;
+};
+const accountUsers=a=>S.users.filter(u=>(u.accountId||u.account_id)===a.id && u.role!=="staff");
+const capName=a=>SOL.find(x=>x.id===a.solution)?.name||a.solution||"";
 const nid=k=>{const p={so:"SO",co:"CO",wo:"WO",ds:"DS"}[k];return p+"-"+String(++S.seq[k]).padStart(4,"0");};
 const now=()=>new Date().toISOString().slice(0,16).replace("T"," ");
 const log=(action,ref,actor)=>S.audit.unshift({t:now(),actor:actor||me()?.email||"visitor",action,ref});
 const chip=st=>({applied:"ok",ready:"ok",done:"ok",pending:"warn",queued:"warn",provisioning:"run",running:"run",rejected:"bad",failed:"bad",invalid:"bad"}[st]||"");
-const isAdmin=()=>{const u=me();return !!u&&(u.role==="admin"||u.role==="staff");};
+const isAdmin=()=>me()?.role==="staff"; // admins are Alida staff; clients are user operators
 const chatFor=(map,id)=>{ if(!map) return []; return (map[id]=map[id]||[]); };
+const balance=a=>Math.max(0,(a.resources?.spendLimitUsd||0)-(a.usage?.spendUsd||0));
+const rgName=a=>{ const clean=(a.name||a.id||"client").toLowerCase().replace(/^acct-/,"").replace(/[^a-z0-9]/g,"").slice(0,8)||"client"; return `rg-${clean}-${a.env||"prod1"}`; };
 
-/* ============================== config orders ============================== */
+/* ============================== config orders (direct execution) ============================== */
 function describe(c){
   if(c.op==="provision") return "provision environment: "+c.value;
-  if(c.target==="domain") return (c.op==="add"?"+ ":"− ")+"domain "+(REGISTRY[c.id]||c.id);
-  if(c.target==="sandbox") return c.op==="add"?`+ sandbox ${c.name} (${c.mode}, ${c.quotaGb} GB)`:`− sandbox ${c.name}`;
-  if(c.target==="user") return c.op==="add"?`+ user ${c.email} as ${c.role}`:c.op==="remove"?`− user ${c.email}`:`~ user ${c.email} → ${c.role}`;
-  if(c.target==="resources") return "~ allocation "+Object.entries(c.value).map(([k,v])=>`${k}=${v}`).join(", ");
+  if(c.target==="domain") return (c.op==="add"?"+ ":"− ")+"work "+(REGISTRY[c.id]||c.id);
+  if(c.target==="user") return (c.op==="add"?"+ ":"− ")+"user "+c.email;
+  if(c.target==="resources") return "~ limits "+Object.entries(c.value).map(([k,v])=>`${{spendLimitUsd:"usage budget",storageGb:"storage GB"}[k]||k}=${v}`).join(", ");
+  if(c.target==="access") return `~ access for ${c.email} · work: ${(c.catalogs||[]).map(x=>REGISTRY[x]||x).join(", ")||"none"}`;
   return JSON.stringify(c);
 }
 function validate(a,changes){
   const errors=[],warnings=[];
-  const doms=new Set(a.domains),sbx=new Map(a.sandboxes.map(s=>[s.name,s])),usr=new Map(accountUsers(a).map(u=>[u.email,{role:u.role}]));
-  let used=a.sandboxes.reduce((n,s)=>n+s.quotaGb,0),cap=a.resources.storageGb;
+  const doms=new Set(a.domains||[]),usr=new Set(accountUsers(a).map(u=>u.email.toLowerCase()));
   if(!changes.length) errors.push("The order contains no changes.");
   for(const c of changes){
-    if(c.target==="domain"){ if(c.op==="add"){ if(!REGISTRY[c.id]) errors.push(`Domain "${c.id}" is not in the registry.`); else if(doms.has(c.id)) warnings.push(`${c.id} already present.`); else doms.add(c.id);} else { if(!doms.has(c.id)) errors.push(`Domain ${c.id} is not present.`); else doms.delete(c.id);} }
-    else if(c.target==="sandbox"){ if(c.op==="add"){ if(!c.name) errors.push("Sandbox name required."); else if(sbx.has(c.name)) errors.push(`Sandbox ${c.name} already exists.`); else {used+=+c.quotaGb; sbx.set(c.name,c);} } else { if(!sbx.has(c.name)) errors.push(`Sandbox ${c.name} is not present.`); else {used-=sbx.get(c.name).quotaGb; sbx.delete(c.name);} } }
-    else if(c.target==="user"){ if(!/^\S+@\S+\.\S+$/.test(c.email)) errors.push("Invalid email: "+c.email);
-      else if(c.op==="add"){ if(usr.has(c.email)) warnings.push(c.email+" is already a user."); else if(S.users.some(u=>u.email===c.email&&u.accountId&&u.accountId!==a.id)) errors.push(c.email+" belongs to another account."); else usr.set(c.email,{role:c.role}); }
-      else if(c.op==="remove"){ if(!usr.has(c.email)) errors.push(c.email+" is not a user."); else usr.delete(c.email); }
-      else if(c.op==="set"){ if(!usr.has(c.email)) errors.push(c.email+" is not a user."); else usr.set(c.email,{role:c.role}); } }
-    else if(c.target==="resources"){ if(c.value.spendLimitUsd!=null&&c.value.spendLimitUsd>MAX_SPEND) errors.push(`Spend limit above policy maximum ($${MAX_SPEND.toLocaleString()}).`); if(c.value.storageGb!=null) cap=c.value.storageGb; }
+    if(c.target==="domain"){
+      if(c.op==="add"){ if(!REGISTRY[c.id]) errors.push(`Work "${c.id}" is not in the registry.`); else if(doms.has(c.id)) warnings.push(`${c.id} already present.`); else doms.add(c.id); }
+      else { if(!doms.has(c.id)) errors.push(`Work ${c.id} is not present.`); else doms.delete(c.id); }
+    }
+    else if(c.target==="user"){
+      const em=(c.email||"").toLowerCase();
+      if(!/^\S+@\S+\.\S+$/.test(em)) errors.push("Invalid email: "+c.email);
+      else if(c.op==="add"){
+        if(usr.has(em)) warnings.push(em+" is already a user.");
+        else if(S.users.some(u=>u.email.toLowerCase()===em&&((u.accountId&&u.accountId!==a.id)||u.role==="staff"))) errors.push(em+" belongs to another account or is an Alida admin.");
+        else usr.add(em);
+      }
+      else if(c.op==="remove"){ if(!usr.has(em)) errors.push(em+" is not a user."); else usr.delete(em); }
+    }
+    else if(c.target==="access"){
+      const em=(c.email||"").toLowerCase();
+      if(!usr.has(em)) errors.push(em+" is not a user.");
+      else for(const x of (c.catalogs||[])) if(!doms.has(x)) errors.push(`Work ${x} is not in this account.`);
+    }
+    else if(c.target==="resources"){
+      if(c.value.spendLimitUsd!=null){
+        if(c.value.spendLimitUsd<=0) errors.push("Usage budget must be positive.");
+        else if(c.value.spendLimitUsd>MAX_SPEND) errors.push(`Usage budget above policy maximum ($${MAX_SPEND.toLocaleString()}).`);
+      }
+      if(c.value.storageGb!=null && c.value.storageGb<=0) errors.push("Storage limit must be positive.");
+    }
   }
-  if(used>cap) errors.push(`Sandbox quota ${used} GB exceeds storage allocation ${cap} GB.`);
-  if(![...usr.values()].some(u=>u.role==="admin")) errors.push("An account must keep at least one admin.");
   return {ok:!errors.length,errors,warnings};
 }
 function apply(a,changes){
   for(const c of changes){
-    if(c.target==="domain"){ if(c.op==="add"&&!a.domains.includes(c.id)) a.domains.push(c.id); if(c.op==="remove") a.domains=a.domains.filter(x=>x!==c.id); }
-    else if(c.target==="sandbox"){ if(c.op==="add") a.sandboxes.push({name:c.name,mode:c.mode,quotaGb:+c.quotaGb}); else a.sandboxes=a.sandboxes.filter(x=>x.name!==c.name); }
-    else if(c.target==="user"){ const u=S.users.find(u=>u.email===c.email);
-      if(c.op==="add"){ if(u){u.accountId=a.id;u.role=c.role;} else S.users.push({email:c.email,name:c.name||c.email.split("@")[0],password:"welcome",accountId:a.id,role:c.role}); }
-      if(c.op==="remove"&&u){ S.users=S.users.filter(x=>x.email!==c.email); }
-      if(c.op==="set"&&u){ u.role=c.role; } }
+    if(c.target==="domain"){
+      if(c.op==="add"&&!a.domains.includes(c.id)) a.domains.push(c.id);
+      if(c.op==="remove") a.domains=a.domains.filter(x=>x!==c.id);
+    }
+    else if(c.target==="user"){
+      const em=(c.email||"").toLowerCase();
+      const u=S.users.find(u=>u.email.toLowerCase()===em);
+      if(c.op==="add"){
+        if(u){ u.accountId=a.id; u.role="user"; }
+        else S.users.push({email:em,name:em.split("@")[0],password:"welcome",accountId:a.id,role:"user",access:{catalogs:[]}});
+      }
+      if(c.op==="remove"&&u) S.users=S.users.filter(x=>x.email.toLowerCase()!==em);
+    }
     else if(c.target==="resources") Object.assign(a.resources,c.value);
+    else if(c.target==="access"){
+      const em=(c.email||"").toLowerCase();
+      const u=S.users.find(u=>u.email.toLowerCase()===em);
+      if(u) u.access={catalogs:(c.catalogs||[]).slice()};
+    }
+  }
+  for(const u of accountUsers(a)){
+    u.access=u.access||{catalogs:[]};
+    u.access.catalogs=u.access.catalogs.filter(x=>a.domains.includes(x));
   }
 }
 function createOrder(a,changes,source,opts={}){
   const v=validate(a,changes);
-  const o={id:nid("co"),accountId:a.id,kind:opts.kind||"change",source,requestedBy:me()?.email||"visitor",status:v.ok?(opts.direct?"applied":"pending"):"invalid",validation:v,changes,jobs:[],created:now(),note:opts.note||""};
-  S.orders.unshift(o); log("config-order.created ("+source+")",o.id);
-  if(v.ok&&opts.direct){ apply(a,changes); log("config-order.applied (direct, dashboard)",o.id); }
+  const o={id:nid("co"),accountId:a.id,kind:opts.kind||"change",source,requestedBy:me()?.email||"visitor",status:v.ok?"applied":"invalid",validation:v,changes,jobs:[],created:now(),note:opts.note||""};
+  S.orders.unshift(o);
+  log("config-order.created ("+source+")",o.id);
+  if(v.ok){
+    apply(a,changes);
+    log("config-order.applied ("+source+")",o.id);
+    if(window.fetch){
+      fetch('/api/orders/apply',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({accountId:a.id,orderId:o.id,changes})
+      }).then(r=>r.json()).then(data=>{
+        if(data&&data.azure_actions){
+          data.azure_actions.forEach(act=>log(act,o.id,"azure-arm"));
+          save(); render();
+        }
+      }).catch(()=>{});
+    }
+  }
   save(); return o;
 }
-function approveOrder(o){
-  const a=acct(o.accountId); const v=validate(a,o.changes);
-  if(!v.ok){ o.validation=v; o.status="invalid"; save(); render(); return; }
-  o.status="running"; log("config-order.approved",o.id); o.jobs=[["Service configuration (ADSvcConfig)","pending"],["Verify","pending"]]; save(); render();
-  if(window.fetch){
-    fetch('/api/orders/apply',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({accountId: a.id, orderId: o.id, changes: o.changes})
-    }).then(r=>r.json()).then(data=>{
-      if(data && data.azure_actions){
-        data.azure_actions.forEach(act=>log(act, o.id, "azure-arm"));
-        save();
-        render();
-      }
-    }).catch(e=>console.log("Apply sync error:", e));
-  }
-  runJobs(o,()=>{ apply(a,o.changes); o.status="applied"; log("config-order.applied",o.id,"orchestrator"); save(); render(); });
-}
-function rejectOrder(o){ o.status="rejected"; log("config-order.rejected",o.id); save(); render(); }
 function runJobs(o,done,i=0){
   if(i>=o.jobs.length){ done(); return; }
   o.jobs[i][1]="run"; save(); render();
-  setTimeout(()=>{ o.jobs[i][1]="done"; log("job.done · "+o.jobs[i][0],o.id,"orchestrator"); save(); render(); runJobs(o,done,i+1); },1000);
+  setTimeout(()=>{ o.jobs[i][1]="done"; log("job.done · "+o.jobs[i][0],o.id,"orchestrator"); save(); render(); runJobs(o,done,i+1); },900);
 }
 
 /* ============================== auth ============================== */
-function register(name,org,email,password){
-  if(!name.trim()||!org.trim()) return "Name and organisation are required.";
-  if(!/^\S+@\S+\.\S+$/.test(email)) return "Enter a valid email.";
-  if(password.length<2) return "Choose a password.";
-  if(S.users.some(u=>u.email===email)) return "That email is already registered. Sign in instead.";
-  S.users.push({email,name,password,accountId:null,role:"admin",org}); S.session={email}; log("register",email,email);
-  startOnboarding("sales"); save(); return "";
-}
 function login(email,password){
-  const u=S.users.find(u=>u.email===email&&u.password===password); if(!u) return "Wrong email or password.";
-  S.session={email:u.email}; S.ui.dock=true; if(u.role==="staff") S.acting=null; log("sign-in ("+u.role+")",u.accountId||"portal",u.email); save(); return "";
+  const u=S.users.find(u=>u.email.toLowerCase()===email.toLowerCase()&&u.password===password);
+  if(!u) return "Wrong email or password.";
+  S.session={email:u.email}; S.ui.dock=true;
+  if(u.role==="staff") S.acting=null;
+  log("sign-in ("+u.role+")",u.accountId||"portal",u.email);
+  save(); return "";
 }
 function logout(){ if(me()) log("sign-out","portal"); S.session=null; S.acting=null; save(); }
-function landing(){ const u=me(); if(!u) return "/login"; if(u.role==="staff") return S.acting?"/app":"/app/accounts"; const aid=u.accountId||u.account_id; if(!aid) return "/onboard"; const a=acct(); if(!a||a.status!=="ready") return "/provisioning"; return "/app"; }
+function landing(){ const u=me(); if(!u) return "/login"; if(u.role==="staff") return S.acting?"/app":"/app/accounts"; const a=acct(); if(!a||a.status!=="ready") return "/provisioning"; return "/app"; }
 
 /* ============================== onboarding ============================== */
-function onbKey(){ const u=me(); return u.role==="staff"?"staff":u.email; }
-function startOnboarding(source){
-  const u=me(); const k=onbKey();
-  if(!S.onbs[k]) S.onbs[k]={source,step:0,d:{solution:"data-foundation",org:u.org||"",adminName:source==="staff"?"":u.name,adminEmail:source==="staff"?"":u.email,spend:5000,users:[],region:"eastus2",tenancy:"multi",management:"self",storage:500,sandbox:"sbx-main",quota:100}};
+function startOnboarding(){
+  if(!S.onbs.staff){ S.onbs.staff={step:0,d:{solution:"data-foundation",org:"",...DEFAULTS,users:[]}}; }
   S.ui.onbErr=""; save();
 }
-const onb=()=>S.onbs[onbKey()];
-function salesOrder(){ const o=onb(),d=o.d; const id=d.org.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"client";
-  return {salesOrderId:"(assigned on confirm)",source:o.source,solution:d.solution,account:{id,name:d.org},admin:{name:d.adminName,email:d.adminEmail},users:d.users,spendLimitUsd:+d.spend,environment:{region:d.region,tenancy:d.tenancy,management:d.management},sandboxes:[{name:d.sandbox,mode:"dedicated",quotaGb:+d.quota}],storageGb:+d.storage,paid:false}; }
+const onb=()=>S.onbs.staff;
+function salesOrder(){
+  const d=onb().d;
+  const id=d.org.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"client";
+  return {salesOrderId:"(assigned on confirm)",solution:d.solution,account:{id,name:d.org},admin:{email:me()?.email||OPERATOR},users:d.users.map(u=>u.email),usageBudgetUsd:+d.spend,storageGb:+d.storage,stack:{region:d.region,env:d.env||"prod1",tenancy:"dedicated",management:"fully"}};
+}
 function onbValidate(step){
-  const o=onb(),d=o.d;
-  if(step===1){ if(!d.org.trim()) return "Organisation name is required."; if(!/^\S+@\S+\.\S+$/.test(d.adminEmail)) return "A valid admin email is required."; if(S.accounts.some(a=>a.id===salesOrder().account.id)) return "An account with this name already exists."; if(o.source==="staff"&&S.users.some(u=>u.email===d.adminEmail&&u.accountId)) return "That admin email already belongs to an account."; }
-  if(step===2){ if(+d.spend<=0) return "Spending limit must be positive."; if(+d.spend>MAX_SPEND) return `Spending limit above policy maximum ($${MAX_SPEND.toLocaleString()}).`; }
-  if(step===4){ if(+d.quota>+d.storage) return "Sandbox quota exceeds storage allocation."; if(!d.sandbox.trim()) return "Sandbox name required."; }
+  const d=onb().d;
+  if(step===0){
+    if(!d.org.trim()) return "Client organisation name is required.";
+    const candidateId=salesOrder().account.id;
+    if(S.accounts.some(a=>a.id===candidateId||a.id===("acct-"+candidateId)||a.name.toLowerCase()===d.org.trim().toLowerCase())) return "An account with this name already exists.";
+  }
+  if(step===2){
+    if(+d.spend<=0) return "Usage budget must be positive.";
+    if(+d.spend>MAX_SPEND) return `Usage budget above policy maximum ($${MAX_SPEND.toLocaleString()}).`;
+    if(+d.storage<=0) return "Storage limit must be positive.";
+  }
   return "";
 }
+let _pollTimer=null;
+function pollBackendOrder(orderId,co,a,sol){
+  if(_pollTimer) clearInterval(_pollTimer);
+  _pollTimer=setInterval(()=>{
+    fetch('/api/orders/'+orderId)
+      .then(r=>r.json())
+      .then(orderData=>{
+        if(orderData&&orderData.jobs){
+          co.jobs=orderData.jobs;
+          if(orderData.logs) co.logs=orderData.logs;
+          if(orderData.status==="applied"){
+            clearInterval(_pollTimer); _pollTimer=null;
+            a.domains=sol.domains.slice();
+            a.status="ready";
+            co.status="applied";
+            co.jobs.forEach(j=>j[1]="done");
+            log("config-order.applied",co.id,"orchestrator");
+            log("jumpstart.done",a.id,"orchestrator");
+            save(); render();
+          } else if(orderData.status==="failed"){
+            clearInterval(_pollTimer); _pollTimer=null;
+            co.status="failed";
+            save(); render();
+          } else {
+            render();
+          }
+        }
+      })
+      .catch(()=>{ clearInterval(_pollTimer); _pollTimer=null; });
+  },1000);
+}
 function confirmOnboarding(){
-  const o=onb(),d=o.d; const so=salesOrder(); so.salesOrderId=nid("so"); so.paid=o.source!=="staff";
-  const a={id:so.account.id,name:so.account.name,solution:so.solution,region:d.region,env:d.env||"dev1",tenancy:d.tenancy,management:d.management,status:"provisioning",domains:[],sandboxes:[],resources:{spendLimitUsd:+d.spend,storageGb:+d.storage},usage:{spendUsd:0,computeHours:0},datasets:[],created:now().slice(0,10)};
-  S.accounts.push(a);
-  let admin=S.users.find(u=>u.email===d.adminEmail);
-  if(admin){ admin.accountId=a.id; admin.role="admin"; admin.name=admin.name||d.adminName; } else S.users.push({email:d.adminEmail,name:d.adminName||d.adminEmail,password:"welcome",accountId:a.id,role:"admin"});
-  for(const u of d.users){ if(!S.users.some(x=>x.email===u.email)) S.users.push({email:u.email,name:u.email.split("@")[0],password:"welcome",accountId:a.id,role:u.admin?"admin":"user"}); }
-  log("sales-order.received"+(so.paid?" (paid)":""),so.salesOrderId,o.source==="staff"?me().email:d.adminEmail);
+  const d=onb().d, so=salesOrder(); so.salesOrderId=nid("so");
   const sol=SOL.find(s=>s.id===so.solution);
-  const changes=[{op:"provision",target:"environment",value:`${d.region} · ${d.tenancy}-tenant · ${d.management} managed`},...sol.domains.map(id=>({op:"add",target:"domain",id})),{op:"add",target:"sandbox",name:d.sandbox,mode:"dedicated",quotaGb:+d.quota},...accountUsers(a).map(u=>({op:"add",target:"user",email:u.email,role:u.role}))];
-  const co={id:nid("co"),accountId:a.id,kind:"provision",source:o.source==="staff"?"staff":"sales",requestedBy:o.source==="staff"?me().email:d.adminEmail,status:"running",validation:{ok:true,errors:[],warnings:[]},changes,created:now(),salesOrder:so,
-    jobs:[["Validate sales order","pending"],["Environment setup (ADAzEnvConfig)","pending"],["Service configuration (ADSvcConfig)","pending"],["Jumpstart AD","pending"],["Verify","pending"]]};
+  const env=d.env||"prod1";
+  const a={id:so.account.id,name:so.account.name,solution:so.solution,region:d.region,env,tenancy:"dedicated",management:"fully",status:"provisioning",domains:[],resources:{spendLimitUsd:+d.spend,storageGb:+d.storage},usage:{spendUsd:0,computeHours:0},datasets:[],created:now().slice(0,10)};
+  S.accounts.push(a);
+  for(const u of d.users){
+    if(!S.users.some(x=>x.email.toLowerCase()===u.email.toLowerCase())){
+      S.users.push({email:u.email,name:u.email.split("@")[0],password:"welcome",accountId:a.id,role:"user",access:{catalogs:sol.domains.slice()}});
+    }
+  }
+  const actorEmail=me()?.email||OPERATOR;
+  log("sales-order.received",so.salesOrderId,actorEmail);
+  const changes=[{op:"provision",target:"environment",value:`${d.region} · ${env} · dedicated · fully managed`},...sol.domains.map(id=>({op:"add",target:"domain",id})),...accountUsers(a).map(u=>({op:"add",target:"user",email:u.email})),...accountUsers(a).map(u=>({op:"set",target:"access",email:u.email,catalogs:sol.domains.slice()}))];
+  const co={id:nid("co"),accountId:a.id,kind:"provision",source:"staff",requestedBy:actorEmail,status:"running",validation:{ok:true,errors:[],warnings:[]},changes,created:now(),salesOrder:so,jobs:STACK_JOBS.map(n=>[n,"pending"]),logs:[]};
   S.orders.unshift(co); log("config-order.created (provision)",co.id,"configgy");
-  if(me().role==="staff") S.acting=a.id;
-  delete S.onbs[onbKey()]; S.provisioning=co.id; save();
+  S.acting=a.id; delete S.onbs.staff; S.provisioning=co.id; save();
   nav("/provisioning");
-  const runLocalFallback=()=>{
-    setTimeout(()=>runJobs(co,()=>{ a.domains=sol.domains.slice(); a.sandboxes=[{name:d.sandbox,mode:"dedicated",quotaGb:+d.quota}]; a.status="ready"; co.status="applied"; log("config-order.applied",co.id,"orchestrator"); log("jumpstart.done",a.id,"orchestrator"); save(); render(); }),500);
-  };
+  const runLocalFallback=()=>setTimeout(()=>runJobs(co,()=>{ a.domains=sol.domains.slice(); a.status="ready"; co.status="applied"; log("config-order.applied",co.id,"orchestrator"); log("jumpstart.done",a.id,"orchestrator"); save(); render(); }),500);
   if(window.fetch){
     fetch('/api/orders/provision',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        org: d.org||a.name,
-        adminEmail: d.adminEmail,
-        adminName: d.adminName||d.adminEmail,
-        solution: so.solution,
-        region: d.region,
-        env: d.env || "dev1",
-        tenancy: d.tenancy,
-        management: d.management,
-        storage: +d.storage,
-        sandbox: d.sandbox,
-        quota: +d.quota,
-        spend: +d.spend,
-        users: d.users
+        org:d.org,
+        adminEmail:actorEmail,
+        adminName:me()?.name||"Demetrius",
+        solution:so.solution,
+        region:d.region,
+        env,
+        tenancy:"dedicated",
+        management:"fully",
+        storage:+d.storage,
+        spend:+d.spend,
+        domains:sol.domains.slice(),
+        users:d.users.map(u=>({email:u.email,role:"user",access:{catalogs:sol.domains.slice()}}))
       })
-    })
-    .then(r=>r.json())
-    .then(data=>{
+    }).then(r=>r.json()).then(data=>{
       if(data&&data.orderId){
         co.id=data.orderId;
-        pollBackendOrder(data.orderId,co,a,sol,d);
+        pollBackendOrder(data.orderId,co,a,sol);
       } else runLocalFallback();
-    })
-    .catch(e=>{
-      console.log("Backend offline or standalone browser mode:", e);
-      runLocalFallback();
-    });
+    }).catch(()=>runLocalFallback());
   } else runLocalFallback();
 }
 
@@ -523,119 +474,94 @@ function confirmOnboarding(){
 function parseConfig(text){
   const t=text.toLowerCase(); const ch=[]; let res=null;
   t.split(/\s+and\s+|,|;/).forEach(p=>{ let m;
-    if(m=p.match(/add (?:the )?domain\s+(\S+)/)) ch.push({op:"add",target:"domain",id:m[1]});
-    else if(m=p.match(/(?:remove|drop|delete) (?:the )?domain\s+(\S+)/)) ch.push({op:"remove",target:"domain",id:m[1]});
-    else if(m=p.match(/add (?:a )?sandbox\s+(\S+)(?:\s+(\d+)\s*gb)?/)) ch.push({op:"add",target:"sandbox",name:m[1],mode:"dedicated",quotaGb:+(m[2]||50)});
-    else if(m=p.match(/(?:remove|drop|delete) (?:the )?sandbox\s+(\S+)/)) ch.push({op:"remove",target:"sandbox",name:m[1]});
+    if(m=p.match(/add (?:the )?(?:domain|work)\s+(\S+)/)) ch.push({op:"add",target:"domain",id:m[1]});
+    else if(m=p.match(/(?:remove|drop|delete) (?:the )?(?:domain|work)\s+(\S+)/)) ch.push({op:"remove",target:"domain",id:m[1]});
     else if(m=p.match(/(?:spend|budget).*?(\d[\d,]*)/)) (res=res||{}).spendLimitUsd=+m[1].replace(/,/g,"");
     else if(m=p.match(/storage.*?(\d+)/)) (res=res||{}).storageGb=+m[1];
-    else if(m=p.match(/(?:add|invite) (?:user )?(\S+@\S+)(?:\s+as\s+(admin|user))?/)) ch.push({op:"add",target:"user",email:m[1],role:m[2]||"user"});
-    else if(m=p.match(/(?:remove|delete) (?:user )?(\S+@\S+)/)) ch.push({op:"remove",target:"user",email:m[1]});
-    else if(m=p.match(/(?:make|promote)\s+(\S+@\S+)\s+(?:an? )?admin/)) ch.push({op:"set",target:"user",email:m[1],role:"admin"});
+    else if(m=p.match(/(?:give|grant)\s+(\S+@\S+)\s+access to\s+(\S+)/)){
+      const em=m[1].toLowerCase();
+      const cur=S.users.find(x=>x.email.toLowerCase()===em)?.access?.catalogs||[];
+      ch.push({op:"set",target:"access",email:em,catalogs:[...new Set([...cur,m[2]])]});
+    }
+    else if(m=p.match(/(?:add|invite) (?:user )?(\S+@\S+)/)) ch.push({op:"add",target:"user",email:m[1].toLowerCase()});
+    else if(m=p.match(/(?:remove|delete) (?:user )?(\S+@\S+)/)) ch.push({op:"remove",target:"user",email:m[1].toLowerCase()});
   });
   if(res) ch.push({op:"set",target:"resources",value:res});
   return ch;
 }
-const isConfigIntent=t=>/\b(add|remove|drop|delete|invite|promote)\b.*\b(domain|sandbox|user|admin)\b|\b(spend|budget|storage|quota|limit)\b/i.test(t);
+const isConfigIntent=t=>/\b(add|remove|drop|delete)\b.*\b(domain|work|user)\b|\binvite\b|\b(give|grant)\b.*\baccess\b|\b(spend|budget|storage|limit)\b/i.test(t);
 function configgySay(text){
   const a=acct(); const c=chatFor(S.chats.cfg,a.id); c.push({r:"u",t:text}); const t=text.toLowerCase(); const ch=parseConfig(text);
   if(ch.length){
     const o=createOrder(a,ch,"configgy",{direct:true});
-    if(window.fetch){
-      fetch('/api/orders/apply',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({accountId: a.id, orderId: o.id, changes: ch})
-      }).then(r=>r.json()).then(data=>{
-        if(data && data.azure_actions){
-          data.azure_actions.forEach(act=>log(act, o.id, "azure-arm"));
-          save();
-        }
-      }).catch(e=>console.log("Apply sync error:", e));
-      fetch('/api/assistant/command',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({accountId: a.id, text: text})
-      }).catch(e=>console.log("Backend offline:", e));
+    if(o.status==="applied"){
+      c.push({r:"a",t:`Applied ${o.id} directly to ${a.name}.`,card:`<div class="mini"><div class="diff">${ch.map(x=>`<div>${esc(describe(x))}</div>`).join("")}</div></div>`});
+    } else {
+      c.push({r:"a",t:`${o.id} failed validation:\n- ${o.validation.errors.join("\n- ")}`});
     }
-    c.push({r:"a",t:o.status==="applied"?`✔ Configuration change applied directly to dedicated tenant ${a.name} (order ${o.id}). Azure ARM updated.`:`✕ Order ${o.id} failed validation:\n- ${o.validation.errors.join("\n- ")}`,
-      card:`<div class="mini"><div class="diff">${ch.map(x=>esc(describe(x))).join("<br>")}</div></div>`});
-    S.ui.orderId=o.id;
-  } else if(/status|summary|usage|spend|azure/.test(t)){
-    const envTier = a.env || "test1";
-    const formattedStatus = `📊 ${a.name} Dedicated Environment Overview:
-• Tenancy: 100% Dedicated (Single-Tenant)
-• State: Active & Ready (Azure rg-${(a.name||"client").toLowerCase()}-${envTier})
-• Compliance: 100% HITRUST/HIPAA Compliant
-• Domains: ${a.domains.length} active (${a.domains.join(", ") || "data-foundation"})
-• Storage: ${a.resources.storageGb} GB dedicated cloud storage
-• Spend: $${a.usage.spendUsd.toLocaleString()} of $${a.resources.spendLimitUsd.toLocaleString()} limit
-• Direct Admin Mode: Active (all mutations apply immediately)`;
-    c.push({r:"a",t:formattedStatus});
+  } else if(/status|summary|usage|spend|balance|azure/.test(t)){
+    const statusMsg={r:"a",t:`${a.name}: ${a.status} (${rgName(a)} · ${a.region}). ${a.domains.length} piece(s) of work, ${accountUsers(a).length} user(s). $${balance(a).toLocaleString()} left of $${a.resources.spendLimitUsd.toLocaleString()}.`};
+    c.push(statusMsg);
     if(window.fetch){
-      fetch('/api/assistant/command',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({accountId: a.id, text: text})
-      }).catch(e=>console.log("Backend offline:", e));
+      fetch('/api/assistant/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accountId:a.id,text})})
+        .then(r=>r.ok?r.json():null).then(d=>{ if(d&&d.response){ statusMsg.t=d.response; save(); render(); } }).catch(()=>{});
     }
-  } else c.push({r:"a",t:"I configure this dedicated tenant directly. Try:\n• add domain readygo-finance\n• set spend limit 8000\n• invite ana@client.com as admin\n• status\nChain requests with \"and\"."});
+  } else {
+    c.push({r:"a",t:"I apply changes directly for this account. Try:\n• add work readygo-finance\n• invite x@y.com\n• give x@y.com access to readygo-retail\n• set usage budget 8000\n• status\nChain requests with \"and\"."});
+  }
   save();
 }
 function adySay(text){
   const a=acct(); const c=chatFor(S.chats.ad,a.id); c.push({r:"u",t:text});
   if(isConfigIntent(text)){
-    const ch=parseConfig(text);
-    if(!ch.length){ c.push({r:"a",t:"That sounds like a configuration change. Try saying: \"add domain readygo-healthcare\"."}); save(); return; }
-    const o=createOrder(a,ch,"ady",{direct:isAdmin()});
-    if(isAdmin()){
-      c.push({r:"a",t:`✔ Applied configuration change directly to dedicated tenant ${a.name} (${o.id}).`,card:`<div class="mini"><div class="diff">${ch.map(x=>esc(describe(x))).join("<br>")}</div></div>`});
-    } else {
-      const admins=accountUsers(a).filter(u=>u.role==="admin").map(u=>u.email).join(", ");
-      c.push({r:"a",t:`Configuration changes require admin privileges. Contact your tenant admin (${admins}).`});
-    }
+    c.push({r:"a",t:isAdmin()?"That's a configuration change. Go to Setup to ask Configgy, or use the Setup page directly.":"That's a configuration change, which your Alida admin handles."});
     save(); return;
   }
   const t=text.toLowerCase();
   const verb=/profile|ingest|import|load|upload|register/.test(t)?"DATA":/produce|build|pipeline|foundation|run/.test(t)?"PRODUCE":/generate|new model|new metric|package/.test(t)?"GENERATE":/explore|find|show|what|which|how many|metric|insight|pattern|trend/.test(t)?"EXPLORE":null;
-  if(!verb){ c.push({r:"a",t:"I'm ADy. Tell me what work you want done and I'll turn it into a work order for the right domain. Examples:\n• profile the retail_orders dataset\n• produce a data foundation from the retail datasets\n• explore which stores drive returns\n• generate a model for weekly demand"}); save(); return; }
-  const sol=SOL.find(s=>s.id===a.solution);
-  if(!sol.verbs.includes(verb)){ c.push({r:"a",t:`${verb} is not part of your work solution (${sol.name}). An admin can change the solution in Configure.`}); save(); return; }
-  const w={id:nid("wo"),accountId:a.id,by:me().email,verb,text,status:"queued",result:""}; S.works.unshift(w); log("work-order.created ("+verb+")",w.id);
-  c.push({r:"a",t:`Work order ${w.id} (${verb}) sent to the ${verb.toLowerCase()} coordinator. I'll report the results here.`}); save(); if((R.parts[0]||"")==="app") nav("/app/"+verb.toLowerCase());
+  if(!verb){ c.push({r:"a",t:"I'm ADy. Tell me what work you want done and I'll turn it into a work order for the right work. Examples:\n• profile the retail_orders dataset\n• produce a data foundation from the retail datasets\n• explore which stores drive returns\n• generate a model for weekly demand"}); save(); return; }
+  const sol=SOL.find(s=>s.id===a.solution)||SOL[0];
+  if(!sol.verbs.includes(verb)){ c.push({r:"a",t:`${verb} is not part of your use case (${sol.name}). Ask your Alida admin to update it.`}); save(); return; }
+  const w={id:nid("wo"),accountId:a.id,by:me().email,verb,text,status:"queued",result:"",metrics:[],promoted:false};
+  S.works.unshift(w); log("work-order.created ("+verb+")",w.id);
+  c.push({r:"a",t:`Work order ${w.id} (${verb}) sent to the ${verb.toLowerCase()} coordinator. I'll report the results here.`}); save();
+  const finishWork=(resultText,metricsArr)=>{
+    w.status="done"; w.result=resultText; w.metrics=metricsArr;
+    if(verb==="DATA"&&!a.datasets.some(d=>d.name==="dataset_"+S.seq.ds)) a.datasets.push({name:"dataset_"+(++S.seq.ds),gb:+(Math.random()*20).toFixed(1),src:"import"});
+    log("work-order.done",w.id,"coordinator");
+    c.push({r:"a",t:`${w.id} done. ${w.result}\n${w.metrics.map(([k,v])=>k+": "+v).join(" · ")}${verb==="DATA"?"":"\nTweak it as much as you like; promote it from Reports → Metrics when you're happy."}`});
+    save(); render();
+  };
   if(window.fetch){
     fetch('/api/assistant/workorder',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({accountId: a.id, verb: verb, text: text, by: me().email})
+      body:JSON.stringify({accountId:a.id,verb,text,by:me().email})
     }).then(r=>r.json()).then(d=>{
-      w.status="done";
-      w.result=d.result || "Domain job completed successfully.";
-      if(verb==="DATA") a.datasets.push({name:"dataset_"+(++S.seq.ds),gb:+(Math.random()*20).toFixed(1),src:"import"});
-      log("work-order.done",w.id,"coordinator"); c.push({r:"a",t:`${w.id}: ${w.result}`}); save(); render();
-    }).catch(err=>{
-      console.log("ADy backend offline fallback:", err);
-      setTimeout(()=>{ w.status="done";
-        w.result={DATA:"Domain job results: dataset profiled, 9 columns, 2 quality issues flagged, metadata registered.",PRODUCE:"Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged, audit metadata written.",EXPLORE:"Domain job results: 3 patterns found; returns concentrate in 4 stores; report attached.",GENERATE:"Domain job results: model generated with 2 metrics. Adding it to the domain library is a configuration step for your admin."}[verb];
-        if(verb==="DATA") a.datasets.push({name:"dataset_"+(++S.seq.ds),gb:+(Math.random()*20).toFixed(1),src:"import"});
-        log("work-order.done",w.id,"coordinator"); c.push({r:"a",t:`${w.id}: ${w.result}`}); save(); render(); },1000);
+      const fallbackMetrics={DATA:[["Rows","480k"],["Columns","9"],["Quality issues","2"],["Time","40s"]],PRODUCE:[["Rows","1.2M"],["Entities","14"],["Transformations","38"],["Quality","98%"],["Time","3m 20s"]],EXPLORE:[["Patterns","3"],["Confidence","0.91"],["Stores flagged","4"],["Time","1m 05s"]],GENERATE:[["Metrics","2"],["Fit","0.87"],["Time","2m 10s"]]}[verb];
+      finishWork(d.result||"Completed.", d.metrics||fallbackMetrics);
+    }).catch(()=>{
+      setTimeout(()=>{
+        const res={DATA:"Dataset profiled and registered.",PRODUCE:"2 datasets integrated into one foundation.",EXPLORE:"3 patterns found; returns concentrate in 4 stores. Report attached.",GENERATE:"Model generated with 2 new metrics."}[verb];
+        const met={DATA:[["Rows","480k"],["Columns","9"],["Quality issues","2"],["Time","40s"]],PRODUCE:[["Rows","1.2M"],["Entities","14"],["Transformations","38"],["Quality","98%"],["Time","3m 20s"]],EXPLORE:[["Patterns","3"],["Confidence","0.91"],["Stores flagged","4"],["Time","1m 05s"]],GENERATE:[["Metrics","2"],["Fit","0.87"],["Time","2m 10s"]]}[verb];
+        finishWork(res,met);
+      },1200);
     });
   } else {
-    setTimeout(()=>{ w.status="done";
-      w.result={DATA:"Domain job results: dataset profiled, 9 columns, 2 quality issues flagged, metadata registered.",PRODUCE:"Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged, audit metadata written.",EXPLORE:"Domain job results: 3 patterns found; returns concentrate in 4 stores; report attached.",GENERATE:"Domain job results: model generated with 2 metrics. Adding it to the domain library is a configuration step for your admin."}[verb];
-      if(verb==="DATA") a.datasets.push({name:"dataset_"+(++S.seq.ds),gb:+(Math.random()*20).toFixed(1),src:"import"});
-      log("work-order.done",w.id,"coordinator"); c.push({r:"a",t:`${w.id}: ${w.result}`}); save(); render(); },1200);
+    setTimeout(()=>{
+      const res={DATA:"Dataset profiled and registered.",PRODUCE:"2 datasets integrated into one foundation.",EXPLORE:"3 patterns found; returns concentrate in 4 stores. Report attached.",GENERATE:"Model generated with 2 new metrics."}[verb];
+      const met={DATA:[["Rows","480k"],["Columns","9"],["Quality issues","2"],["Time","40s"]],PRODUCE:[["Rows","1.2M"],["Entities","14"],["Transformations","38"],["Quality","98%"],["Time","3m 20s"]],EXPLORE:[["Patterns","3"],["Confidence","0.91"],["Stores flagged","4"],["Time","1m 05s"]],GENERATE:[["Metrics","2"],["Fit","0.87"],["Time","2m 10s"]]}[verb];
+      finishWork(res,met);
+    },1200);
   }
 }
 function salesySay(text){
-  S.chats.sales.push({r:"u",t:text}); const t=text.toLowerCase(); let r,go=null;
-  if(/account|sign ?up|start|create|get started|onboard|buy|subscribe|register/.test(t)){ r=me()?"You're signed in. Let's continue your onboarding.":"Let's get you set up. First, register (name, organisation, email, password). Then I'll walk you through six short steps."; go=me()?"/onboard":"/register"; }
-  else if(/what is ad|what does ad|what is this/.test(t)) r=LEARN[0][1];
-  else if(/safe|trust|control|deterministic/.test(t)) r=UNDERSTAND[0][1];
-  else if(/price|cost|plan|pay/.test(t)) r="There is a single plan. You pay by data volume and compute use, within a spending limit you set. Single-tenant and fully managed options are account upgrades.";
-  else if(/sign in|log ?in|existing/.test(t)){ r="If you already have an account, sign in. You won't see me again after that."; go="/login"; }
-  else r="I can tell you what AD can do (See), how it works (Learn), why it's safe (Understand), or get you started (Partner).";
-  S.chats.sales.push({r:"a",t:r}); save(); if(go) nav(go);
+  S.chats.sales.push({r:"u",t:text}); const t=text.toLowerCase(); let r;
+  if(/region|where|tenan|dedicated|stack|env/.test(t)) r="Every account gets its own dedicated stack: its own Azure resource group, VNet, storage, database and compute. You pick the region and environment tier.";
+  else if(/price|cost|bill|budget|fee|pay/.test(t)) r="Billing is a monthly fee plus usage. Set the usage budget in the Stack step; the client sees one number, what is left of it.";
+  else if(/user|people|admin/.test(t)) r="Add the client's people as users. Admins are always Alida staff: accounts are managed from "+(me()?.email||OPERATOR)+".";
+  else r="Name the client, pick the use case, choose a region, tier and usage budget, add their people, then confirm. Dedicated provisioning starts immediately.";
+  S.chats.sales.push({r:"a",t:r}); save();
 }
 
 /* ============================== router ============================== */
@@ -644,66 +570,44 @@ const hashNow=()=>HASH_OK?(location.hash||"#/"):memHash;
 function parseHash(){ const h=hashNow().slice(1); const [p,qs]=h.split("?"); const parts=p.split("/").filter(Boolean); return {path:"/"+parts.join("/"),parts,q:Object.fromEntries(new URLSearchParams(qs||""))}; }
 function nav(path,replace){ if(HASH_OK){ if(replace) location.replace("#"+path); else location.hash=path; } else { memHash="#"+path; render(); } }
 let R=parseHash();
-const PUBLIC=["","see","learn","understand","partner","login"];
-const AD_PAGES={data:"Data",produce:"Produce",explore:"Explore",generate:"Generate","work-orders":"Work orders"};
-const ADMIN_PAGES={setup:"Setup",domains:"Domains",people:"People",usage:"Usage",audit:"Audit log"};
-const inAdmin=()=>R.parts[0]==="app"&&R.parts[1]==="admin";
+const PUBLIC=["","login"];
+const SETUP_PAGES={environment:"Stack & limits",work:"Work",users:"Users"};
+const DASH_PAGES={usage:"Usage",metrics:"Metrics",audit:"Audit log"};
+const inAdmin=()=>R.parts[0]==="app"&&R.parts[1]==="setup";
 let toastT=null; function toast(msg){ let t=$("#toast"); if(!t){ t=document.createElement("div"); t.id="toast"; document.body.appendChild(t);} t.textContent=msg; t.className="show"; clearTimeout(toastT); toastT=setTimeout(()=>t.className="",2600); }
 
 /* ============================== shell ============================== */
 function topbar(){
-  const u=me(), a=u?acct():null, p=R.parts[0]||"";
-  if(!u) return `<div class="brand" data-act="home">AD<span>as a Service</span></div><nav class="hnav">${[["see","See"],["learn","Learn"],["understand","Understand"],["partner","Partner"]].map(([k,l])=>`<a href="#/${k}" class="${p===k?"on":""}">${l}</a>`).join("")}</nav><span class="spacer"></span><a class="btn sm" href="#/login">Sign in</a>`;
-  const tenant=u.role==="staff"||u.role==="admin"?`<select class="tenant" data-act="switchAcct">${S.accounts.map(x=>`<option value="${x.id}" ${(a&&a.id===x.id)?"selected":""}>${esc(x.name)} (Dedicated)</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)} (Dedicated)</span>`:"");
-  const activeChat = S.ui.activeChat || (inAdmin() ? "cfg" : "ad");
-  const astSelector = (a && a.status === "ready") ? `
-    <div style="display:inline-flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:8px;padding:2px 6px">
-      <span style="font-size:12px;color:var(--slate);font-weight:600;margin-right:2px">Assistant:</span>
-      <select class="tenant" data-act="selectAssistant" title="Switch Assistant" style="border:none;background:transparent;padding:4px 6px;font-size:12.5px;font-weight:600;cursor:pointer">
-        <option value="ad" ${activeChat==="ad"&&S.ui.dock!==false?"selected":""}>AD</option>
-        <option value="cfg" ${activeChat==="cfg"&&S.ui.dock!==false?"selected":""}>Configgy</option>
-        <option value="toggle" ${S.ui.dock===false?"selected":""}>Closed</option>
-      </select>
-    </div>
-  ` : "";
+  const u=me(), a=u?acct():null;
+  if(!u) return `<div class="brand" data-act="home">AD<span>as a Service</span></div><span class="spacer"></span>`;
+  const tenant=u.role==="staff"?`<select class="tenant" data-act="switchAcct"><option value="">All accounts</option>${S.accounts.map(x=>`<option value="${x.id}" ${S.acting===x.id?"selected":""}>${esc(x.name)} (Dedicated)</option>`).join("")}</select>`:(a?`<span class="tenant-name">${esc(a.name)} (Dedicated)</span>`:"");
   return `<div class="brand" data-act="home">AD<span>as a Service</span></div>${tenant}<span class="spacer"></span>
   <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
-    ${(u.role==="staff"||u.role==="admin")?`<a class="link ${R.parts[1]==="accounts"?"on":""}" href="#/app/accounts">All Tenants</a>`:""}
-    ${astSelector}
-    <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Alida Staff":u.role==="admin"?"Client Admin":"Operator"}</small></span>
+    ${u.role==="staff"?`<a class="link ${R.parts[1]==="accounts"?"on":""}" href="#/app/accounts">All accounts</a>`:""}
+    ${a&&a.status==="ready"?`<button class="link ${S.ui.dock===false?"":"on"}" data-act="toggleDock">Assistant</button>`:""}
+    <span class="user"><b>${esc(u.name)}</b><small>${u.role==="staff"?"Admin":"User"}</small></span>
     <button class="link" data-act="signout">Sign out</button>
   </div>`;
 }
 function sidebar(){
   const u=me(), a=acct(), p1=R.parts[1]||"", p2=R.parts[2]||"";
   const link=(href,label,on,badge)=>`<a href="${href}" class="${on?"on":""}">${label}${badge?`<span class="badge">${badge}</span>`:""}</a>`;
-  const running=a?S.works.filter(w=>w.accountId===a.id&&w.status!=="done").length:0;
   let h="";
-  if(u.role==="staff"||u.role==="admin") h+=link("#/app/accounts","Tenants",p1==="accounts");
+  if(u.role==="staff"&&!a) h+=link("#/app/accounts","Accounts",true);
   if(a&&a.status==="ready"){
+    const sect=(key,label,pages)=>{ const on=p1===key; return link("#/app/"+key+"/"+Object.keys(pages)[0],label,on)+(on?Object.entries(pages).map(([k,l])=>`<a class="sub ${(p2||Object.keys(pages)[0])===k?"on":""}" href="#/app/${key}/${k}">${l}</a>`).join(""):""); };
     h+=link("#/app","Overview",p1==="");
-    h+=`<div class="grp">OPERATE</div>`+Object.entries(AD_PAGES).map(([k,l])=>link("#/app/"+k,l,p1===k,k==="work-orders"?running:0)).join("");
-    if(isAdmin()) h+=`<div class="grp">CONFIGURE</div>`+Object.entries(ADMIN_PAGES).map(([k,l])=>link("#/app/admin/"+k,l,p1==="admin"&&p2===k)).join("");
-    else h+=`<div class="grp">CONFIGURE</div><div class="locked">Managed by your admins</div>`;
+    if(isAdmin()) h+=sect("setup","Setup",SETUP_PAGES);
+    h+=sect("reports","Reports",DASH_PAGES);
   }
   return `<nav class="side">${h}</nav>`;
 }
 function dock(){
-  const a=acct(); if(!a||a.status!=="ready") return "";
-  if(S.ui.dock===false) return "";
-  S.chats = S.chats || {};
-  S.chats.cfg = S.chats.cfg || {};
-  S.chats.ad = S.chats.ad || {};
-  const activeChat = S.ui.activeChat || (inAdmin() ? "cfg" : "ad");
-  const isCfg = activeChat === "cfg";
-  const list = isCfg ? chatFor(S.chats.cfg, a.id) : chatFor(S.chats.ad, a.id);
-  return `<aside class="dock">
-  <div style="display:flex;border-bottom:1px solid var(--line);background:#f8fafc;padding:6px;gap:6px">
-    <button data-act="switchChat" data-v="ad" style="flex:1;padding:7px 10px;font-size:12.5px;font-weight:600;border:1px solid ${!isCfg?'var(--line)':'transparent'};border-radius:6px;cursor:pointer;background:${!isCfg?'#fff':'transparent'};color:${!isCfg?'var(--navy)':'var(--slate)'};box-shadow:${!isCfg?'var(--sh)':'none'}">AD Assistant</button>
-    <button data-act="switchChat" data-v="cfg" style="flex:1;padding:7px 10px;font-size:12.5px;font-weight:600;border:1px solid ${isCfg?'var(--line)':'transparent'};border-radius:6px;cursor:pointer;background:${isCfg?'#fff':'transparent'};color:${isCfg?'var(--navy)':'var(--slate)'};box-shadow:${isCfg?'var(--sh)':'none'}">Configgy</button>
-  </div>
-  <div class="head"><b>${isCfg?"Configgy":"AD (ADy)"}</b><small>${isCfg?"Directly configures and manages your dedicated environment":"Turns requests into work orders and reports back"}</small></div>
-  ${chatHtml(list,isCfg?"cfg":"ad",isCfg?"e.g. add domain readygo-finance":"Tell ADy what you need",isCfg?["add domain readygo-finance","invite ana@client.com as user","set spend limit 6000","status"]:["profile store_master","produce a data foundation from the retail datasets","explore which stores drive returns","add domain readygo-healthcare"])}</aside>`;
+  const a=acct(); if(!a||a.status!=="ready"||S.ui.dock===false) return "";
+  const cfg=inAdmin()&&isAdmin();
+  const list=cfg?chatFor(S.chats.cfg,a.id):chatFor(S.chats.ad,a.id);
+  return `<aside class="dock"><div class="head"><b>${cfg?"Configgy":"ADy"}</b><small>${cfg?"Applies changes directly to this dedicated stack":"Turns requests into work orders and reports back"}</small></div>
+  ${chatHtml(list,cfg?"cfg":"ad",cfg?"e.g. add work readygo-finance":"Tell ADy what you need",cfg?["add work readygo-finance","invite ana@client.com","set usage budget 8000","status"]:["profile store_master","produce a data foundation from the retail datasets","explore which stores drive returns","generate a model for weekly demand"])}</aside>`;
 }
 function stepper(cur){ const st=["Account","Set up","Environment","Ready"]; return `<ol class="stepper">${st.map((s,i)=>`<li class="${i<cur?"done":i===cur?"on":""}"><span>${i<cur?"✓":i+1}</span>${s}</li>`).join("")}</ol>`; }
 const head=(title,sub,extra="")=>`<div class="phead"><div><h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:""}</div>${extra}</div>`;
@@ -716,99 +620,67 @@ function chatHtml(list,id,placeholder,sugg){
   <form class="chat-in" data-chat="${id}"><input placeholder="${placeholder}" autocomplete="off"><button class="btn">Send</button></form>`;
 }
 
-/* ============================== views: site ============================== */
+/* ============================== views: entry ============================== */
 const siteFoot=()=>`<footer class="site">© Alida · AD as a Service</footer>`;
-function vHome(){
-  return `<div class="site"><div class="wrap"><div class="hero">
-   <h1 class="xl">Automate the safe production and exploration of data.</h1><p class="lead">AD produces integrated, peered datasets, explores them, and generates new models — deterministically, with every step verified and every change audited.</p>
-   <div class="row">${me()?`<a class="btn lg" href="#${landing()}">Go to Dedicated Dashboard</a>`:`<a class="btn lg" href="#/login">Sign in</a>`}</div>
-   <h2 style="margin-top:34px">With AD you can…</h2><ul class="can">${SEE.map(([t])=>`<li><a href="#/see">${t}</a></li>`).join("")}</ul></div>
-   <div class="paths"><a class="path" href="#/see"><b>See</b><span>What AD can do</span><small>Eight things you can do with AD today.</small></a><a class="path" href="#/learn"><b>Learn</b><span>How AD works</span><small>The cycle, the agents, the work orders.</small></a><a class="path" href="#/understand"><b>Understand</b><span>Why AD is safe</span><small>Safe AI, deterministic results, control.</small></a><a class="path" href="#/partner"><b>Partner</b><span>Work with AD</span><small>Eight steps from account to first job.</small></a></div>
-   ${me()?`<div class="info" style="margin-top:24px">You're signed in. <a href="#${landing()}">Go to your account</a>.</div>`:""}</div>${siteFoot()}</div>`;
-}
-const qaPage=(title,sub,items,extra="")=>`<div class="site"><div class="wrap"><h1 class="xl">${title}</h1><p class="sub">${sub}</p>${items}${extra}</div>${siteFoot()}</div>`;
-const vSee=()=>qaPage("With AD you can…","The work solutions AD delivers.",`<div class="items">${SEE.map(([t,d])=>`<div><b>${t}</b><small>${d}</small></div>`).join("")}</div>`,`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/login">Sign in</a><a class="btn ghost lg" href="#/learn">Learn how it works</a></div>`);
-const vLearn=()=>qaPage("The key basics to understand AD","Short answers to the questions people ask first.",LEARN.map(([q,a])=>`<details class="qa"><summary>${q}</summary><p>${a}</p></details>`).join(""),`<div class="row" style="margin-top:28px"><a class="btn ghost lg" href="#/understand">Why AD is safe</a></div>`);
-const vUnderstand=()=>qaPage("Reasons why AD is safe to use","",UNDERSTAND.map(([q,a])=>`<details class="qa"><summary>${q}</summary><p>${a}</p></details>`).join(""),`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/login">Client Sign In</a></div>`);
-const vPartner=()=>qaPage("AD is with you every step of the way","The path from first look to first job.",`<ol class="vt">${PARTNER.map(([t,d],i)=>`<li><span class="num">${i+1}</span><div><b>${t}</b><small>${d}</small></div></li>`).join("")}</ol>`,`<div class="row" style="margin-top:28px"><a class="btn lg" href="#/login">Sign in to Platform</a></div>`);
-function vRegister(){
-  return `<div class="site"><div class="wrap"><div class="auth card" style="max-width:560px;text-align:center"><h2>Admin-Driven Account Management</h2><p class="sub">Self-service registration is disabled. All dedicated environments are provisioned by Alida Administrators.</p>
-  <div class="row" style="margin-top:20px;justify-content:center"><a class="btn lg" href="#/login">Go to Sign In</a></div></div></div>${siteFoot()}</div>`;
-}
 function vLogin(){
-  return `<div class="site"><div class="wrap"><div class="auth card"><h2>Sign in</h2><p class="sub">Sign in to your dedicated environment.</p>
-  <form data-form="login"><label>Work Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required>
-  ${S.ui.authErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.authErr)}</div>`:""}<div class="row" style="margin-top:18px"><button class="btn lg">Sign in</button><span class="log" style="font-size:12px">Client accounts are managed by administrators.</span></div></form>
-  <details class="creds"><summary>Accounts for this review</summary><table>${S.users.map(u=>`<tr><td>${esc(u.email)}</td><td>${esc(u.password)}</td><td>${u.role}${u.accountId?" · "+esc(acct(u.accountId)?.name||""):u.role==="staff"?"":" · no account yet"}</td></tr>`).join("")}</table>Users invited inside an account sign in with the password <code>welcome</code>. <a href="#/demo/reset">Reset all data</a>.</details></div></div>${siteFoot()}</div>`;
+  return `<div class="site"><div class="wrap"><div class="auth card"><h2>Sign in</h2><p class="sub">Use your work email.</p>
+  <form data-form="login"><label>Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required>
+  ${S.ui.authErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.authErr)}</div>`:""}<div class="row" style="margin-top:18px"><button class="btn lg">Sign in</button></div></form>
+  <p class="log" style="margin-top:16px">Your account is set up for you. Sign in with the email you were invited with.</p>
+  <details class="creds"><summary>Accounts for this review</summary><table>${S.users.map(u=>`<tr><td>${esc(u.email)}</td><td>${esc(u.password)}</td><td>${u.role==="staff"?"admin · all accounts":"user · "+esc(acct(u.accountId||u.account_id)?.name||"")}</td></tr>`).join("")}</table>Users added inside an account sign in with the password <code>welcome</code>. <a href="#/demo/reset">Reset local data</a>.</details></div></div>${siteFoot()}</div>`;
 }
 
 /* ============================== views: onboarding & provisioning ============================== */
 function vOnboard(){
-  const o=onb(); const d=o.d, step=o.step, sol=SOL.find(s=>s.id===d.solution), staff=o.source==="staff";
+  const o=onb(), d=o.d, step=o.step, sol=SOL.find(s=>s.id===d.solution), uc="Use case";
   const body=[
-   ()=>`<h3>Choose a work solution</h3><div class="sol">${SOL.map(s=>`<div class="${d.solution===s.id?"on":""}" data-act="chooseSol" data-v="${s.id}"><b>${s.name}</b><small>${s.blurb}</small><br><small>${s.verbs.join(" · ")}</small></div>`).join("")}</div>`,
-   ()=>`<h3>Account</h3><label>Organisation</label><input data-bind="org" value="${esc(d.org)}" style="width:100%"><div class="grid g2"><div><label>Admin name</label><input data-bind="adminName" value="${esc(d.adminName)}" style="width:100%" ${staff?"":"readonly"}></div><div><label>Admin email</label><input data-bind="adminEmail" value="${esc(d.adminEmail)}" style="width:100%" ${staff?"":"readonly"}></div></div><p class="log" style="margin-top:10px">${staff?"The admin receives sign-in credentials (password: welcome).":"You are the admin. Other people are added in the Users step."}</p>`,
-   ()=>`<h3>Spending limit</h3><label>Monthly spending limit (USD)</label><input data-bind="spend" type="number" value="${d.spend}" style="width:160px"><p class="log">Billing is by data volume and compute use. AD stops scheduling work at the limit; an admin can raise it later.</p>`,
-   ()=>`<h3>Users</h3><table><tr><th>Email</th><th>Admin</th><th></th></tr>${d.users.map((u,i)=>`<tr><td>${esc(u.email)}</td><td><input type="checkbox" data-act="onbAdmin" data-v="${i}" ${u.admin?"checked":""}></td><td><button class="btn red sm" data-act="onbRmUser" data-v="${i}">Remove</button></td></tr>`).join("")||'<tr><td colspan="3" class="empty">Only the admin so far.</td></tr>'}</table><div class="row" style="margin-top:10px"><input id="onbUser" placeholder="user@acme.com" style="width:260px"><button class="btn ghost" data-act="onbAddUser">Add user</button></div><p class="log">Admins configure and operate; users operate only.</p>`,
-   ()=>`<h3>Environment</h3><div class="grid g3"><div><label>Region</label><select data-bind="region">${REGIONS.map(r=>`<option ${d.region===r?"selected":""}>${r}</option>`).join("")}</select></div><div><label>Tenancy</label><select data-bind="tenancy"><option value="multi" ${d.tenancy==="multi"?"selected":""}>multi-tenant</option><option value="single" ${d.tenancy==="single"?"selected":""}>single-tenant (upgrade)</option></select></div><div><label>Management</label><select data-bind="management"><option value="self" ${d.management==="self"?"selected":""}>self-managed</option><option value="fully" ${d.management==="fully"?"selected":""}>fully managed (upgrade)</option></select></div></div><div class="grid g3"><div><label>Storage allocation (GB)</label><input data-bind="storage" type="number" value="${d.storage}"></div><div><label>First sandbox</label><input data-bind="sandbox" value="${esc(d.sandbox)}"></div><div><label>Sandbox quota (GB)</label><input data-bind="quota" type="number" value="${d.quota}"></div></div>`,
-   ()=>`<h3>Review and confirm</h3><div class="kv"><b>Solution</b><span>${sol.name}</span><b>Account</b><span>${esc(d.org)} · admin ${esc(d.adminEmail)}</span><b>Users</b><span>${d.users.length+1}</span><b>Spending limit</b><span>$${(+d.spend).toLocaleString()}/month</span><b>Environment</b><span>${d.region} · ${d.tenancy}-tenant · ${d.management} managed</span><b>Storage</b><span>${d.storage} GB · sandbox ${esc(d.sandbox)} ${d.quota} GB</span></div><details style="margin-top:14px"><summary class="log" style="cursor:pointer">Sales order</summary><pre style="margin-top:8px">${esc(JSON.stringify(salesOrder(),null,2))}</pre></details><p class="log">${staff?"Provisioning starts on confirm.":"On confirmation, payment is taken and your environment is provisioned."}</p>`
+   ()=>`<h3>Register the client</h3><label>Client organisation</label><input data-bind="org" value="${esc(d.org)}" placeholder="e.g. HealthFirst AI" style="width:100%"><p class="log" style="margin-top:10px">The organisation name becomes the account name. The account is managed from ${esc(me()?.email||OPERATOR)}; the client's people are added as users.</p>`,
+   ()=>`<h3>What do you want to do with the data?</h3><p class="log" style="margin:-6px 0 12px">Pick the ${uc.toLowerCase()} this account starts with. More can be added later.</p><div class="sol">${SOL.map(x=>`<div class="${d.solution===x.id?"on":""}" data-act="chooseSol" data-v="${x.id}"><b>${x.name}</b><small>${x.blurb}</small><br><small>${x.verbs.map(v=>v[0]+v.slice(1).toLowerCase()).join(" · ")}</small></div>`).join("")}</div>`,
+   ()=>`<h3>Stack</h3><p class="log" style="margin:-6px 0 12px">Creating the account creates its stack: a dedicated Azure environment, database and compute that no other client shares.</p><div class="grid g2"><div><label>Region</label><select data-bind="region" style="width:100%">${REGIONS.map(r=>`<option ${d.region===r?"selected":""}>${r}</option>`).join("")}</select></div><div><label>Environment tier</label><select data-bind="env" style="width:100%">${ENVS.map(e=>`<option value="${e.id}" ${(d.env||"prod1")===e.id?"selected":""}>${e.label}</option>`).join("")}</select></div></div><div class="kv" style="margin-top:14px"><b>Tenancy</b><span>Dedicated (Single-Tenant isolated)</span><b>Management</b><span>Fully managed</span></div><div class="grid g2" style="margin-top:6px"><div><label>Usage budget (USD / month)</label><input data-bind="spend" type="number" value="${d.spend}" style="width:100%"></div><div><label>Storage limit (GB)</label><input data-bind="storage" type="number" value="${d.storage}" style="width:100%"></div></div><p class="log" style="margin-top:10px">Billing is a monthly fee plus usage. The client sees one number: what is left of the budget. AD stops scheduling work when it runs out; it can be raised later.</p>`,
+   ()=>`<h3>Users</h3><p class="log" style="margin:-6px 0 12px">The client's people. Each gets a personal workspace and access to the work of the ${uc.toLowerCase()}. Users operate AD; they never configure it.</p><table><tr><th>Email</th><th></th></tr>${d.users.map((u,i)=>`<tr><td>${esc(u.email)}</td><td class="r"><button class="btn red sm" data-act="onbRmUser" data-v="${i}">Remove</button></td></tr>`).join("")||'<tr><td colspan="2" class="empty">No users yet. You can add them later.</td></tr>'}</table><div class="row" style="margin-top:10px"><input id="onbUser" placeholder="user@client.com" style="width:260px"><button class="btn ghost" data-act="onbAddUser">Add user</button></div>`,
+   ()=>`<h3>Review and confirm</h3><div class="kv"><b>${uc}</b><span>${sol.name}</span><b>Account</b><span>${esc(d.org)}</span><b>Admin</b><span>${esc(me()?.email||OPERATOR)}</span><b>Users</b><span>${d.users.length}</span><b>Usage budget</b><span>$${(+d.spend).toLocaleString()}/month</span><b>Stack</b><span>${d.region} · ${d.env||"prod1"} · dedicated · fully managed</span><b>Storage limit</b><span>${d.storage} GB</span></div><details style="margin-top:14px"><summary class="log" style="cursor:pointer">Sales order</summary><pre style="margin-top:8px">${esc(JSON.stringify(salesOrder(),null,2))}</pre></details><p class="log">Confirming creates the account and triggers dedicated Terraform / Azure provisioning.</p>`
   ][step]();
   return `<div class="content narrow">${stepper(1)}<div class="wiz"><ol>${WIZ.map((w,i)=>`<li class="${i===step?"on":i<step?"done":""}">${i<step?"✓ ":""}${w}</li>`).join("")}</ol>
   <div><div class="card">${body}${S.ui.onbErr?`<div class="err" style="margin-top:10px">✕ ${esc(S.ui.onbErr)}</div>`:""}
-  <div class="row" style="margin-top:18px;justify-content:space-between"><div>${step>0?`<button class="btn ghost" data-act="onbBack">Back</button>`:`<button class="btn ghost" data-act="onbCancel">${staff?"Cancel":"Save and sign out"}</button>`}</div><div>${step<5?`<button class="btn" data-act="onbNext">Continue</button>`:`<button class="btn" data-act="onbConfirm">${staff?"Confirm and provision":"Confirm and pay"}</button>`}</div></div></div></div></div></div>`;
+  <div class="row" style="margin-top:18px;justify-content:space-between"><div>${step>0?`<button class="btn ghost" data-act="onbBack">Back</button>`:`<button class="btn ghost" data-act="onbCancel">Cancel</button>`}</div><div>${step<4?`<button class="btn" data-act="onbNext">Continue</button>`:`<button class="btn" data-act="onbConfirm">Confirm and provision</button>`}</div></div></div></div></div></div>
+  <aside class="dock"><div class="head"><b>Configgy</b><small>Account setup · ask me anything while you fill this in</small></div>${chatHtml(S.chats.sales,"sales","Ask Configgy…")}</aside>`;
 }
 function vProvisioning(){
   const a=acct();
   let o=S.orders.find(x=>x.id===S.provisioning);
-  if(!o && a) o=S.orders.find(x=>x.accountId===a.id&&x.kind==="provision");
-  if(!o) return `<div class="content narrow">${head("Provisioning","Check status of environment setup.")}<div class="card" style="padding:28px;text-align:center">${empty("Nothing is currently being set up.")}<p class="sub" style="margin-top:8px">Your account is ready.</p><div class="row" style="margin-top:18px;justify-content:center"><a class="btn lg" href="#/app">Open your account</a></div></div></div>`;
-  const ready=a?.status==="ready"||o.status==="applied";
-  const logs = o.logs || [];
-  return `<div class="content" style="max-width:1160px">${stepper(ready?3:2)}${head(ready?"Your environment is ready":"Setting up "+esc(a?.name||"your environment"),ready?"Pipeline execution completed. All Azure resources verified & active.":"Pipeline runner is deploying Azure resources. Streaming real-time execution logs below.")}
+  if(!o&&a) o=S.orders.find(x=>x.accountId===a.id&&x.kind==="provision");
+  if(!o) return `<div class="content narrow">${empty("Nothing is being set up.")}<div class="row" style="margin-top:14px"><a class="btn" href="#/app/accounts">Back to Accounts</a></div></div>`;
+  const targetA=acct(o.accountId)||a;
+  const ready=targetA?.status==="ready"||o.status==="applied";
+  const logs=o.logs||[];
+  return `<div class="content" style="max-width:1160px;margin:0 auto">${stepper(ready?3:2)}${head(ready?"Your environment is ready":"Setting up "+esc(targetA?.name||"client environment"),ready?"AD has started. All dedicated Azure resources are verified and active.":"Terraform / Azure ARM provisioning is running. You can leave this page; we'll keep going.")}
   <div class="grid" style="grid-template-columns:360px 1fr;gap:20px;align-items:start">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h3 style="margin:0">Pipeline Stages</h3>
-        <span class="pill ${ready?"green":"blue"}">${ready?"Succeeded":"In Progress"}</span>
+      <h3>Progress</h3>
+      <ul class="steps">${(o.jobs||[]).map(([n,st])=>`<li><span class="dot ${st==="done"?"done":st==="run"?"run":st==="error"?"error":""}"></span><span>${n} <span class="log">${st==="run"?"running…":st==="done"?"done":st==="error"?"error":""}</span></span></li>`).join("")}</ul>
+      <div class="row" style="margin-top:16px">
+        ${ready?`<a class="btn lg" href="#/app" style="width:100%">Open your account</a>`:`<button class="btn lg" data-act="forceReady" style="width:100%">Open your account</button>`}
+        ${isAdmin()?`<a class="btn ghost sm" href="#/app/accounts" style="width:100%">Back to All accounts</a>`:""}
       </div>
-      <ul class="steps">${o.jobs.map(([n,st])=>`<li><span class="dot ${st==="done"?"done":st==="run"?"run":""}"></span><span>${n} <span class="log">${st==="run"?"running…":st==="done"?"✓ done":""}</span></span></li>`).join("")}</ul>
-      <div style="margin-top:20px;padding-top:14px;border-top:1px solid #e1e4e8">
-        ${ready ? `
-          <div style="color:#2ea043;font-weight:600;margin-bottom:12px;font-size:13px">✔ All phases deployed and verified in Azure</div>
-          <a class="btn lg" href="#/app" style="width:100%;text-align:center;box-sizing:border-box;display:block">Open your account</a>
-        ` : `
-          <div style="display:flex;align-items:center;gap:8px;color:#0969da;font-size:13px;font-weight:500">
-            <span class="spin">◐</span> <span>Deploying to Azure subscription...</span>
-          </div>
-          <p class="log" style="margin-top:6px">Resources are being provisioned live. Please wait until execution completes.</p>
-          <button class="btn lg" data-act="forceReady" style="width:100%;margin-top:12px;background:#238636;color:#fff;border:none;cursor:pointer">Open your account (Enter Dashboard)</button>
-        `}
-      </div>
-      <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e1e4e8">
-        <details><summary class="log" style="cursor:pointer">Target Plan Changes</summary>
-          <div class="diff" style="margin-top:8px">${o.changes.map(c=>`<div>${esc(describe(c))}</div>`).join("")}</div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
+        <details><summary class="log" style="cursor:pointer">What is being set up</summary>
+          <div class="diff" style="margin-top:8px">${(o.changes||[]).map(c=>`<div>${esc(describe(c))}</div>`).join("")}</div>
         </details>
       </div>
     </div>
-    <div class="card" style="background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.15)">
+    <div class="card" style="background:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:0;overflow:hidden">
       <div style="background:#161b22;padding:10px 16px;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:600;color:#8b949e;font-family:monospace">
-          <span style="color:${ready?'#56d364':'#58a6ff'}">●</span> Azure DevOps Pipeline Console: azure-pipelines.environment.yml
-        </span>
-        <span style="font-size:11px;color:${ready?'#56d364':'#e3b341'};font-family:monospace;font-weight:600">
-          ${ready ? "● COMPLETED (EXIT 0)" : "● LIVE STREAM"}
-        </span>
+        <span style="font-size:12px;font-weight:600;color:#8b949e;font-family:monospace"><span style="color:${ready?'#56d364':'#58a6ff'}">●</span> Terraform &amp; Azure Provisioning Console</span>
+        <span style="font-size:11px;color:${ready?'#56d364':'#e3b341'};font-family:monospace;font-weight:600">${ready?"● COMPLETED (EXIT 0)":"● LIVE STREAM"}</span>
       </div>
-      <div id="pipeline-terminal" style="padding:14px;font-family:'Cascadia Code',Consolas,monospace;font-size:12px;line-height:1.7;height:420px;overflow-y:auto;white-space:pre-wrap">
-        ${logs.length ? logs.map(l => {
-          const time = (l.timestamp||"").split("T")[1]?.slice(0,8) || "00:00:00";
-          const isErr = l.status === "error";
-          const isDone = l.status === "done";
-          const color = isErr ? "#f85149" : isDone ? "#56d364" : "#e3b341";
-          const tag = isErr ? "[FAIL]" : isDone ? "[DONE]" : "[RUN]";
-          return `<div><span style="color:#6e7681;">[${time}]</span> <span style="color:${color};font-weight:600;">${tag}</span> <span style="color:#79c0ff;">[${esc(l.step)}]</span> ${esc(l.message)}</div>`;
-        }).join("") : `<div style="color:#8b949e;">[00:00:00] [INIT] Pipeline agent initialized: pool 'Azure Pipelines', runner 'linux-vm-agent-01'...</div><div style="color:#8b949e;">[00:00:01] [AUTH] Authenticating with Azure Service Principal to subscription 63724fbc-977f-4de8-834c-2be740ed933e...</div>`}
-        ${!ready ? `<div style="color:#e3b341;margin-top:6px"><span class="spin">◐</span> [Azure ARM] Long running operation in progress... waiting for confirmation.</div>` : `<div style="color:#56d364;margin-top:8px;font-weight:600">✔ Job completed successfully with exit code 0. Environment is ready.</div>`}
+      <div id="pipeline-terminal" style="padding:14px;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.7;height:400px;overflow-y:auto;white-space:pre-wrap">
+        ${logs.length?logs.map(l=>{
+          const tm=(l.timestamp||"").split("T")[1]?.slice(0,8)||"00:00:00";
+          const color=l.status==="error"?"#f85149":l.status==="done"?"#56d364":"#e3b341";
+          const tag=l.status==="error"?"[FAIL]":l.status==="done"?"[DONE]":"[RUN]";
+          return `<div><span style="color:#6e7681">[${tm}]</span> <span style="color:${color};font-weight:600">${tag}</span> <span style="color:#79c0ff">[${esc(l.step)}]</span> ${esc(l.message)}</div>`;
+        }).join(""):`<div style="color:#8b949e">[INIT] Initializing dedicated stack provisioning workflow for ${esc(targetA?.name||o.accountId)}...</div>`}
+        ${ready?`<div style="color:#56d364;margin-top:8px;font-weight:600">✔ Dedicated environment ready.</div>`:`<div style="color:#e3b341;margin-top:6px"><span class="spin">◐</span> Provisioning Azure resources...</div>`}
       </div>
     </div>
   </div></div>`;
@@ -816,148 +688,66 @@ function vProvisioning(){
 
 /* ============================== views: app ============================== */
 function vOverview(){
-  const a=acct(), u=me(), sol=SOL.find(s=>s.id===a.solution), users=accountUsers(a);
-  const ws=S.works.filter(w=>w.accountId===a.id), running=ws.filter(w=>w.status!=="done").length;
-  const pct=Math.round(a.usage.spendUsd/a.resources.spendLimitUsd*100);
-  const checklist=[["Environment provisioned",true,"#/app/admin/setup"],["Invite your team",users.length>1,"#/app/admin/people"],["Run your first job",ws.length>0,"#/app/data"]];
+  const a=acct(), sol=SOL.find(s=>s.id===a.solution)||SOL[0], users=accountUsers(a);
+  const ws=S.works.filter(w=>w.accountId===a.id), running=ws.filter(w=>w.status!=="done").length, done=ws.length-running;
+  const pct=Math.min(100,Math.round((a.usage?.spendUsd||0)/(a.resources?.spendLimitUsd||1)*100));
+  const checklist=[["Stack ready",true,"#/app/setup/environment"],["Add the client's people and set their access",users.length>0,"#/app/setup/users"],["Run your first job and check the numbers",ws.length>0,"#/app/reports/metrics"]];
   const showCheck=ws.length<2&&isAdmin();
-  const activity=ws.map(w=>({t:w.id,d:w.text,s:w.status,href:"#/app/work-orders"})).slice(0,6);
-  return `<div class="content">${head("Overview",`${sol.name} · ${a.region} · Dedicated Single-Tenant`)}
-  <div class="stats">${stat(a.datasets.length,"Datasets",a.datasets.reduce((n,d)=>n+d.gb,0).toFixed(1)+" GB")}${stat(ws.length,"Work orders",running?running+" running":"none running")}${stat("$"+a.usage.spendUsd.toLocaleString(),"Spend this month",pct+"% of limit")}${stat(a.domains.length,"Active Domains",a.domains.join(", "))}</div>
+  const activity=[...ws.map(w=>({t:w.id,d:w.text,s:w.status,href:"#/app/reports/metrics"})),...S.orders.filter(o=>o.accountId===a.id).map(o=>({t:o.id,d:o.changes.map(describe).join(", "),s:o.status,href:"#/app/reports/audit"}))].slice(0,6);
+  return `<div class="content">${head("Overview",`${capName(a)} · ${a.region} · ${a.env||"prod1"} · Dedicated`)}
+  <div class="stats">${stat(a.datasets.length,"Datasets",a.datasets.reduce((n,d)=>n+d.gb,0).toFixed(1)+" GB")}${stat(ws.length,"Work orders",running?running+" running":"none running")}${stat("$"+balance(a).toLocaleString(),"Balance left",pct+"% of $"+a.resources.spendLimitUsd.toLocaleString()+" used")}${stat(done,"Runs completed",`<a href="#/app/reports/metrics">See metrics</a>`)}</div>
   <div class="grid g2">
-  ${showCheck?`<div class="card"><h3>Getting started</h3><ul class="check">${checklist.map(([t,done,href])=>`<li class="${done?"done":""}"><span>${done?"✓":""}</span><a href="${href}">${t}</a></li>`).join("")}</ul></div>`:`<div class="card"><h3>Work solution</h3><div class="big">${sol.name}</div><p class="log">${sol.blurb}</p>${sol.verbs.map(v=>`<span class="pill">${v}</span>`).join("")}</div>`}
-  <div class="card"><h3>Recent activity</h3>${activity.map(x=>`<a class="act" href="${x.href}"><span><b>${x.t}</b> <span class="log">${esc(x.d)}</span></span><span class="chip ${chip(x.s)}">${x.s}</span></a>`).join("")||empty("Nothing yet. Ask ADy for something.")}</div></div></div>`;
+  ${showCheck?`<div class="card"><h3>Getting started</h3><ul class="check">${checklist.map(([t,dn,href])=>`<li class="${dn?"done":""}"><span>${dn?"✓":""}</span><a href="${href}">${t}</a></li>`).join("")}</ul></div>`:`<div class="card"><h3>Use case</h3><div class="big">${capName(a)}</div><p class="log">${sol.blurb}</p>${sol.verbs.map(v=>`<span class="pill">${v}</span>`).join("")}</div>`}
+  <div class="card"><h3>Recent activity</h3>${activity.map(x=>`<a class="act" href="${x.href}"><span><b>${x.t}</b> <span class="log">${esc(x.d)}</span></span><span class="chip ${chip(x.s)}">${x.s}</span></a>`).join("")||empty("Bring data in, pick an action, get results you can measure. Start by asking ADy.")}</div></div></div>`;
 }
-const woTable=ws=>`<div class="card flush"><table><tr><th>Work order</th><th>Request</th><th>By</th><th>Status</th></tr>${ws.map(w=>`<tr><td><b>${w.id}</b><br><span class="log">${w.verb}</span></td><td>${esc(w.text)}${w.result?`<br><span class="log">${esc(w.result)}</span>`:""}</td><td class="log">${esc(w.by)}</td><td><span class="chip ${chip(w.status)}">${w.status}</span></td></tr>`).join("")||`<tr><td colspan="4">${empty("No work orders yet.")}</td></tr>`}</table></div>`;
-function vVerb(k){
-  const a=acct(), sol=SOL.find(s=>s.id===a.solution), ws=S.works.filter(w=>w.accountId===a.id);
-  if(k==="work-orders") return `<div class="content">${head("Work orders","Everything ADy has sent to the coordinators.")}${woTable(ws)}</div>`;
-  const V={data:["DATA","Bring data in: import, profile and register datasets so Produce can use them."],produce:["PRODUCE","Integrated, peered datasets with transformation and governance metadata."],explore:["EXPLORE","Patterns, metrics, insights and reports over what was produced."],generate:["GENERATE","New models and ontologies fed back into Produce."]}[k];
-  const ok=sol.verbs.includes(V[0]);
-  const ds=k==="data"?`<div class="card flush"><table><tr><th>Dataset</th><th>Source</th><th>Size</th></tr>${a.datasets.map(d=>`<tr><td>${esc(d.name)}</td><td>${d.src}</td><td>${d.gb} GB</td></tr>`).join("")||`<tr><td colspan="3">${empty("No datasets yet. Ask ADy to import or profile one.")}</td></tr>`}</table></div>`:"";
-  return `<div class="content">${head(AD_PAGES[k],V[1],ok?"":`<span class="chip warn">Not in your work solution</span>`)}${ds}${woTable(ws.filter(w=>w.verb===V[0]))}</div>`;
-}
-function vAdmin(k){
+const woTable=ws=>`<div class="card flush"><table><tr><th>Work order</th><th>Request</th><th>By</th><th>Status</th></tr>${ws.map(w=>`<tr><td><b>${w.id}</b><br><span class="log">${w.verb}</span></td><td>${esc(w.text)}${w.result?`<br><span class="log">${esc(w.result)}</span>`:""}${w.metrics&&w.metrics.length?`<div class="metrics">${w.metrics.map(([k,v])=>`<span><small>${k}</small><b>${v}</b></span>`).join("")}</div>`:""}</td><td class="log">${esc(w.by)}</td><td><span class="chip ${chip(w.status)}">${w.status}</span>${w.promoted?` <span class="chip ok">in catalog</span>`:w.status==="done"&&w.verb!=="DATA"?` <button class="btn ghost sm" data-act="promote" data-v="${w.id}">Promote</button>`:""}</td></tr>`).join("")||`<tr><td colspan="4">${empty("Nothing has run here yet. Tell ADy what you want and the result, with its numbers, will show up here.")}</td></tr>`}</table></div>`;
+function vSetup(k){
   const a=acct(), users=accountUsers(a);
   const err=S.ui.cfgErr?`<div class="err" style="margin-top:8px">✕ ${esc(S.ui.cfgErr)}</div>`:"";
   switch(k){
-   case "setup": return `<div class="content">${head("Setup","The dedicated environment this account runs on.")}<div class="grid g2"><div class="card"><h3>Environment</h3><div class="kv"><b>Work solution</b><span>${SOL.find(s=>s.id===a.solution)?.name}</span><b>Region</b><span>${a.region}</span><b>Environment Tier</b><span>${a.env||"test1"}</span><b>Tenancy</b><span>Dedicated (Single-Tenant isolated Azure RG & VNet)</span><b>Management</b><span>Dedicated Managed</span><b>Status</b><span><span class="chip ${chip(a.status)}">${a.status}</span></span><b>Created</b><span>${a.created||a.created_at||"2026-11-05"}</span></div></div>
-    <div class="card"><h3>Allocation</h3><div class="row"><div><label>Spending limit (USD / month)</label><input id="rs" type="number" value="${a.resources.spendLimitUsd}" style="width:150px"></div><div><label>Storage (GB)</label><input id="rg" type="number" value="${a.resources.storageGb}" style="width:110px"></div><div style="align-self:flex-end"><button class="btn" data-act="setRes">Save</button></div></div><p class="log" style="margin-top:10px">Dedicated cloud storage allocated exclusively to this client tenant.</p>${err}</div></div>
-    <div class="card" style="margin-top:16px"><h3>Generated Terraform Code (infrastructure.tfvars)</h3><p class="sub">View the live Terraform parameter configuration generated by the backend for this dedicated environment.</p>
-    <button class="btn sm" data-act="loadTfvars" data-v="${a.id}">View Generated .tfvars</button>
-    <pre id="tfvars-out" class="log" style="display:none;background:#0f172a;color:#38bdf8;padding:14px;border-radius:8px;overflow:auto;margin-top:12px;font-size:12.5px;max-height:300px"></pre>
-    </div></div>`;
-   case "domains": return `<div class="content">${head("Domains","Capability domains available in this account.")}<div class="card flush"><table><tr><th>Domain</th><th>Id</th><th></th></tr>${a.domains.map(d=>`<tr><td>${REGISTRY[d]||d}</td><td class="log">${d}</td><td class="r"><button class="btn red sm" data-act="rmDomain" data-v="${d}">Remove</button></td></tr>`).join("")}</table></div>
-    <div class="card"><h3>Add a domain</h3><div class="row"><select id="nd">${Object.entries(REGISTRY).filter(([k])=>!a.domains.includes(k)).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><button class="btn" data-act="addDomain">Add</button></div>${err}</div></div>`;
-   case "people": return `<div class="content">${head("People","Admins configure and operate; users operate only. At least one admin must remain.")}<div class="card flush"><table><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr>${users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td><select data-act="setRole" data-v="${esc(u.email)}"><option ${u.role==="user"?"selected":""}>user</option><option ${u.role==="admin"?"selected":""}>admin</option></select></td><td class="r"><button class="btn red sm" data-act="rmUser" data-v="${esc(u.email)}">Remove</button></td></tr>`).join("")}</table></div>
-    <div class="card"><h3>Invite someone</h3><div class="row"><input id="nu" placeholder="name@company.com" style="width:260px"><select id="nur"><option>user</option><option>admin</option></select><button class="btn" data-act="addUser">Invite</button></div>${err}</div></div>`;
-   case "usage": { const pct=Math.min(100,Math.round(a.usage.spendUsd/a.resources.spendLimitUsd*100)); const dsGb=a.datasets.reduce((n,d)=>n+d.gb,0); const spct=Math.min(100,Math.round(dsGb/a.resources.storageGb*100));
-    return `<div class="content">${head("Usage","Spend and storage against what was allocated.")}<div class="grid g2"><div class="card"><h3>Spend this month</h3><div class="big">$${a.usage.spendUsd.toLocaleString()} <span class="log">of $${a.resources.spendLimitUsd.toLocaleString()}</span></div><div class="bar" style="margin:10px 0"><i class="${pct>=90?"bad":pct>=75?"warn":""}" style="width:${pct}%"></i></div>${pct>=75?`<div class="warn">${pct}% of the spending limit used.</div>`:""}<div class="kv" style="margin-top:10px"><b>Compute</b><span>${a.usage.computeHours} h</span><b>Data volume</b><span>${dsGb.toFixed(1)} GB</span></div></div>
-    <div class="card"><h3>Storage</h3><div class="big">${dsGb.toFixed(1)} GB <span class="log">of ${a.resources.storageGb} GB</span></div><div class="bar" style="margin:10px 0"><i class="${spct>=90?"bad":spct>=75?"warn":""}" style="width:${spct}%"></i></div><p class="log">Dedicated client cloud storage. Change the total allocation under Setup.</p></div></div></div>`; }
-   case "audit": { const ids=new Set([a.id,...S.orders.filter(o=>o.accountId===a.id).map(o=>o.id),...S.works.filter(w=>w.accountId===a.id).map(w=>w.id),...S.orders.filter(o=>o.accountId===a.id&&o.salesOrder).map(o=>o.salesOrder.salesOrderId),...accountUsers(a).map(u=>u.email)]);
-    return `<div class="content">${head("Audit log","Every order, action, job and sign-in, with who did it.")}<div class="card flush"><table><tr><th>Time</th><th>Actor</th><th>Action</th><th>Ref</th></tr>${S.audit.filter(e=>ids.has(e.ref)||(e.ref==="SO-0001"&&a.id==="alida-internal")).map(e=>`<tr><td class="log">${e.t}</td><td>${esc(e.actor)}</td><td>${esc(e.action)}</td><td class="log">${esc(e.ref)}</td></tr>`).join("")}</table></div></div>`; }
+   case "environment": return `<div class="content">${head("Stack & limits","The use case, dedicated stack and limits this account runs on.")}<div class="grid g2"><div class="card"><h3>Stack</h3><div class="kv"><b>Use case</b><span>${capName(a)}</span><b>Region</b><span>${a.region}</span><b>Environment tier</b><span>${a.env||"prod1"}</span><b>Resource group</b><span style="font-family:monospace;font-size:12.5px">${rgName(a)}</span><b>Tenancy</b><span>Dedicated</span><b>Management</b><span>Fully managed</span><b>Status</b><span><span class="chip ${chip(a.status)}">${a.status}</span></span><b>Created</b><span>${a.created||a.created_at||""}</span></div></div>
+    <div class="card"><h3>Limits</h3><div class="row"><div><label>Usage budget (USD / month)</label><input id="rs" type="number" value="${a.resources.spendLimitUsd}" style="width:160px"></div><div><label>Storage limit (GB)</label><input id="rg" type="number" value="${a.resources.storageGb}" style="width:120px"></div><div style="align-self:flex-end"><button class="btn" data-act="setRes">Save</button></div></div>${err}</div></div>
+    <div class="card"><h3>Generated Terraform Configuration (infrastructure.tfvars)</h3><p class="sub">Live Terraform parameters synchronized for this dedicated client stack.</p><button class="btn sm" data-act="loadTfvars" data-v="${a.id}">View Generated .tfvars</button><pre id="tfvars-out" style="display:none;margin-top:12px"></pre></div></div>`;
+   case "work": return `<div class="content">${head("Work","The work this account can do. People are given access to work one by one, and each piece of work gets a shared workspace for everyone who has it.")}<div class="card flush"><table><tr><th>Work</th><th>What it does</th><th></th></tr>${a.domains.map(d=>`<tr><td><b>${REGISTRY[d]||d}</b><br><span class="log">${d}</span></td><td>${WORK_INFO[d]||""}</td><td class="r"><button class="btn red sm" data-act="rmDomain" data-v="${d}">Remove</button></td></tr>`).join("")}</table></div>
+    <div class="card"><h3>Add work</h3><div class="row"><select id="nd">${Object.entries(REGISTRY).filter(([k])=>!a.domains.includes(k)).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")||`<option value="">All available work added</option>`}</select><button class="btn" data-act="addDomain" ${Object.entries(REGISTRY).some(([k])=>!a.domains.includes(k))?"":"disabled"}>Add</button></div>${err}</div></div>`;
+   case "users": {
+    const ed=S.ui.editUser?users.find(u=>u.email.toLowerCase()===S.ui.editUser.toLowerCase()):null;
+    const acc=u=>u.access||{catalogs:[]};
+    const editor=ed?`<div class="card"><h3>Access for ${esc(ed.name)} <span class="log">· ${esc(ed.email)}</span></h3>
+      <label>Work they can use</label>${a.domains.map(d=>`<label class="ck"><input type="checkbox" class="ea-cat" value="${d}" ${acc(ed).catalogs.includes(d)?"checked":""}> ${workLabel(d)}</label>`).join("")||'<span class="empty">No work yet.</span>'}
+      ${err}<div class="row" style="margin-top:14px"><button class="btn" data-act="saveAccess" data-v="${esc(ed.email)}">Save access</button><button class="btn ghost" data-act="cancelAccess">Cancel</button></div></div>`:"";
+    return `<div class="content">${head("Users","The client's people and the work each can use. Everyone gets a personal workspace automatically.")}${editor}<div class="card flush"><table><tr><th>Name</th><th>Work</th><th></th></tr>${users.map(u=>`<tr class="${ed&&ed.email===u.email?"sel":""}"><td><b>${esc(u.name)}</b><br><span class="log">${esc(u.email)}</span></td><td>${acc(u).catalogs.map(x=>`<span class="pill">${REGISTRY[x]||x}</span>`).join("")||'<span class="log">none</span>'}</td><td class="r"><button class="btn ghost sm" data-act="editAccess" data-v="${esc(u.email)}">Edit access</button> <button class="btn red sm" data-act="rmUser" data-v="${esc(u.email)}">Remove</button></td></tr>`).join("")||`<tr><td colspan="3">${empty("No users yet.")}</td></tr>`}</table></div>
+    <div class="card"><h3>Add a user</h3><label>Email</label><input id="nu" placeholder="name@client.com" style="width:260px"><label>Work they can use</label>${a.domains.map(d=>`<label class="ck"><input type="checkbox" class="nu-work" value="${d}" checked> ${workLabel(d)}</label>`).join("")||'<span class="empty">Add work first.</span>'}<div class="row" style="margin-top:12px"><button class="btn" data-act="addUser">Add user</button></div><p class="log">They also get a personal workspace automatically. Change their work any time with Edit access.</p>${ed?"":err}</div></div>`;
+   }
   }
   return `<div class="content">${empty("Not found.")}</div>`;
 }
-function orderDetail(o){
-  const ed=S.ui.editing===o.id;
-  const rows=o.changes.map((c,i)=>{ const cls=c.op==="add"?"a":c.op==="remove"?"r":"c"; let extra="";
-    if(ed&&c.target==="sandbox"&&c.op==="add") extra=` quota <input type="number" value="${c.quotaGb}" data-act="editNum" data-i="${i}" data-k="quotaGb"> GB`;
-    if(ed&&c.target==="resources"&&c.value.spendLimitUsd!=null) extra=` spend <input type="number" value="${c.value.spendLimitUsd}" data-act="editNum" data-i="${i}" data-k="spendLimitUsd">`;
-    return `<div class="${cls}">${esc(describe(c))}${extra}${ed?`<button class="x" data-act="dropChange" data-v="${i}" title="Drop this change">×</button>`:""}</div>`; }).join("");
-  return `<div class="card"><h3>${o.id} · from ${o.source}${o.requestedBy?" · "+esc(o.requestedBy):""}</h3>${o.note?`<div class="log">${esc(o.note)}</div>`:""}
-  <div class="diff" style="margin:8px 0">${rows||'<span class="empty">No changes left.</span>'}</div>
-  ${(o.validation?.errors||[]).map(e=>`<div class="err">✕ ${esc(e)}</div>`).join("")}${(o.validation?.warnings||[]).map(e=>`<div class="warn">${esc(e)}</div>`).join("")}
-  ${o.status==="pending"?`<div class="row" style="margin-top:12px"><button class="btn" data-act="approve" data-v="${o.id}">Approve</button>${ed?`<button class="btn ghost" data-act="doneEdit">Done editing</button>`:`<button class="btn ghost" data-act="edit" data-v="${o.id}">Edit</button>`}<button class="btn red" data-act="reject" data-v="${o.id}">Reject</button></div>`:""}
-  ${o.status==="invalid"?`<div class="row" style="margin-top:12px"><button class="btn ghost" data-act="edit" data-v="${o.id}">Edit</button><button class="btn" data-act="approve" data-v="${o.id}">Re-check and approve</button><button class="btn red" data-act="reject" data-v="${o.id}">Reject</button></div>`:""}
-  ${o.jobs.length?`<h3 style="margin-top:16px">Jobs</h3><ul class="steps">${o.jobs.map(([n,st])=>`<li><span class="dot ${st==="done"?"done":st==="run"?"run":""}"></span><span>${n} <span class="log">${st==="run"?"running…":st==="done"?"done":""}</span></span></li>`).join("")}</ul>`:""}
-  ${o.salesOrder?`<details style="margin-top:14px"><summary class="log" style="cursor:pointer">Sales order</summary><pre style="margin-top:8px">${esc(JSON.stringify(o.salesOrder,null,2))}</pre></details>`:""}</div>`;
+function vDash(k){
+  const a=acct();
+  switch(k){
+   case "usage": { const pct=Math.min(100,Math.round((a.usage?.spendUsd||0)/(a.resources?.spendLimitUsd||1)*100));
+    return `<div class="content">${head("Usage","What is left of this month's usage budget.")}<div class="card"><h3>Balance</h3><div class="big">$${balance(a).toLocaleString()} <span class="log">left of $${a.resources.spendLimitUsd.toLocaleString()}</span></div><div class="bar" style="margin:10px 0"><i class="${pct>=90?"bad":pct>=75?"warn":""}" style="width:${pct}%"></i></div>${pct>=75?`<div class="warn">${pct}% of the usage budget used.</div>`:""}<p class="log">One number covers everything AD does for you this month.</p></div></div>`; }
+   case "metrics": { const done=S.works.filter(w=>w.accountId===a.id&&w.status==="done"); const hrs=done.reduce((n,w)=>n+(HRS[w.verb]||0),0);
+    return `<div class="content">${head("Metrics","What AD has accomplished, not only what it used.")}<div class="stats">${stat(done.length,"Runs completed")}${stat(a.datasets.reduce((n,d)=>n+d.gb,0).toFixed(1)+" GB","Data processed")}${stat("~"+hrs+" h","Time saved","against doing it by hand")}${stat(done.filter(w=>w.promoted).length,"Results in the catalog")}</div><h3 style="margin:18px 0 8px">Work accomplished</h3>${woTable(done)}</div>`; }
+   case "audit": { const ids=new Set([a.id,...S.orders.filter(o=>o.accountId===a.id).map(o=>o.id),...S.works.filter(w=>w.accountId===a.id).map(w=>w.id),...S.orders.filter(o=>o.accountId===a.id&&o.salesOrder).map(o=>o.salesOrder.salesOrderId),...accountUsers(a).map(u=>u.email)]);
+    return `<div class="content">${head("Audit log","Every order, job and sign-in, with who did it.")}<div class="card flush"><table><tr><th>Time</th><th>Actor</th><th>Action</th><th>Ref</th></tr>${S.audit.filter(e=>ids.has(e.ref)||(e.ref==="SO-0001"&&a.id==="alida-internal")).map(e=>`<tr><td class="log">${e.t}</td><td>${esc(e.actor)}</td><td>${esc(e.action)}</td><td class="log">${esc(e.ref)}</td></tr>`).join("")}</table></div></div>`; }
+  }
+  return `<div class="content">${empty("Not found.")}</div>`;
 }
 function vAccounts(){
-  const totalTenants = S.accounts.length;
-  const totalRes = totalTenants * 15;
-  const err = S.ui.adminProvErr ? `<div class="err" style="margin-top:10px">✕ ${esc(S.ui.adminProvErr)}</div>` : "";
-  return `<div class="content" style="width:100%;max-width:100%;box-sizing:border-box">
-  <div class="phead"><div><h1>Dedicated Admin Dashboard</h1><p class="sub">Provision and manage 100% dedicated single-tenant client environments.</p></div></div>
-  
-  <div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
-    ${stat(totalTenants, "Dedicated Tenants", "100% Single-Tenant isolated")}
-    ${stat("15 / tenant", "Isolated PaaS Resources", totalRes + "+ active in Azure")}
-    ${stat("HITRUST / HIPAA", "Security Architecture", "Dedicated RG, VNet & Key Vault")}
-    ${stat(S.users.length, "Provisioned Users", S.users.filter(u=>u.role==="admin").length + " client admins")}
-  </div>
-
-  <div class="card" style="border-top:3px solid var(--blue);margin-bottom:24px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h3 style="margin:0">Provision Dedicated Client Environment</h3>
-      <span class="chip ok">Admin-Driven Provisioning</span>
-    </div>
-    <p class="sub" style="margin-bottom:16px;font-size:13.5px">Create a client tenant with automated Azure Resource Group, VNet, Private Storage, and initial user credentials.</p>
-    <form data-form="adminCreateAccount" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;align-items:end">
-      <div><label>Client / Organization Name</label><input name="org" required placeholder="e.g. HealthFirst AI" style="width:100%"></div>
-      <div><label>Primary Contact / User Name</label><input name="name" required placeholder="e.g. Dr. Alex Mercer" style="width:100%"></div>
-      <div><label>Primary Work Email</label><input name="email" type="email" required placeholder="e.g. alex@healthfirst.org" style="width:100%"></div>
-      <div><label>User Role in Tenant</label><select name="role" style="width:100%"><option value="admin" selected>Tenant Admin (Can invite users & configure)</option><option value="user">Standard User (Operator only)</option></select></div>
-      <div><label>Azure Region</label><select name="region" style="width:100%"><option value="eastus2" selected>East US 2 (Azure)</option><option value="centralus">Central US</option><option value="westus2">West US 2</option></select></div>
-      <div><label>Environment Tier</label><select name="env" style="width:100%"><option value="prod1" selected>Production (prod1)</option><option value="test1">Testing / QA (test1)</option><option value="dev1">Development (dev1)</option></select></div>
-      <div><label>Work Solution</label><select name="solution" style="width:100%">${SOL.map(s=>`<option value="${s.id}">${s.name}</option>`).join("")}</select></div>
-      <div><label>Storage Quota (GB)</label><input name="storage" type="number" value="500" style="width:100%"></div>
-      <div><label>Monthly Spend Limit (USD)</label><input name="spend" type="number" value="5000" style="width:100%"></div>
-      <div style="grid-column:span 3;margin-top:6px"><button class="btn lg" style="width:100%;background:var(--blue);font-weight:700">+ Provision Dedicated Tenant</button></div>
-    </form>
-    ${err}
-  </div>
-
-  <div class="card flush">
-    <div style="padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:0">Active Dedicated Client Tenants</h3>
-      <span class="log">Total: ${totalTenants} isolated environments</span>
-    </div>
-    <table>
-      <tr><th>Client Tenant</th><th>Solution</th><th>Azure Environment</th><th>Primary Contact & Role</th><th>Spend Limit</th><th>Status</th><th></th></tr>
-      ${S.accounts.map(a=>{
-        const primaryUser = accountUsers(a).find(u=>u.role==="admin") || accountUsers(a)[0];
-        const isCurrent = (acct() && acct().id === a.id);
-        return `<tr>
-          <td><b>${esc(a.name)}</b> <span class="chip ok" style="font-size:10px;padding:1px 6px">Dedicated</span><br><span class="log">Created ${a.created||a.created_at||"2026-11-05"}</span></td>
-          <td>${SOL.find(s=>s.id===a.solution)?.name||a.solution}</td>
-          <td><span style="font-family:monospace;font-size:12px">rg-${esc(a.id)}-${a.env||"prod1"}</span><br><span class="log">${a.region} · Single-Tenant</span></td>
-          <td>${primaryUser ? `<b>${esc(primaryUser.name||primaryUser.email)}</b> <span class="chip ${primaryUser.role==='admin'?'ok':'warn'}" style="font-size:10px;padding:1px 6px">${primaryUser.role==='admin'?'Tenant Admin':'Standard User'}</span><br><span class="log">${esc(primaryUser.email)}</span>` : `<span class="log">${accountUsers(a).length} users</span>`}</td>
-          <td>$${a.usage.spendUsd.toLocaleString()} / $${a.resources.spendLimitUsd.toLocaleString()}<br><span class="log">${a.resources.storageGb} GB Storage</span></td>
-          <td><span class="chip ${chip(a.status)}">${a.status==="ready"?"Active / Ready":a.status}</span></td>
-          <td class="r">${isCurrent ? `<span class="pill" style="color:var(--blue);font-weight:600">Current</span>` : `<button class="btn ghost sm" data-act="openAccount" data-v="${a.id}">Switch Tenant</button>`}</td>
-        </tr>`;
-      }).join("")}
-    </table>
-  </div>
-</div>`;
+  return `<div class="content">${head("Accounts","Every dedicated client account and its stack.",`<a class="btn" href="#/onboard">Set up a client account</a>`)}
+  <div class="card flush"><table><tr><th>Account</th><th>Use case</th><th>Stack</th><th>Users</th><th>Balance</th><th>Status</th><th></th></tr>
+  ${S.accounts.map(a=>`<tr><td><b>${esc(a.name)}</b> <span class="chip ok" style="font-size:10px;padding:1px 6px">Dedicated</span><br><span class="log">${a.created||a.created_at||""}</span></td><td>${capName(a)}</td><td><span style="font-family:monospace;font-size:12px">${rgName(a)}</span><br><span class="log">${a.region} · ${a.env||"prod1"}</span></td><td>${accountUsers(a).length}</td><td>$${balance(a).toLocaleString()} of $${a.resources.spendLimitUsd.toLocaleString()}</td><td><span class="chip ${chip(a.status)}">${a.status}</span></td><td class="r"><button class="btn ghost sm" data-act="openAccount" data-v="${a.id}" ${a.status!=="ready"?"disabled":""}>Open</button></td></tr>`).join("")}</table></div></div>`;
 }
 
-/* ============================== demos (linked from flows.html) ============================== */
+/* ============================== demos ============================== */
+const asAdmin=(acc="alida-internal")=>{ login("demetrius@alidainc.com","ad"); S.acting=acc; };
+const freshOnb=()=>{ login("demetrius@alidainc.com","ad"); delete S.onbs.staff; };
 const DEMOS={
-  reset:()=>{ store.del(); S=seed(); return "/"; },
-  P1:()=>{ logout(); return "/"; },
-  P2a:()=>{ login("bill@alidainc.com","ad"); return "/app"; },
-  P2b:()=>{ login("dhananjay@alidainc.com","ad"); return "/app"; },
-  P3:()=>{ logout(); if(!S.users.some(u=>u.email==="pat@newco.com")) { register("Pat Lee","NewCo","pat@newco.com","pw"); S.onbs["pat@newco.com"].step=2; } logout(); login("pat@newco.com","pw"); return "/app"; },
-  P4:()=>{ logout(); return "/"; },
-  S1:()=>"/see", S2:()=>"/", S3:()=>{ logout(); return "/register"; },
-  C1:()=>{ logout(); const n=Date.now()%1000; register("Ana Admin","Acme Co "+n,"ana"+n+"@acme.com","pw"); const o=onb(); Object.assign(o.d,{spend:8000}); o.step=5; return "/onboard"; },
-  C2:()=>DEMOS.C1(),
-  C3:()=>{ login("bill@alidainc.com","ad"); return "/app/admin/domains"; },
-  C4:()=>{ login("bill@alidainc.com","ad"); configgySay("add domain readygo-finance and add sandbox sbx-2 50gb"); return "/app/admin/approvals"; },
-  C5:()=>{ login("bill@alidainc.com","ad"); configgySay("add domain readygo-finance and add sandbox sbx-2 50gb"); S.ui.editing=S.orders[0].id; return "/app/admin/approvals"; },
-  C6:()=>{ login("bill@alidainc.com","ad"); return "/app/admin/people"; },
-  C7:()=>{ login("dhananjay@alidainc.com","ad"); adySay("add domain readygo-healthcare"); return "/app"; },
-  C8:()=>{ login("bill@alidainc.com","ad"); return "/app/admin/approvals"; },
-  C9:()=>{ login("bill@alidainc.com","ad"); return "/app/admin/usage"; },
-  C13:()=>{ login("bill@alidainc.com","ad"); return "/app/admin/audit"; },
-  A1:()=>{ login("dhananjay@alidainc.com","ad"); return "/app"; },
-  A2:()=>{ login("dhananjay@alidainc.com","ad"); adySay("produce a data foundation from the retail datasets"); return "/app/produce"; },
-  A3:()=>DEMOS.C7(),
-  L1:()=>{ login("staff@alidainc.com","ad"); startOnboarding("staff"); return "/onboard"; },
-  L2:()=>{ login("staff@alidainc.com","ad"); return "/app/accounts"; },
-  L3:()=>{ login("staff@alidainc.com","ad"); S.acting="alida-internal"; return "/app"; }
+  reset:()=>{ store.del(); S=seed(); fetchBackendState(); return "/"; },
+  L1:()=>{ freshOnb(); startOnboarding(); return "/onboard"; },
+  L2:()=>{ login("demetrius@alidainc.com","ad"); return "/app/accounts"; },
+  L3:()=>{ asAdmin(); return "/app"; }
 };
 
 /* ============================== render ============================== */
@@ -968,25 +758,26 @@ function render(){
   if(needUser.includes(p)&&!u){ nav("/login",true); return; }
   if(p==="register"){ nav("/login",true); return; }
   if(p==="login"&&u){ nav(landing(),true); return; }
-  if(p==="onboard"){ const aid=u.accountId||u.account_id; if(u.role!=="staff"&&aid){ nav(landing(),true); return; } if(!onb()) startOnboarding(u.role==="staff"?"staff":"sales"); }
+  if(p==="onboard"){ if(u.role!=="staff"){ nav(landing(),true); return; } if(!onb()) startOnboarding(); }
+  let staffOnly=false;
   if(p==="app"){
     const sub=R.parts[1]||"";
-    if(u.role==="staff"&&!S.acting&&sub!=="accounts"){ nav("/app/accounts",true); return; }
-    if(sub==="accounts"&&u.role!=="staff"&&u.role!=="admin"){ nav("/app",true); return; }
-    if(sub!=="accounts"){ const a=acct(); if(!a){ nav(landing(),true); return; } if(a.status!=="ready"){ nav("/provisioning",true); return; } }
-    if(sub==="admin"&&!isAdmin()){ nav("/app",true); return; }
-    if(sub==="admin"&&(R.parts[2]==="approvals"||R.parts[2]==="sandboxes")){ nav("/app/admin/setup",true); return; }
+    staffOnly=sub==="accounts";
+    if(u.role==="staff"&&!S.acting&&!staffOnly){ nav("/app/accounts",true); return; }
+    if(staffOnly&&u.role!=="staff"){ nav("/app",true); return; }
+    if(!staffOnly){ const a=acct(); if(!a){ nav(landing(),true); return; } if(a.status!=="ready"){ nav("/provisioning",true); return; } }
+    if(sub==="setup"&&!isAdmin()){ nav("/app",true); return; }
   }
   $("#hdr").innerHTML=topbar();
   const app=$("#app"); const sc=app.querySelector(".content,.site")?.scrollTop||0;
   let html;
-  if(PUBLIC.includes(p)) html={"":vHome,see:vSee,learn:vLearn,understand:vUnderstand,partner:vPartner,register:vRegister,login:vLogin}[p]();
+  if(PUBLIC.includes(p)) html=vLogin();
   else if(p==="onboard") html=`<div class="shell plain">${vOnboard()}</div>`;
   else if(p==="provisioning") html=`<div class="shell plain">${vProvisioning()}</div>`;
   else if(p==="app"){ const sub=R.parts[1]||""; let main;
-    if(sub==="accounts") main=vAccounts(); else if(sub==="") main=vOverview(); else if(AD_PAGES[sub]) main=vVerb(sub); else if(sub==="admin") main=vAdmin(R.parts[2]||"setup"); else main=`<div class="content">${empty("Not found.")}</div>`;
-    html=`<div class="shell">${sidebar()}${main}${sub==="accounts"?"":dock()}</div>`; }
-  else html=vHome();
+    if(sub==="accounts") main=vAccounts(); else if(sub==="") main=vOverview(); else if(sub==="setup") main=vSetup(R.parts[2]||"environment"); else if(sub==="reports") main=vDash(R.parts[2]||"usage"); else main=`<div class="content">${empty("Not found.")}</div>`;
+    html=`<div class="shell">${sidebar()}${main}${staffOnly?"":dock()}</div>`; }
+  else html=vLogin();
   app.innerHTML=html;
   const pg=app.querySelector(".content,.site"); if(pg&&p===lastPage) pg.scrollTop=sc; lastPage=p;
   document.querySelectorAll(".chat").forEach(c=>c.scrollTop=c.scrollHeight);
@@ -996,44 +787,46 @@ let lastPage="";
 
 /* ============================== events ============================== */
 const g=id=>document.getElementById(id);
-const direct=(changes,okMsg)=>{ const o=createOrder(acct(),changes,"dashboard",{direct:true}); S.ui.cfgErr=o.status==="invalid"?o.validation.errors.join(" "):""; if(!S.ui.cfgErr) toast(okMsg||"Saved"); };
+const direct=(changes,okMsg)=>{ const o=createOrder(acct(),changes,"page",{direct:true}); S.ui.cfgErr=o.status==="invalid"?o.validation.errors.join(" "):""; if(!S.ui.cfgErr) toast(okMsg||"Saved"); };
 const ACT={
   home:()=>nav(me()?landing():"/"), signout:()=>{logout();delete S.provisioning;save();nav("/");},
-  forceReady:()=>{
-    const a=acct();
-    if(a) a.status="ready";
-    let o=S.orders.find(x=>x.id===S.provisioning||(a&&x.accountId===a.id));
-    if(o){ o.status="applied"; o.jobs.forEach(j=>j[1]="done"); }
-    delete S.provisioning;
-    save();
-    nav("/app");
-  },
-  loadTfvars:el=>{
-    const out=g("tfvars-out"); if(!out) return;
-    out.style.display="block"; out.textContent="Loading generated infrastructure.tfvars from backend...";
-    fetch('/api/accounts/'+el.dataset.v+'/tfvars').then(r=>r.json()).then(d=>{ out.textContent=d.content||"No tfvars generated."; }).catch(()=>{ out.textContent="Backend offline."; });
-    return "norender";
-  },
-  toggleDock:()=>{ S.ui.dock = !(S.ui.dock !== false); save(); },
-  selectAssistant:el=>{ if(el.value==="toggle"){ S.ui.dock=false; } else { S.ui.activeChat=el.value; S.ui.dock=true; } save(); },
-  switchChat:el=>{ S.ui.activeChat = el.dataset.v; S.ui.dock = true; save(); },
+  toggleDock:()=>{S.ui.dock=S.ui.dock===false;save();},
   switchAcct:el=>{S.acting=el.value||null;save();nav(el.value?"/app":"/app/accounts");},
   chooseSol:el=>{onb().d.solution=el.dataset.v;save();},
   onbNext:()=>{ const o=onb(); S.ui.onbErr=onbValidate(o.step); if(!S.ui.onbErr) o.step++; save(); },
   onbBack:()=>{S.ui.onbErr="";onb().step--;save();},
-  onbCancel:()=>{ if(me().role==="staff"){delete S.onbs.staff;save();nav("/app/accounts");} else {save();logout();nav("/");} },
-  onbConfirm:()=>{ S.ui.onbErr=[1,2,4].map(onbValidate).find(Boolean)||""; save(); if(!S.ui.onbErr){confirmOnboarding();return "norender";} },
-  onbAddUser:()=>{ const v=g("onbUser").value.trim(); const d=onb().d; if(!/^\S+@\S+\.\S+$/.test(v)){S.ui.onbErr="Enter a valid email.";return;} if(v===d.adminEmail||d.users.some(u=>u.email===v)||S.users.some(u=>u.email===v&&u.accountId)){S.ui.onbErr="Already listed or belongs to another account.";return;} S.ui.onbErr=""; d.users.push({email:v,admin:false}); save(); },
-  onbRmUser:el=>{onb().d.users.splice(+el.dataset.v,1);save();}, onbAdmin:el=>{onb().d.users[+el.dataset.v].admin=el.checked;save();},
+  onbCancel:()=>{ delete S.onbs.staff; save(); nav("/app/accounts"); },
+  onbConfirm:()=>{ S.ui.onbErr=[0,2].map(onbValidate).find(Boolean)||""; save(); if(!S.ui.onbErr){confirmOnboarding();return "norender";} },
+  onbAddUser:()=>{
+    const v=g("onbUser").value.trim().toLowerCase(); const d=onb().d;
+    if(!/^\S+@\S+\.\S+$/.test(v)){S.ui.onbErr="Enter a valid email.";return;}
+    if(d.users.some(u=>u.email.toLowerCase()===v)||S.users.some(u=>u.email.toLowerCase()===v&&(u.accountId||u.role==="staff"))){S.ui.onbErr="Already listed, belongs to another account, or is an Alida admin.";return;}
+    S.ui.onbErr=""; d.users.push({email:v}); save();
+  },
+  onbRmUser:el=>{onb().d.users.splice(+el.dataset.v,1);save();},
+  forceReady:()=>{
+    if(_pollTimer){ clearInterval(_pollTimer); _pollTimer=null; }
+    const a=acct();
+    if(a) a.status="ready";
+    let o=S.orders.find(x=>x.id===S.provisioning||(a&&x.accountId===a.id));
+    if(o){ o.status="applied"; (o.jobs||[]).forEach(j=>j[1]="done"); }
+    delete S.provisioning; save(); nav("/app");
+  },
+  loadTfvars:el=>{
+    const out=g("tfvars-out"); if(!out) return "norender";
+    out.style.display="block"; out.textContent="Loading generated infrastructure.tfvars from backend...";
+    fetch('/api/accounts/'+el.dataset.v+'/tfvars').then(r=>r.json()).then(d=>{ out.textContent=d.content||"No tfvars generated yet."; }).catch(()=>{ out.textContent="Backend offline."; });
+    return "norender";
+  },
   openAccount:el=>{S.acting=el.dataset.v;save();nav("/app");},
-  addDomain:()=>direct([{op:"add",target:"domain",id:g("nd").value}],"Domain added"), rmDomain:el=>{ if(confirm("Remove domain "+(REGISTRY[el.dataset.v]||el.dataset.v)+"?")) direct([{op:"remove",target:"domain",id:el.dataset.v}],"Domain removed"); },
-  addSandbox:()=>direct([{op:"add",target:"sandbox",name:g("ns").value.trim(),mode:g("nm").value,quotaGb:+g("nq").value}],"Sandbox added"), rmSandbox:el=>{ if(confirm("Remove sandbox "+el.dataset.v+"?")) direct([{op:"remove",target:"sandbox",name:el.dataset.v}],"Sandbox removed"); },
-  addUser:()=>direct([{op:"add",target:"user",email:g("nu").value.trim(),role:g("nur").value}],"Invitation sent"), rmUser:el=>{ if(confirm("Remove "+el.dataset.v+"?")) direct([{op:"remove",target:"user",email:el.dataset.v}],"Removed"); }, setRole:el=>direct([{op:"set",target:"user",email:el.dataset.v,role:el.value}],"Role updated"),
+  addDomain:()=>{ const v=g("nd")?.value; if(v) direct([{op:"add",target:"domain",id:v}],"Work added"); },
+  rmDomain:el=>{ if(confirm("Remove work "+(REGISTRY[el.dataset.v]||el.dataset.v)+"?")) direct([{op:"remove",target:"domain",id:el.dataset.v}],"Work removed"); },
+  editAccess:el=>{S.ui.editUser=el.dataset.v;S.ui.cfgErr="";}, cancelAccess:()=>{S.ui.editUser=null;S.ui.cfgErr="";},
+  saveAccess:el=>{ const em=el.dataset.v; direct([{op:"set",target:"access",email:em,catalogs:[...document.querySelectorAll(".ea-cat:checked")].map(x=>x.value)}],"Access updated"); if(!S.ui.cfgErr) S.ui.editUser=null; },
+  addUser:()=>{ const em=g("nu").value.trim().toLowerCase(); const ch=[{op:"add",target:"user",email:em}]; const w=[...document.querySelectorAll(".nu-work:checked")].map(x=>x.value); if(w.length) ch.push({op:"set",target:"access",email:em,catalogs:w}); direct(ch,"User added"); },
+  rmUser:el=>{ if(confirm("Remove "+el.dataset.v+"?")) direct([{op:"remove",target:"user",email:el.dataset.v}],"Removed"); },
+  promote:el=>{ const w=S.works.find(x=>x.id===el.dataset.v); if(w){ w.promoted=true; log("work-order.promoted",w.id); save(); toast("Promoted to the catalog"); } },
   setRes:()=>direct([{op:"set",target:"resources",value:{spendLimitUsd:+g("rs").value,storageGb:+g("rg").value}}],"Allocation saved"),
-  selOrder:el=>{S.ui.orderId=el.dataset.v;S.ui.editing=null;save();}, approve:el=>{approveOrder(S.orders.find(o=>o.id===el.dataset.v));return "norender";}, reject:el=>{rejectOrder(S.orders.find(o=>o.id===el.dataset.v));return "norender";},
-  edit:el=>{S.ui.editing=el.dataset.v;S.ui.orderId=el.dataset.v;save();}, doneEdit:()=>{S.ui.editing=null;save();},
-  dropChange:el=>{ const o=S.orders.find(o=>o.id===S.ui.editing); o.changes.splice(+el.dataset.v,1); o.validation=validate(acct(o.accountId),o.changes); o.status=o.validation.ok?"pending":"invalid"; log("config-order.edited",o.id); save(); },
-  editNum:el=>{ const o=S.orders.find(o=>o.id===S.ui.editing); const c=o.changes[+el.dataset.i]; if(c.target==="resources") c.value[el.dataset.k]=+el.value; else c[el.dataset.k]=+el.value; o.validation=validate(acct(o.accountId),o.changes); o.status=o.validation.ok?"pending":"invalid"; log("config-order.edited",o.id); save(); },
   sugg:el=>sendChat(el.dataset.chat,el.dataset.v)
 };
 function sendChat(id,text){ if(!text) return; if(id==="sales") salesySay(text); else if(id==="cfg") configgySay(text); else if(id==="ad") adySay(text); }
@@ -1041,123 +834,36 @@ document.body.addEventListener("click",e=>{ const an=e.target.closest('a[href^="
 document.body.addEventListener("change",e=>{ const el=e.target; if(el.dataset.bind&&onb()){ onb().d[el.dataset.bind]=el.value; save(); return; } if(el.dataset.act&&ACT[el.dataset.act]){ ACT[el.dataset.act](el); render(); } });
 document.body.addEventListener("submit",e=>{ e.preventDefault(); const f=e.target; const fd=new FormData(f);
   if(f.dataset.chat){ const inp=f.querySelector("input"); const v=inp.value.trim(); inp.value=""; sendChat(f.dataset.chat,v); render(); return; }
-  if(f.dataset.form==="adminCreateAccount"){
-    const org = fd.get("org").trim();
-    const name = fd.get("name").trim();
-    const email = fd.get("email").trim().toLowerCase();
-    const role = fd.get("role") || "admin";
-    const region = fd.get("region") || "eastus2";
-    const env = fd.get("env") || "prod1";
-    const solution = fd.get("solution") || "data-foundation";
-    const storage = +fd.get("storage") || 500;
-    const spend = +fd.get("spend") || 5000;
-    const id = "acct-" + org.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
-    if(S.accounts.some(x=>x.id===id||x.name.toLowerCase()===org.toLowerCase())){
-      S.ui.adminProvErr = "A tenant with this organization name already exists.";
-      render(); return;
-    }
-    const newAcct = {
-      id, name: org, solution, region, env, tenancy: "single", management: "fully", status: "ready",
-      domains: ["gendf"], sandboxes: [{name: "sbx-main", mode: "dedicated", quotaGb: 100}],
-      resources: {spendLimitUsd: spend, storageGb: storage},
-      usage: {spendUsd: 0, computeHours: 0}, datasets: [], created: now().slice(0,10)
-    };
-    S.accounts.unshift(newAcct);
-    const existingU = S.users.find(u=>u.email===email);
-    if(existingU){ existingU.accountId = id; existingU.role = role; }
-    else { S.users.push({email, name, password: "welcome", accountId: id, role, org}); }
-    
-    log("admin-provision-dedicated-tenant", id);
-    toast("Dedicated tenant provisioned: " + org);
-    S.ui.adminProvErr = "";
-    save();
-    
-    if(window.fetch){
-      fetch('/api/auth/register',{
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({name, org, email, password: "welcome", role, region, tenancy: "single", env, storage, sandbox: "sbx-main", quota: 100, spend})
-      }).catch(e=>console.log("Backend register error:", e));
-    }
-    render();
-    return;
-  }
-  if(f.dataset.form==="register"){
-    const name = fd.get("name").trim();
-    const org = fd.get("org").trim();
-    const email = fd.get("email").trim().toLowerCase();
-    const password = fd.get("password");
-    const region = fd.get("region") || "eastus2";
-    const tenancy = fd.get("tenancy") || "single";
-    const env = fd.get("env") || "dev1";
-    S.ui.authErr = register(name, org, email, password);
-    save();
-    if(S.ui.authErr) {
-      render();
-    } else {
-      const o = onb();
-      if(o && o.d) {
-        o.d.region = region;
-        o.d.tenancy = tenancy;
-        o.d.env = env;
-      }
-      confirmOnboarding();
-      if(window.fetch){
-        fetch('/api/auth/register',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({name, org, email, password, region, tenancy, env, storage:500, sandbox:"sbx-main", quota:100, spend:5000})
-        }).then(r=>r.json()).then(res=>{
-          if(res.ok && res.state && res.state.users){
-            S.users = res.state.users;
-            save();
-          }
-        }).catch(()=>{});
-      }
-    }
-  }
   if(f.dataset.form==="login"){
-    const email = fd.get("email").trim().toLowerCase();
-    const password = fd.get("password");
+    const email=fd.get("email").trim().toLowerCase();
+    const password=fd.get("password");
     if(window.fetch){
       fetch('/api/auth/login',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({email, password})
-      })
-      .then(r => r.json())
-      .then(res => {
-        if(res.ok && res.user){
-          res.user.accountId = res.user.accountId || res.user.account_id;
-          const idx = S.users.findIndex(u => u.email.toLowerCase() === res.user.email.toLowerCase());
-          if(idx >= 0) S.users[idx] = Object.assign(S.users[idx], res.user);
-          else S.users.push(res.user);
-          if(res.state && res.state.accounts) {
-            res.state.accounts.forEach(a => {
-              const aidx = S.accounts.findIndex(x => x.id === a.id);
-              if(aidx >= 0) S.accounts[aidx] = Object.assign(S.accounts[aidx], a);
-              else S.accounts.push(a);
-            });
-          }
-          S.session = {email: res.user.email};
-          S.ui.dock = true;
-          if(res.user.role === "staff") S.acting = null;
-          else S.acting = res.user.accountId;
-          save();
-          nav(landing());
+        body:JSON.stringify({email,password})
+      }).then(r=>r.json()).then(res=>{
+        if(res.ok&&res.user){
+          if(res.state) mergeBackendState(res.state);
+          const role=res.user.role==="staff"?"staff":"user";
+          const access=res.user.access&&Array.isArray(res.user.access.catalogs)?res.user.access:{catalogs:[]};
+          const norm=Object.assign({},res.user,{accountId:res.user.accountId||res.user.account_id||null,role,access});
+          const idx=S.users.findIndex(u=>u.email.toLowerCase()===norm.email.toLowerCase());
+          if(idx>=0) S.users[idx]=Object.assign(S.users[idx],norm);
+          else S.users.push(norm);
+          S.session={email:norm.email}; S.ui.dock=true; S.ui.authErr="";
+          S.acting=role==="staff"?null:norm.accountId;
+          save(); nav(landing());
         } else {
-          S.ui.authErr = res.detail || "Wrong email or password.";
+          S.ui.authErr=res.detail||"Wrong email or password.";
           render();
         }
-      })
-      .catch(() => {
-        S.ui.authErr = login(email, password);
-        save();
+      }).catch(()=>{
+        S.ui.authErr=login(email,password); save();
         if(S.ui.authErr) render(); else nav(landing());
       });
     } else {
-      S.ui.authErr = login(email, password);
-      save();
+      S.ui.authErr=login(email,password); save();
       if(S.ui.authErr) render(); else nav(landing());
     }
   }

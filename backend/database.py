@@ -25,6 +25,7 @@ def init_db():
         password TEXT,
         role TEXT,
         account_id TEXT,
+        access TEXT DEFAULT '{"catalogs":[]}',
         created_at TEXT
     );
     """)
@@ -66,6 +67,8 @@ def init_db():
         text TEXT,
         status TEXT,
         result TEXT,
+        metrics TEXT DEFAULT '[]',
+        promoted INTEGER DEFAULT 0,
         created_at TEXT
     );
     """)
@@ -80,12 +83,30 @@ def init_db():
     );
     """)
 
+    # Lightweight schema migrations for existing DB files
+    u_cols = {r[1] for r in cursor.execute("PRAGMA table_info(users);").fetchall()}
+    if "access" not in u_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN access TEXT DEFAULT '{\"catalogs\":[]}';")
+    wo_cols = {r[1] for r in cursor.execute("PRAGMA table_info(work_orders);").fetchall()}
+    if "metrics" not in wo_cols:
+        cursor.execute("ALTER TABLE work_orders ADD COLUMN metrics TEXT DEFAULT '[]';")
+    if "promoted" not in wo_cols:
+        cursor.execute("ALTER TABLE work_orders ADD COLUMN promoted INTEGER DEFAULT 0;")
+
     conn.commit()
 
     # Seed initial data if users table is empty
     cursor.execute("SELECT COUNT(*) FROM users;")
     if cursor.fetchone()[0] == 0:
         seed_db(conn)
+    else:
+        # Ensure primary Alida staff admin exists even on persisted volumes
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        cursor.execute("""
+        INSERT OR IGNORE INTO users (email, name, password, role, account_id, access, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, ("demetrius@alidainc.com", "Demetrius", "ad", "staff", None, '{"catalogs":[]}', now_str))
+        conn.commit()
 
     conn.close()
 
@@ -93,65 +114,26 @@ def seed_db(conn):
     cursor = conn.cursor()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    # Default Seed Users
+    # Default Seed Users (Alida staff are Admins; client users are Operators only)
     users = [
-        ("bill@alidainc.com", "Bill Sequeira", "ad", "admin", "acct-grow", now_str),
-        ("smith@client.com", "Smith", "ad", "admin", "acct-grow", now_str),
-        ("dhananjay@alidainc.com", "Dhananjay Goel", "ad", "user", "acct-grow", now_str),
-        ("staff@alidainc.com", "Alida staff", "ad", "staff", None, now_str),
-        ("yma@gmail.com", "ASIRBAD", "kIRT", "admin", "yma", now_str)
+        ("demetrius@alidainc.com", "Demetrius", "ad", "staff", None, json.dumps({"catalogs": []}), now_str),
+        ("staff@alidainc.com", "Alida staff", "ad", "staff", None, json.dumps({"catalogs": []}), now_str),
+        ("bill@alidainc.com", "Bill Sequeira", "ad", "user", "alida-internal", json.dumps({"catalogs": ["gendf", "readygo-retail"]}), now_str),
+        ("dhananjay@alidainc.com", "Dhananjay Goel", "ad", "user", "alida-internal", json.dumps({"catalogs": ["readygo-retail"]}), now_str),
+        ("maya@mercy.org", "Maya Chen", "ad", "user", "mercy-clinics", json.dumps({"catalogs": ["gendf"]}), now_str),
+        ("raj@mercy.org", "Raj Patel", "ad", "user", "mercy-clinics", json.dumps({"catalogs": ["gendf"]}), now_str)
     ]
     cursor.executemany("""
-    INSERT INTO users (email, name, password, role, account_id, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO users (email, name, password, role, account_id, access, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     """, users)
 
-    # Default Seed Accounts
+    # Default Seed Accounts (100% Dedicated single-tenant environments)
     accounts = [
         (
-            "acct-grow", "GROW", "data-foundation", "eastus2", "test1", "single", "fully", "ready",
-            json.dumps({
-                "domains": ["gendf", "readygo-finance"],
-                "sandboxes": [
-                    {"name": "sbx-main", "mode": "dedicated", "quotaGb": 100},
-                    {"name": "sbx-2", "mode": "dedicated", "quotaGb": 50}
-                ],
-                "resources": {"spendLimitUsd": 5000, "storageGb": 500},
-                "usage": {"spendUsd": 0, "computeHours": 0},
-                "datasets": [
-                    {"name": "retail_orders_2025", "gb": 12.4, "src": "UC"},
-                    {"name": "store_master", "gb": 0.3, "src": "import"}
-                ]
-            }),
-            "2026-11-05"
-        ),
-        (
-            "acct-golang", "GOLANG", "data-foundation", "eastus2", "prod1", "single", "self", "ready",
-            json.dumps({
-                "domains": ["data-foundation"],
-                "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
-                "resources": {"spendLimitUsd": 5000, "storageGb": 500},
-                "usage": {"spendUsd": 120, "computeHours": 4},
-                "datasets": []
-            }),
-            "2026-11-05"
-        ),
-        (
-            "acct-xyz", "xyz-test1", "data-foundation", "eastus2", "test1", "single", "fully", "ready",
-            json.dumps({
-                "domains": ["data-foundation"],
-                "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
-                "resources": {"spendLimitUsd": 5000, "storageGb": 500},
-                "usage": {"spendUsd": 350, "computeHours": 12},
-                "datasets": []
-            }),
-            "2026-11-05"
-        ),
-        (
-            "alida-internal", "Alida Internal (first client)", "data-foundation", "eastus2", "dev1", "single", "fully", "ready",
+            "alida-internal", "Alida Internal (first client)", "data-foundation", "eastus2", "dev1", "dedicated", "fully", "ready",
             json.dumps({
                 "domains": ["gendf", "readygo-retail"],
-                "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
                 "resources": {"spendLimitUsd": 5000, "storageGb": 500},
                 "usage": {"spendUsd": 1840, "computeHours": 62},
                 "datasets": [
@@ -162,15 +144,16 @@ def seed_db(conn):
             "2026-11-20"
         ),
         (
-            "yma", "YMA", "data-foundation", "eastus2", "test1", "single", "self", "ready",
+            "mercy-clinics", "Mercy Clinics", "data-foundation", "eastus2", "prod1", "dedicated", "fully", "ready",
             json.dumps({
                 "domains": ["gendf"],
-                "sandboxes": [{"name": "sbx-main", "mode": "dedicated", "quotaGb": 100}],
-                "resources": {"spendLimitUsd": 5000, "storageGb": 500},
-                "usage": {"spendUsd": 0, "computeHours": 0},
-                "datasets": []
+                "resources": {"spendLimitUsd": 12000, "storageGb": 1000},
+                "usage": {"spendUsd": 3100, "computeHours": 90},
+                "datasets": [
+                    {"name": "encounters_2025", "gb": 40.2, "src": "import"}
+                ]
             }),
-            "2026-11-06"
+            "2026-11-22"
         )
     ]
     cursor.executemany("""
@@ -182,18 +165,19 @@ def seed_db(conn):
     co_data = {
         "validation": {"ok": True, "errors": [], "warnings": []},
         "changes": [
-            {"op": "provision", "target": "environment", "value": "eastus2 · single-tenant · fully managed"},
+            {"op": "provision", "target": "environment", "value": "eastus2 · dedicated · fully managed"},
             {"op": "add", "target": "domain", "id": "gendf"},
-            {"op": "add", "target": "domain", "id": "readygo-finance"},
-            {"op": "add", "target": "sandbox", "name": "sbx-main", "mode": "dedicated", "quotaGb": 100},
-            {"op": "add", "target": "sandbox", "name": "sbx-2", "mode": "dedicated", "quotaGb": 50},
-            {"op": "add", "target": "user", "email": "bill@alidainc.com", "role": "admin"}
+            {"op": "add", "target": "domain", "id": "readygo-retail"},
+            {"op": "add", "target": "user", "email": "bill@alidainc.com"},
+            {"op": "set", "target": "access", "email": "bill@alidainc.com", "catalogs": ["gendf", "readygo-retail"]}
         ],
         "jobs": [
-            ["Validate sales order", "done"],
-            ["Environment setup (ADAzEnvConfig)", "done"],
-            ["Service configuration (ADSvcConfig)", "done"],
-            ["Jumpstart AD", "done"],
+            ["Check the order", "done"],
+            ["Create dedicated environment", "done"],
+            ["Create dedicated database", "done"],
+            ["Create dedicated compute", "done"],
+            ["Configure services", "done"],
+            ["Start AD", "done"],
             ["Verify", "done"]
         ]
     }
@@ -201,25 +185,27 @@ def seed_db(conn):
     INSERT INTO orders (id, account_id, kind, source, requested_by, status, data, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        "CO-0001", "acct-grow", "provision", "staff", "bill@alidainc.com", "applied",
-        json.dumps(co_data), "2026-11-05 09:12"
+        "CO-0001", "alida-internal", "provision", "staff", "demetrius@alidainc.com", "applied",
+        json.dumps(co_data), "2026-11-20 09:12"
     ))
 
     # Default Work Orders
     cursor.execute("""
-    INSERT INTO work_orders (id, account_id, by_user, verb, text, status, result, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO work_orders (id, account_id, by_user, verb, text, status, result, metrics, promoted, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        "WO-0001", "acct-grow", "dhananjay@alidainc.com", "PRODUCE",
+        "WO-0001", "alida-internal", "dhananjay@alidainc.com", "PRODUCE",
         "Produce a data foundation from retail_orders_2025", "done",
-        "Domain job results: 2 datasets integrated, 14 entities, 38 transformations logged.",
+        "2 datasets integrated into one foundation.",
+        json.dumps([["Rows", "1.2M"], ["Entities", "14"], ["Transformations", "38"], ["Quality", "98%"], ["Time", "3m 20s"]]),
+        0,
         now_str
     ))
 
     # Default Audit Logs
     audit = [
-        ("2026-11-05 09:31", "orchestrator", "config-order.applied", "CO-0001"),
-        ("2026-11-05 09:14", "bill@alidainc.com", "config-order.approved", "CO-0001")
+        ("2026-11-20 09:31", "orchestrator", "config-order.applied", "CO-0001"),
+        ("2026-11-20 09:14", "demetrius@alidainc.com", "sales-order.received", "SO-0001")
     ]
     cursor.executemany("""
     INSERT INTO audit_logs (timestamp, actor, action, ref)
@@ -229,14 +215,25 @@ def seed_db(conn):
     conn.commit()
 
 # --- Users ---
+def _parse_user(row):
+    u = dict(row)
+    u["accountId"] = u.get("account_id")
+    raw_acc = u.get("access")
+    if isinstance(raw_acc, str):
+        try:
+            u["access"] = json.loads(raw_acc)
+        except Exception:
+            u["access"] = {"catalogs": []}
+    elif not isinstance(raw_acc, dict):
+        u["access"] = {"catalogs": []}
+    return u
+
 def get_user(email: str):
     conn = get_connection()
     row = conn.execute("SELECT * FROM users WHERE email = ? COLLATE NOCASE", (email.strip(),)).fetchone()
     conn.close()
     if row:
-        u = dict(row)
-        u["accountId"] = u.get("account_id")
-        return u
+        return _parse_user(row)
     return None
 
 def authenticate_user(email: str, password: str):
@@ -245,34 +242,39 @@ def authenticate_user(email: str, password: str):
         return user
     return None
 
-def create_user(email: str, name: str, password: str, role: str = "admin", account_id: str = None):
+def create_user(email: str, name: str, password: str, role: str = "user", account_id: str = None, access: dict = None):
     conn = get_connection()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    access_json = json.dumps(access if isinstance(access, dict) else {"catalogs": []})
     try:
         conn.execute("""
-        INSERT INTO users (email, name, password, role, account_id, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO users (email, name, password, role, account_id, access, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(email) DO UPDATE SET
             name = excluded.name,
             password = CASE WHEN excluded.password IS NOT NULL AND excluded.password != 'welcome' THEN excluded.password ELSE users.password END,
             role = excluded.role,
-            account_id = COALESCE(excluded.account_id, users.account_id)
-        """, (email.strip().lower(), name.strip(), password, role, account_id, now_str))
+            account_id = COALESCE(excluded.account_id, users.account_id),
+            access = CASE WHEN ? IS NOT NULL THEN excluded.access ELSE users.access END
+        """, (email.strip().lower(), name.strip(), password, role, account_id, access_json, now_str, access_json if isinstance(access, dict) else None))
         conn.commit()
     finally:
         conn.close()
     return get_user(email)
 
+def delete_user(email: str):
+    conn = get_connection()
+    try:
+        conn.execute("DELETE FROM users WHERE email = ? COLLATE NOCASE AND role != 'staff'", (email.strip().lower(),))
+        conn.commit()
+    finally:
+        conn.close()
+
 def get_all_users():
     conn = get_connection()
-    rows = conn.execute("SELECT email, name, password, role, account_id, created_at FROM users").fetchall()
+    rows = conn.execute("SELECT email, name, password, role, account_id, access, created_at FROM users").fetchall()
     conn.close()
-    res = []
-    for r in rows:
-        u = dict(r)
-        u["accountId"] = u.get("account_id")
-        res.append(u)
-    return res
+    return [_parse_user(r) for r in rows]
 
 # --- Accounts ---
 def get_all_accounts():
@@ -396,18 +398,31 @@ def get_all_work_orders():
         w = dict(r)
         w["accountId"] = w.pop("account_id")
         w["by"] = w.pop("by_user")
+        raw_m = w.get("metrics")
+        if isinstance(raw_m, str):
+            try:
+                w["metrics"] = json.loads(raw_m)
+            except Exception:
+                w["metrics"] = []
+        elif not isinstance(raw_m, list):
+            w["metrics"] = []
+        w["promoted"] = bool(w.get("promoted", 0))
         result.append(w)
     return result
 
 def add_work_order(wo: dict):
     conn = get_connection()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    metrics_json = json.dumps(wo.get("metrics") or [])
+    promoted_int = 1 if wo.get("promoted") else 0
     conn.execute("""
-    INSERT INTO work_orders (id, account_id, by_user, verb, text, status, result, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO work_orders (id, account_id, by_user, verb, text, status, result, metrics, promoted, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
         status = excluded.status,
-        result = excluded.result
+        result = excluded.result,
+        metrics = CASE WHEN excluded.metrics != '[]' THEN excluded.metrics ELSE work_orders.metrics END,
+        promoted = excluded.promoted
     """, (
         wo.get("id"),
         wo.get("accountId") or wo.get("account_id"),
@@ -416,6 +431,8 @@ def add_work_order(wo: dict):
         wo.get("text", ""),
         wo.get("status", "queued"),
         wo.get("result", ""),
+        metrics_json,
+        promoted_int,
         now_str
     ))
     conn.commit()

@@ -38,14 +38,14 @@ app.add_middleware(
 try:
     from database import (
         init_db, get_full_state, get_user, authenticate_user, create_user,
-        get_all_users, get_all_accounts, get_account as db_get_account,
+        delete_user, get_all_users, get_all_accounts, get_account as db_get_account,
         upsert_account, get_all_orders, upsert_order, get_all_work_orders,
         add_work_order, get_all_audit_logs, add_audit_log
     )
 except ImportError:
     from backend.database import (
         init_db, get_full_state, get_user, authenticate_user, create_user,
-        get_all_users, get_all_accounts, get_account as db_get_account,
+        delete_user, get_all_users, get_all_accounts, get_account as db_get_account,
         upsert_account, get_all_orders, upsert_order, get_all_work_orders,
         add_work_order, get_all_audit_logs, add_audit_log
     )
@@ -65,23 +65,26 @@ DB = {
 # ----------------- PYDANTIC SCHEMAS -----------------
 class UserItem(BaseModel):
     email: str
-    admin: bool = False
+    role: Optional[str] = "user"
+    access: Optional[Dict[str, Any]] = None
+    admin: Optional[bool] = False
 
 
 class ProvisionPayload(BaseModel):
     org: str = Field(..., example="Acme Corp")
-    adminEmail: str = Field(..., example="admin@acme.com")
-    adminName: Optional[str] = "Admin User"
+    adminEmail: str = Field(..., example="demetrius@alidainc.com")
+    adminName: Optional[str] = "Demetrius"
     solution: str = Field("data-foundation", example="data-foundation")
     region: str = Field("eastus2", example="eastus2")
-    env: Optional[str] = Field("dev1", example="dev1")  # dev1, test1, prod1
-    tenancy: str = Field("single", example="single")  # single (dedicated) or multi (shared)
-    management: str = Field("fully", example="fully")  # self or fully
-    storage: int = Field(100, example=100)
-    sandbox: str = Field("sbx-main", example="sbx-main")
-    quota: int = Field(50, example=50)
+    env: Optional[str] = Field("prod1", example="prod1")  # dev1, test1, prod1
+    tenancy: str = Field("dedicated", example="dedicated")
+    management: str = Field("fully", example="fully")
+    storage: int = Field(500, example=500)
     spend: float = Field(5000.0, example=5000.0)
+    domains: Optional[List[str]] = None
     users: List[UserItem] = []
+    sandbox: Optional[str] = "sbx-main"
+    quota: Optional[int] = 100
 
 
 class AssistantCommand(BaseModel):
@@ -215,14 +218,29 @@ class RegisterPayload(BaseModel):
 
 
 # ----------------- BACKGROUND WORKER -----------------
+STEP_JOB_MAP = {
+    "Validate sales order": ["Check the order"],
+    "Environment setup (ADAzEnvConfig)": [
+        "Create dedicated environment",
+        "Create dedicated database",
+        "Create dedicated compute",
+    ],
+    "Service configuration (ADSvcConfig)": ["Configure services"],
+    "Jumpstart AD": ["Start AD"],
+    "Verify": ["Verify"],
+}
+
+
 def async_provision_task(order_id: str, payload_dict: Dict[str, Any]):
     order = DB["orders"][order_id]
-    
+
     def on_progress(step_name: str, status: str, log_msg: str):
-        for job in order["jobs"]:
-            if job[0] == step_name:
-                job[1] = status
-                break
+        mapped = STEP_JOB_MAP.get(step_name, [step_name])
+        for target_job in mapped:
+            for job in order["jobs"]:
+                if job[0] == target_job:
+                    job[1] = status
+                    break
         order["logs"].append({
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "step": step_name,
@@ -232,9 +250,11 @@ def async_provision_task(order_id: str, payload_dict: Dict[str, Any]):
 
     try:
         result = run_provisioning_workflow(payload_dict, progress_callback=on_progress)
+        for job in order["jobs"]:
+            job[1] = "done"
         order["status"] = "applied"
         order["result"] = result
-        
+
         # Mark account ready
         for acct in DB["accounts"]:
             if acct["id"] == order["accountId"]:
@@ -308,28 +328,36 @@ def auth_register(payload: RegisterPayload, background_tasks: BackgroundTasks):
 def sync_state(payload: SyncStatePayload):
     if payload.users:
         for u in payload.users:
+            email = u.get("email")
+            if not email:
+                continue
             create_user(
-                email=u.get("email"),
-                name=u.get("name", u.get("email")),
+                email=email,
+                name=u.get("name", email),
                 password=u.get("password", "welcome"),
                 role=u.get("role", "user"),
-                account_id=u.get("accountId")
+                account_id=u.get("accountId"),
+                access=u.get("access")
             )
+        DB["users"] = get_all_users()
     if payload.accounts:
         for a in payload.accounts:
             upsert_account(a)
+        DB["accounts"] = get_all_accounts()
     if payload.orders:
         for o in payload.orders:
             upsert_order(o)
+        DB["orders"] = {o["id"]: o for o in get_all_orders()}
     if payload.works:
         for w in payload.works:
             add_work_order(w)
+        DB["work_orders"] = get_all_work_orders()
     return {"ok": True, "state": get_full_state()}
 
 
 @app.get("/api/accounts")
 def list_accounts():
-    """List multi-tenant accounts (Company A, Company B)."""
+    """List dedicated single-tenant accounts."""
     return DB["accounts"]
 
 
@@ -344,12 +372,14 @@ def get_account(account_id: str):
 @app.get("/api/accounts/{account_id}/tfvars")
 def get_account_tfvars(account_id: str):
     """Returns the live generated infrastructure.tfvars file for this tenant."""
-    clean_org = re.sub(r"[^a-z0-9]", "", account_id.replace("acct-", "").lower())[:8]
-    tfvars_path = Path(__file__).resolve().parent / "runs" / clean_org / "dev1" / "infrastructure.tfvars"
-    if tfvars_path.exists():
-        return {"found": True, "filename": str(tfvars_path), "content": tfvars_path.read_text(encoding="utf-8")}
-    # Also check if it's in a subdirectory
+    acct = next((a for a in DB["accounts"] if a["id"] == account_id), None)
+    raw_name = acct.get("name") if acct else account_id
+    clean_org = re.sub(r"[^a-z0-9]", "", raw_name.replace("acct-", "").lower())[:8]
+    env = (acct.get("env") if acct else None) or "prod1"
     runs_dir = Path(__file__).resolve().parent / "runs"
+    preferred = runs_dir / clean_org / env / "infrastructure.tfvars"
+    if preferred.exists():
+        return {"found": True, "filename": str(preferred), "content": preferred.read_text(encoding="utf-8")}
     for p in runs_dir.glob(f"*{clean_org}*/**/infrastructure.tfvars"):
         return {"found": True, "filename": str(p), "content": p.read_text(encoding="utf-8")}
     return {"found": False, "filename": "", "content": "# Configuration pending generation..."}
@@ -358,8 +388,7 @@ def get_account_tfvars(account_id: str):
 @app.post("/api/register")
 def register_and_provision(payload: RegisterPayload, background_tasks: BackgroundTasks):
     """
-    Automatic provisioning trigger on client registration.
-    Registers client account, generates Terraform tfvars, and immediately executes provisioning.
+    Legacy compatibility endpoint: triggers dedicated tenant provisioning.
     """
     provision_payload = ProvisionPayload(
         org=payload.org,
@@ -367,13 +396,12 @@ def register_and_provision(payload: RegisterPayload, background_tasks: Backgroun
         adminName=payload.name,
         solution="data-foundation",
         region=payload.region,
-        env=payload.env or "dev1",
-        tenancy=payload.tenancy,
-        management="fully" if payload.tenancy == "single" else "self",
+        env=payload.env or "prod1",
+        tenancy="dedicated",
+        management="fully",
         storage=payload.storage,
-        sandbox=payload.sandbox,
-        quota=payload.quota,
         spend=payload.spend,
+        domains=["gendf"],
         users=[]
     )
     return create_provision_order(provision_payload, background_tasks)
@@ -382,67 +410,80 @@ def register_and_provision(payload: RegisterPayload, background_tasks: Backgroun
 @app.post("/api/orders/provision")
 def create_provision_order(payload: ProvisionPayload, background_tasks: BackgroundTasks):
     """
-    Triggers Terraform environment provisioning on form confirmation.
-    Dedicated tenancy: creates new isolated RG, VNet, SA, Key Vault, and Databricks.
-    Shared tenancy: allocates resources on shared platform.
+    Triggers dedicated environment provisioning on wizard confirmation.
+    Creates isolated Azure Resource Group, VNet, Storage, Key Vault, and Databricks.
     """
-    clean_org = re.sub(r"[^a-z0-9]", "-", payload.org.lower()).strip("-")
-    account_id = f"acct-{clean_org}"
+    clean_org = re.sub(r"[^a-z0-9]+", "-", payload.org.lower()).strip("-") or "client"
+    account_id = clean_org
     order_id = f"CO-{uuid.uuid4().hex[:6].upper()}"
+    domains = payload.domains or ["gendf"]
 
-    # Register new account in DB
+    # Register new dedicated account in DB
     new_account = {
         "id": account_id,
         "name": payload.org,
         "solution": payload.solution,
         "region": payload.region,
-        "env": payload.env or "dev1",
-        "tenancy": payload.tenancy,
-        "management": payload.management,
+        "env": payload.env or "prod1",
+        "tenancy": "dedicated",
+        "management": payload.management or "fully",
         "status": "provisioning",
-        "domains": [payload.solution],
-        "sandboxes": [{"name": payload.sandbox, "mode": "dedicated", "quotaGb": payload.quota}],
+        "domains": domains,
         "resources": {"spendLimitUsd": payload.spend, "storageGb": payload.storage},
         "usage": {"spendUsd": 0, "computeHours": 0},
+        "datasets": [],
         "created": datetime.date.today().isoformat()
     }
+    DB["accounts"] = [a for a in DB["accounts"] if a.get("id") != account_id]
     DB["accounts"].append(new_account)
     upsert_account(new_account)
-    if not get_user(payload.adminEmail):
-        create_user(payload.adminEmail, payload.adminName or payload.adminEmail, "welcome", "admin", account_id)
 
-    # Initial order record matching frontend stepper
+    # Clients are operators ("user"); staff operator remains "staff"
+    for u in payload.users:
+        user_access = u.access if isinstance(u.access, dict) else {"catalogs": domains}
+        create_user(u.email, u.email.split("@")[0], "welcome", "user", account_id, access=user_access)
+    DB["users"] = get_all_users()
+
+    # Initial order record matching updated 7-step provisioning tracker
     order_record = {
         "id": order_id,
         "accountId": account_id,
         "kind": "provision",
+        "source": "staff",
+        "requestedBy": payload.adminEmail,
         "status": "running",
         "created": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "jobs": [
-            ["Validate sales order", "pending"],
-            ["Environment setup (ADAzEnvConfig)", "pending"],
-            ["Service configuration (ADSvcConfig)", "pending"],
-            ["Jumpstart AD", "pending"],
+            ["Check the order", "pending"],
+            ["Create dedicated environment", "pending"],
+            ["Create dedicated database", "pending"],
+            ["Create dedicated compute", "pending"],
+            ["Configure services", "pending"],
+            ["Start AD", "pending"],
             ["Verify", "pending"]
         ],
         "changes": [
-            {"op": "provision", "target": "environment", "value": f"{payload.region} • {payload.tenancy}-tenant • {payload.management} managed"},
-            {"op": "add", "target": "sandbox", "name": payload.sandbox, "mode": "dedicated", "quotaGb": payload.quota},
-            {"op": "set", "target": "resources", "spendLimitUsd": payload.spend, "storageGb": payload.storage}
+            {"op": "provision", "target": "environment", "value": f"{payload.region} · {payload.env or 'prod1'} · dedicated · fully managed"},
+            *[{"op": "add", "target": "domain", "id": d} for d in domains],
+            *[{"op": "add", "target": "user", "email": u.email} for u in payload.users],
+            {"op": "set", "target": "resources", "value": {"spendLimitUsd": payload.spend, "storageGb": payload.storage}}
         ],
         "logs": []
     }
     DB["orders"][order_id] = order_record
     upsert_order(order_record)
+    add_audit_log(payload.adminEmail or "staff", "config-order.created (provision)", order_id)
 
-    # Dispatch asynchronous Terraform workflow
-    background_tasks.add_task(async_provision_task, order_id, payload.model_dump())
+    # Dispatch asynchronous Terraform / Azure ARM workflow
+    task_payload = payload.model_dump()
+    task_payload["tenancy"] = "single"
+    background_tasks.add_task(async_provision_task, order_id, task_payload)
 
     return {
         "orderId": order_id,
         "accountId": account_id,
         "status": "running",
-        "message": f"Terraform provisioning dispatched for {payload.org} ({'Shared' if payload.tenancy == 'multi' else 'Dedicated'})"
+        "message": f"Dedicated provisioning dispatched for {payload.org} ({payload.region} · {payload.env or 'prod1'})"
     }
 
 
@@ -459,63 +500,71 @@ def get_order_status(order_id: str):
 def parse_assistant_command(cmd: AssistantCommand):
     """
     Handles natural language assistant commands (Configgy).
-    E.g.: 'add sandbox analytics 60 gb', 'increase spending limit to 8000', 'remove sandbox test'
+    Direct execution: 'add work readygo-finance', 'invite ana@client.com', 'set usage budget 8000', 'status'
     """
     text = cmd.text.lower().strip()
     acct = next((a for a in DB["accounts"] if a["id"] == cmd.accountId or a.get("name", "").lower() == cmd.accountId.lower() or a["id"].replace("acct-", "").lower() == cmd.accountId.lower()), None)
     if not acct:
-        acct = DB["accounts"][-1] if DB["accounts"] else {"id": "alida-internal", "name": "GOLANG", "tenancy": "single", "domains": [], "sandboxes": [], "resources": {"spendLimitUsd": 5000, "storageGb": 500}, "usage": {"spendUsd": 0}}
+        acct = DB["accounts"][-1] if DB["accounts"] else {"id": "alida-internal", "name": "Alida Internal", "tenancy": "dedicated", "domains": [], "resources": {"spendLimitUsd": 5000, "storageGb": 500}, "usage": {"spendUsd": 0}}
 
-    rg_name, sa_name = resolve_azure_target(acct.get("id", ""), acct.get("name", ""), acct.get("tenancy", "single"))
+    rg_name, sa_name = resolve_azure_target(acct.get("id", ""), acct.get("name", ""), "single")
 
     changes = []
     response_text = ""
     azure_msg = ""
 
-    # 1. Add sandbox regex
-    m_sbx = re.search(r"add (?:a )?sandbox\s+([a-z0-9_-]+)(?:\s+(\d+)\s*gb)?", text)
-    if m_sbx:
-        sbx_name = m_sbx.group(1)
-        quota = int(m_sbx.group(2) or 50)
-        acct["sandboxes"].append({"name": sbx_name, "mode": "dedicated", "quotaGb": quota})
-        upsert_account(acct)
-        changes.append({"op": "add", "target": "sandbox", "name": sbx_name, "quotaGb": quota})
-        azure_msg = azure_provision_container(rg_name, sa_name, f"sandbox-{sbx_name}")
-        response_text = f"Added sandbox '{sbx_name}' with {quota} GB quota to {acct['name']}. {azure_msg}"
-
-    # 2. Spend limit regex
-    m_spend = re.search(r"(?:increase|set|change) spending limit to\s*\$?(\d+)", text)
+    # 1. Usage budget / spend / storage regex
+    m_spend = re.search(r"(?:increase|set|change)?\s*(?:usage\s*budget|spending\s*limit|spend|budget)\s*(?:to)?\s*\$?([\d,]+)", text)
     if m_spend:
-        new_spend = float(m_spend.group(1))
+        new_spend = float(m_spend.group(1).replace(",", ""))
         acct["resources"]["spendLimitUsd"] = new_spend
         upsert_account(acct)
-        changes.append({"op": "set", "target": "resources", "spendLimitUsd": new_spend})
-        response_text = f"Updated spending limit to ${new_spend:,.0f} for account {acct['name']}. [Azure Policy] Enforced budget control guardrail."
+        changes.append({"op": "set", "target": "resources", "value": {"spendLimitUsd": new_spend}})
+        response_text = f"Updated usage budget to ${new_spend:,.0f} for account {acct['name']}. [Azure Policy] Enforced budget guardrail."
 
-    # 3. Add domain
-    m_dom = re.search(r"add domain\s+([a-z0-9_-]+)", text)
+    m_storage = re.search(r"storage(?:\s*limit)?\s*(?:to)?\s*(\d+)", text)
+    if m_storage:
+        new_gb = int(m_storage.group(1))
+        acct["resources"]["storageGb"] = new_gb
+        upsert_account(acct)
+        changes.append({"op": "set", "target": "resources", "value": {"storageGb": new_gb}})
+        response_text = (response_text + " " if response_text else "") + f"Updated storage limit to {new_gb} GB."
+
+    # 2. Add/remove work or domain
+    m_dom = re.search(r"add (?:the )?(?:work|domain)\s+([a-z0-9_-]+)", text)
     if m_dom:
         dom = m_dom.group(1)
-        if dom not in acct["domains"]:
+        if dom not in acct.setdefault("domains", []):
             acct["domains"].append(dom)
             upsert_account(acct)
             changes.append({"op": "add", "target": "domain", "id": dom})
-            azure_msg = azure_provision_container(rg_name, sa_name, f"domain-{dom}")
-            response_text = f"Added domain '{dom}' to account {acct['name']}. {azure_msg}"
+            azure_msg = azure_provision_container(rg_name, sa_name, f"work-{dom}")
+            response_text = f"Added work '{dom}' to account {acct['name']}. {azure_msg}"
 
-    # 4. Invite user
-    m_inv = re.search(r"invite\s+([^\s@]+@[^\s@]+\.[^\s@]+)(?:\s+as\s+(admin|user))?", text)
+    # 3. Invite user (always client operator role='user')
+    m_inv = re.search(r"(?:invite|add)\s+(?:user\s+)?([^\s@]+@[^\s@]+\.[^\s@]+)", text)
     if m_inv:
-        email = m_inv.group(1)
-        role = m_inv.group(2) or "user"
-        if not any(u.get("email") == email for u in DB["users"]):
-            new_u = {"email": email, "name": email.split("@")[0].capitalize(), "role": role, "accountId": acct["id"], "password": "welcome"}
-            DB["users"].append(new_u)
-            create_user(email, new_u["name"], "welcome", role, acct["id"])
-            changes.append({"op": "add", "target": "user", "email": email, "role": role})
-            response_text = f"Invited '{email}' as {role} to account {acct['name']}. [Entra ID] Scoped access invitation dispatched."
+        email = m_inv.group(1).lower()
+        if not any(u.get("email", "").lower() == email for u in DB["users"]):
+            new_u = create_user(email, email.split("@")[0], "welcome", "user", acct["id"], access={"catalogs": []})
+            DB["users"] = get_all_users()
+            changes.append({"op": "add", "target": "user", "email": email})
+            response_text = f"Invited '{email}' to account {acct['name']}. [Entra ID] User access provisioned."
         else:
-            response_text = f"User '{email}' is already registered in account {acct['name']}."
+            response_text = f"User '{email}' is already registered."
+
+    # 4. Grant access to work
+    m_acc = re.search(r"(?:give|grant)\s+([^\s@]+@[^\s@]+\.[^\s@]+)\s+access to\s+([a-z0-9_-]+)", text)
+    if m_acc:
+        email, work_id = m_acc.group(1).lower(), m_acc.group(2)
+        u = get_user(email)
+        if u:
+            cur = (u.get("access") or {}).get("catalogs", [])
+            cats = list(dict.fromkeys([*cur, work_id]))
+            create_user(email, u["name"], u["password"], u["role"], u.get("accountId"), access={"catalogs": cats})
+            DB["users"] = get_all_users()
+            changes.append({"op": "set", "target": "access", "email": email, "catalogs": cats})
+            response_text = f"Updated work access for '{email}': {', '.join(cats)}."
 
     # 5. Status query
     if "status" in text or "azure" in text:
@@ -525,22 +574,20 @@ def parse_assistant_command(cmd: AssistantCommand):
         st = azure_get_account_status(rg_name, sa_name)
         conts_str = ", ".join(st.get("containers", [])) or "None"
         res_count = st.get("resourceCount", 15)
-        response_text = f"📊 {acct['name']} Dedicated Environment Overview:\n• Tenancy: 100% Dedicated (Single-Tenant)\n• State: Active & Ready (Azure {rg_name})\n• Compliance: 100% HITRUST/HIPAA Compliant\n• Active PaaS Resources: {res_count} provisioned in Azure\n• Storage: {total_gb} GB dedicated cloud storage\n• Azure Storage Containers: {conts_str}\n• Monthly Spend: ${spend:,.0f} of ${limit:,.0f} limit\n• Direct Admin Mode: Active (all mutations apply immediately)"
+        response_text = f"{acct['name']} Dedicated Environment Overview:\n• Tenancy: Dedicated (Single-Tenant)\n• State: Active & Ready (Azure {rg_name})\n• Active PaaS Resources: {res_count} provisioned in Azure\n• Storage: {total_gb} GB dedicated cloud storage\n• Azure Storage Containers: {conts_str}\n• Monthly Balance: ${max(0, limit - spend):,.0f} left of ${limit:,.0f}"
         changes.append({"op": "query", "target": "status"})
 
-    if not changes:
-        response_text = f"I understood your request ('{cmd.text}'). No matching configuration mutation pattern found. Try: 'add domain readygo-finance' or 'set spending limit to 6000'."
-    else:
-        # Automatically synchronize updated parameters to client's .tfvars on disk
+    if not changes and not response_text:
+        response_text = f"Try: 'add work readygo-finance', 'invite ana@client.com', 'give ana@client.com access to readygo-retail', 'set usage budget 8000', or 'status'."
+    elif changes:
         try:
             generate_tfvars({
                 "org": acct.get("name", "client"),
                 "env": acct.get("env", "prod1"),
                 "region": acct.get("region", "eastus2"),
-                "tenancy": acct.get("tenancy", "single"),
+                "tenancy": "single",
                 "storage": acct.get("resources", {}).get("storageGb", 500),
                 "spend": acct.get("resources", {}).get("spendLimitUsd", 5000),
-                "sandbox": acct["sandboxes"][-1]["name"] if acct.get("sandboxes") else "sbx-main"
             })
         except Exception as e:
             print(f"Notice: could not refresh tfvars for {acct.get('id')}: {e}")
@@ -556,48 +603,68 @@ def parse_assistant_command(cmd: AssistantCommand):
 @app.post("/api/orders/apply")
 def apply_change_order(payload: ApplyOrderPayload):
     """
-    Called when an admin approves a Change Order in the UI.
-    Applies infrastructure mutations directly to live Azure ARM and regenerates tfvars.
+    Applies configuration changes directly to SQLite DB, Azure ARM, and regenerates tfvars.
     """
     acct = next((a for a in DB["accounts"] if a["id"] == payload.accountId or a.get("name", "").lower() == payload.accountId.lower() or a["id"].replace("acct-", "").lower() == payload.accountId.lower()), None)
     if not acct:
-        acct = DB["accounts"][-1] if DB["accounts"] else {"id": "alida-internal", "name": "GOLANG", "tenancy": "single", "domains": [], "sandboxes": [], "resources": {"spendLimitUsd": 5000, "storageGb": 500}, "usage": {"spendUsd": 0}}
+        acct = DB["accounts"][-1] if DB["accounts"] else {"id": "alida-internal", "name": "Alida Internal", "tenancy": "dedicated", "domains": [], "resources": {"spendLimitUsd": 5000, "storageGb": 500}, "usage": {"spendUsd": 0}}
 
-    rg_name, sa_name = resolve_azure_target(acct.get("id", ""), acct.get("name", ""), acct.get("tenancy", "single"))
+    rg_name, sa_name = resolve_azure_target(acct.get("id", ""), acct.get("name", ""), "single")
     azure_actions = []
 
     for c in payload.changes:
         target = c.get("target")
-        if target == "sandbox":
-            name = c.get("name", "sbx")
-            msg = azure_provision_container(rg_name, sa_name, f"sandbox-{name}")
-            azure_actions.append(msg)
-        elif target == "domain":
+        op = c.get("op")
+        if target == "domain":
             dom = c.get("id", "dom")
-            msg = azure_provision_container(rg_name, sa_name, f"domain-{dom}")
-            azure_actions.append(msg)
+            if op == "add":
+                if dom not in acct.setdefault("domains", []):
+                    acct["domains"].append(dom)
+                azure_actions.append(azure_provision_container(rg_name, sa_name, f"work-{dom}"))
+            elif op == "remove":
+                acct["domains"] = [x for x in acct.get("domains", []) if x != dom]
+                azure_actions.append(f"[Work] Removed work '{dom}' from dedicated stack.")
         elif target == "resources":
-            spend = c.get("spendLimitUsd", 5000)
-            azure_actions.append(f"[Azure Policy] Enforced billing alert threshold at ${spend:,.0f}.")
+            val = c.get("value") if isinstance(c.get("value"), dict) else c
+            acct.setdefault("resources", {})
+            if val.get("spendLimitUsd") is not None:
+                acct["resources"]["spendLimitUsd"] = float(val["spendLimitUsd"])
+                azure_actions.append(f"[Azure Policy] Updated monthly usage budget to ${acct['resources']['spendLimitUsd']:,.0f}.")
+            if val.get("storageGb") is not None:
+                acct["resources"]["storageGb"] = int(val["storageGb"])
+                azure_actions.append(f"[Azure Storage] Updated dedicated storage limit to {acct['resources']['storageGb']} GB.")
         elif target == "user":
-            email = c.get("email", "")
-            azure_actions.append(f"[Entra ID] RBAC assignment confirmed for {email}.")
+            email = (c.get("email") or "").lower()
+            if op == "add" and email:
+                create_user(email, email.split("@")[0], "welcome", "user", acct["id"], access={"catalogs": []})
+                azure_actions.append(f"[Entra ID] Provisioned user account for {email}.")
+            elif op == "remove" and email:
+                delete_user(email)
+                azure_actions.append(f"[Entra ID] Removed user access for {email}.")
+        elif target == "access":
+            email = (c.get("email") or "").lower()
+            cats = c.get("catalogs", [])
+            u = get_user(email)
+            if u:
+                create_user(email, u["name"], u["password"], u["role"], u.get("accountId"), access={"catalogs": cats})
+                azure_actions.append(f"[Entra ID] Scoped work access for {email}: {', '.join(cats) or 'none'}.")
+
+    DB["users"] = get_all_users()
+    upsert_account(acct)
 
     try:
         generate_tfvars({
             "org": acct.get("name", "client"),
             "env": acct.get("env", "prod1"),
             "region": acct.get("region", "eastus2"),
-            "tenancy": acct.get("tenancy", "single"),
+            "tenancy": "single",
             "storage": acct.get("resources", {}).get("storageGb", 500),
             "spend": acct.get("resources", {}).get("spendLimitUsd", 5000),
-            "sandbox": acct["sandboxes"][-1]["name"] if acct.get("sandboxes") else "sbx-main"
         })
         azure_actions.append("[Terraform] Updated infrastructure.tfvars synchronized on disk.")
     except Exception:
         pass
 
-    upsert_account(acct)
     add_audit_log("orchestrator", "config-order.applied", payload.orderId)
 
     return {
@@ -611,7 +678,7 @@ def apply_change_order(payload: ApplyOrderPayload):
 def execute_work_order(req: WorkOrderRequest):
     """
     Handles data engineering & pipeline requests sent to ADy (Autonomous Data assistant).
-    Supports profile (DATA), produce (PRODUCE), explore (EXPLORE), and generate (GENERATE).
+    Supports DATA, PRODUCE, EXPLORE, and GENERATE.
     """
     acct = next((a for a in DB["accounts"] if a["id"] == req.accountId), None)
     if not acct:
@@ -621,27 +688,32 @@ def execute_work_order(req: WorkOrderRequest):
     verb = req.verb.upper()
     text_lower = req.text.lower()
     result_msg = ""
+    metrics = []
 
     if "profile" in text_lower or verb == "DATA":
         target_match = re.search(r"profile\s+(?:the\s+)?([a-z0-9_-]+)", text_lower)
         target = target_match.group(1) if target_match else "store_master"
-        result_msg = f"Domain job results: Dataset '{target}' profiled (9 columns, 24,500 rows analyzed). 0 nulls in primary keys, schema validated against Unity Catalog metastore standards."
-        if "datasets" not in acct:
-            acct["datasets"] = []
+        result_msg = f"Dataset '{target}' profiled and registered."
+        metrics = [["Rows", "480k"], ["Columns", "9"], ["Quality issues", "2"], ["Time", "40s"]]
+        acct.setdefault("datasets", [])
         if not any(d.get("name") == target for d in acct["datasets"]):
             acct["datasets"].append({"name": target, "gb": 12.4, "src": "pos_connector"})
 
     elif "produce" in text_lower or "foundation" in text_lower or verb == "PRODUCE":
-        result_msg = "Domain job results: Integrated 2 retail datasets ('store_master' + 'pos_transactions'), 14 entities generated, 38 transformations logged. Published to Unity Catalog 'retail_foundation' table."
+        result_msg = "2 datasets integrated into one foundation."
+        metrics = [["Rows", "1.2M"], ["Entities", "14"], ["Transformations", "38"], ["Quality", "98%"], ["Time", "3m 20s"]]
 
     elif "explore" in text_lower or "return" in text_lower or verb == "EXPLORE":
-        result_msg = "Domain job results: Analyzed 142k transactions. Pattern found: Store #104 and #208 drive 64% of product returns due to sizing mismatch in footwear."
+        result_msg = "3 patterns found; returns concentrate in 4 stores. Report attached."
+        metrics = [["Patterns", "3"], ["Confidence", "0.91"], ["Stores flagged", "4"], ["Time", "1m 05s"]]
 
     elif "generate" in text_lower or "model" in text_lower or verb == "GENERATE":
-        result_msg = "Domain job results: Weekly store demand model v1 trained (MAE 2.14, RMSE 3.08). Model artifacts registered in Databricks Unity Catalog Model Registry."
+        result_msg = "Model generated with 2 new metrics."
+        metrics = [["Metrics", "2"], ["Fit", "0.87"], ["Time", "2m 10s"]]
 
     else:
-        result_msg = f"Domain job results: Completed '{req.text}'. 0 errors reported."
+        result_msg = f"Completed '{req.text}'. 0 errors reported."
+        metrics = [["Checks", "Passed"], ["Time", "1m 00s"]]
 
     wo_record = {
         "id": wo_id,
@@ -651,6 +723,8 @@ def execute_work_order(req: WorkOrderRequest):
         "text": req.text,
         "status": "done",
         "result": result_msg,
+        "metrics": metrics,
+        "promoted": False,
         "created": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
     DB["work_orders"].append(wo_record)
@@ -663,6 +737,7 @@ def execute_work_order(req: WorkOrderRequest):
         "status": "done",
         "verb": verb,
         "result": result_msg,
+        "metrics": metrics,
         "workOrder": wo_record
     }
 
